@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  --app-bg: #0b0b0c;
+  --panel-bg: #111112;
+  --panel-raised: #161617;
+
+  --page-bg: #000000;
+
+  --text: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --text-tertiary: #66666b;
+
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.18);
+
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+
+  --font-oook: "oook-variable", sans-serif;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--app-bg);
+}
+
+body {
+  overflow: hidden;
+  background: var(--app-bg);
+  color: var(--text);
+
+  font-family: var(--font-oook);
+  font-variation-settings: "wght" 400;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: white;
+  color: black;
+}
+
+/* OOOk variable helpers */
+
+.oook-light {
+  font-family: var(--font-oook);
+  font-variation-settings: "wght" 300;
+}
+
+.oook-regular {
+  font-family: var(--font-oook);
+  font-variation-settings: "wght" 400;
+}
+
+.oook-medium {
+  font-family: var(--font-oook);
+  font-variation-settings: "wght" 500;
+}
+
+.oook-semibold {
+  font-family: var(--font-oook);
+  font-variation-settings: "wght" 600;
+}
+
+.oook-bold {
+  font-family: var(--font-oook);
+  font-variation-settings: "wght" 700;
+}
+
+/* scrollbars */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+}
