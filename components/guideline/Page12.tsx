@@ -7,14 +7,15 @@ import {
 } from "react";
 
 import GuidelinePage from "./GuidelinePage";
+import PartnershipLockup from "./PartnershipLockup";
+
+import {
+  BrandCharacterTraitId,
+  brandCharacterTraits,
+} from "@/data/brandCharacterTraits";
 
 import { useGuidelineStore } from "@/store/guidelineStore";
 import { PartnershipModelId } from "@/types/guideline";
-
-import {
-  brandCharacterTraits,
-  BrandCharacterTraitId,
-} from "@/data/brandCharacterTraits";
 
 /* ------------------------------------------------ */
 /* TYPES                                            */
@@ -24,1172 +25,352 @@ interface ImageProfile {
   contrast: number;
   saturation: number;
   warmth: number;
-  brightness: number;
-
   grain: number;
   softness: number;
-  sharpness: number;
-
-  vignette: number;
-  glow: number;
   depth: number;
-
-  cropEnergy: number;
-  asymmetry: number;
-  monochrome: number;
-
-  texture: number;
-}
-
-interface TreatmentConfig {
-  eyebrow: string;
-  intro: string;
-
-  owner: string;
-  supportingRole: string;
-
-  doLabel: string;
-  dontLabel: string;
-
-  rules: [
-    string,
-    string,
-    string
-  ];
+  crop: number;
 }
 
 interface TreatmentRecipe {
   label: string;
-
-  description: string;
-
   contrast: string;
   colour: string;
   texture: string;
   framing: string;
 }
 
-interface ImageTraitDefinition {
-  id: BrandCharacterTraitId;
-
-  implication: string;
-}
-
-/* ------------------------------------------------ */
-/* CHARACTER → IMAGE LANGUAGE                       */
-/* ------------------------------------------------ */
-
-const IMAGE_TRAITS: ImageTraitDefinition[] = [
-  {
-    id: "classic",
-    implication:
-      "Balanced exposure, natural colour and stable compositions.",
-  },
-
-  {
-    id: "elegant",
-    implication:
-      "Restrained saturation, soft highlights and generous negative space.",
-  },
-
-  {
-    id: "premium",
-    implication:
-      "Deep blacks, controlled highlights, subtle grain and refined contrast.",
-  },
-
-  {
-    id: "minimal",
-    implication:
-      "Clean surfaces, low visual noise and simple restrained crops.",
-  },
-
-  {
-    id: "editorial",
-    implication:
-      "Confident crops, strong framing and carefully controlled tonal contrast.",
-  },
-
-  {
-    id: "technical",
-    implication:
-      "Cooler colour, high clarity, neutral exposure and precise overlays.",
-  },
-
-  {
-    id: "precise",
-    implication:
-      "Sharp detail, neutral grading and disciplined image alignment.",
-  },
-
-  {
-    id: "futuristic",
-    implication:
-      "Cool bias, deeper blacks, selective glow and luminous highlights.",
-  },
-
-  {
-    id: "experimental",
-    implication:
-      "Unexpected crops, selective blur, distortion and unconventional layering.",
-  },
-
-  {
-    id: "disruptive",
-    implication:
-      "Aggressive crops, high contrast and deliberately tense compositions.",
-  },
-
-  {
-    id: "bold",
-    implication:
-      "High contrast, strong subject separation and large visual masses.",
-  },
-
-  {
-    id: "dynamic",
-    implication:
-      "Directional crops, off-centre framing and stronger sense of movement.",
-  },
-
-  {
-    id: "energetic",
-    implication:
-      "Higher saturation, punchier contrast and active compositions.",
-  },
-
-  {
-    id: "playful",
-    implication:
-      "Brighter colour, softer contrast and more flexible framing.",
-  },
-
-  {
-    id: "youthful",
-    implication:
-      "Fresh colour, brighter exposure and spontaneous crops.",
-  },
-
-  {
-    id: "friendly",
-    implication:
-      "Warmer skin tones, softer highlights and approachable framing.",
-  },
-
-  {
-    id: "organic",
-    implication:
-      "Warm natural tones, texture, softer sharpness and imperfect framing.",
-  },
-
-  {
-    id: "immersive",
-    implication:
-      "Strong depth, foreground layers, wide framing and atmospheric separation.",
-  },
-
-  {
-    id: "cinematic",
-    implication:
-      "Deep contrast, atmospheric colour, grain, vignette and narrative framing.",
-  },
-
-  {
-    id: "sporty",
-    implication:
-      "Crisp detail, punchy contrast, kinetic crops and strong subject focus.",
-  },
-];
-
 /* ------------------------------------------------ */
 /* HELPERS                                          */
 /* ------------------------------------------------ */
 
 function clamp(
-  value: number,
-  min = 0,
-  max = 1
+  value: number
 ) {
   return Math.min(
+    1,
     Math.max(
-      value,
-      min
-    ),
-    max
+      0,
+      value
+    )
   );
 }
 
-function normalizeHex(
+function safeColour(
   value: unknown,
   fallback: string
 ) {
-  if (
-    typeof value !== "string"
-  ) {
-    return fallback;
-  }
-
-  const trimmed =
-    value.trim();
-
-  if (
-    /^#[0-9A-Fa-f]{6}$/.test(
-      trimmed
-    )
-  ) {
-    return trimmed;
-  }
-
-  if (
-    /^[0-9A-Fa-f]{6}$/.test(
-      trimmed
-    )
-  ) {
-    return `#${trimmed}`;
-  }
-
-  return fallback;
+  return typeof value === "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(value)
+    ? value
+    : fallback;
 }
 
-function getBrandColour(
-  brand: unknown,
-  fallback: string
-) {
-  const value =
-    brand as {
-      primaryColor?: unknown;
-      primaryColour?: unknown;
-      color?: unknown;
-      colors?: unknown[];
-    };
-
-  return normalizeHex(
-    value.primaryColor ??
-      value.primaryColour ??
-      value.color ??
-      value.colors?.[0],
-    fallback
-  );
-}
-
-function getCharacterTraits(
+function getTraits(
   brand: unknown
-): BrandCharacterTraitId[] {
+) {
   const value =
     brand as {
       characterTraits?:
         BrandCharacterTraitId[];
     };
 
-  if (
-    !Array.isArray(
-      value.characterTraits
-    )
-  ) {
-    return [];
-  }
-
-  return value.characterTraits;
+  return Array.isArray(
+    value.characterTraits
+  )
+    ? value.characterTraits
+    : [];
 }
 
-function hexToRgb(
-  colour: string
-) {
-  const safe =
-    normalizeHex(
-      colour,
-      "#FFFFFF"
-    );
-
-  const value =
-    parseInt(
-      safe.replace("#", ""),
-      16
-    );
-
-  return {
-    r:
-      (value >> 16) & 255,
-
-    g:
-      (value >> 8) & 255,
-
-    b:
-      value & 255,
-  };
-}
-
-function alpha(
-  colour: string,
-  opacity: number
-) {
-  const {
-    r,
-    g,
-    b,
-  } = hexToRgb(
-    colour
-  );
-
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-}
-
-/* ------------------------------------------------ */
-/* BASE PROFILE                                     */
-/* ------------------------------------------------ */
-
-function getBaseImageProfile(): ImageProfile {
-  return {
+function buildProfile(
+  traits:
+    BrandCharacterTraitId[]
+): ImageProfile {
+  const p:
+    ImageProfile = {
     contrast: 0.5,
     saturation: 0.45,
     warmth: 0.5,
-    brightness: 0.5,
-
     grain: 0.12,
     softness: 0.25,
-    sharpness: 0.6,
-
-    vignette: 0.15,
-    glow: 0.12,
     depth: 0.45,
-
-    cropEnergy: 0.3,
-    asymmetry: 0.25,
-    monochrome: 0.05,
-
-    texture: 0.15,
+    crop: 0.3,
   };
-}
-
-/* ------------------------------------------------ */
-/* BUILD PROFILE                                    */
-/* ------------------------------------------------ */
-
-function buildImageProfile(
-  traits: BrandCharacterTraitId[]
-): ImageProfile {
-  const profile =
-    getBaseImageProfile();
 
   traits.forEach(
     (trait) => {
       switch (trait) {
         case "classic":
-          profile.contrast += 0.04;
-          profile.saturation -= 0.06;
-          profile.asymmetry -= 0.15;
-          profile.cropEnergy -= 0.12;
-          profile.sharpness += 0.08;
+          p.saturation -= 0.05;
+          p.crop -= 0.1;
           break;
 
         case "elegant":
-          profile.saturation -= 0.12;
-          profile.softness += 0.14;
-          profile.brightness += 0.04;
-          profile.cropEnergy -= 0.08;
-          profile.texture -= 0.04;
+          p.saturation -= 0.1;
+          p.softness += 0.15;
           break;
 
         case "premium":
-          profile.contrast += 0.18;
-          profile.saturation -= 0.07;
-          profile.grain += 0.08;
-          profile.vignette += 0.12;
-          profile.depth += 0.1;
+          p.contrast += 0.18;
+          p.grain += 0.08;
+          p.depth += 0.12;
           break;
 
         case "minimal":
-          profile.saturation -= 0.08;
-          profile.texture -= 0.12;
-          profile.grain -= 0.1;
-          profile.cropEnergy -= 0.14;
-          profile.brightness += 0.05;
+          p.saturation -= 0.08;
+          p.grain -= 0.1;
+          p.crop -= 0.12;
           break;
 
         case "editorial":
-          profile.contrast += 0.12;
-          profile.cropEnergy += 0.18;
-          profile.asymmetry += 0.1;
-          profile.sharpness += 0.08;
+          p.contrast += 0.12;
+          p.crop += 0.18;
           break;
 
         case "technical":
-          profile.warmth -= 0.18;
-          profile.sharpness += 0.28;
-          profile.contrast += 0.08;
-          profile.saturation -= 0.08;
-          profile.softness -= 0.12;
+          p.warmth -= 0.18;
+          p.contrast += 0.08;
+          p.softness -= 0.12;
           break;
 
         case "precise":
-          profile.sharpness += 0.32;
-          profile.asymmetry -= 0.18;
-          profile.softness -= 0.15;
-          profile.texture -= 0.08;
+          p.softness -= 0.15;
+          p.crop -= 0.08;
           break;
 
         case "futuristic":
-          profile.warmth -= 0.24;
-          profile.contrast += 0.16;
-          profile.glow += 0.3;
-          profile.depth += 0.18;
-          profile.saturation += 0.05;
+          p.warmth -= 0.2;
+          p.contrast += 0.14;
+          p.depth += 0.2;
           break;
 
         case "experimental":
-          profile.cropEnergy += 0.3;
-          profile.asymmetry += 0.26;
-          profile.softness += 0.12;
-          profile.texture += 0.16;
-          profile.monochrome += 0.08;
+          p.crop += 0.3;
+          p.softness += 0.12;
           break;
 
         case "disruptive":
-          profile.contrast += 0.32;
-          profile.cropEnergy += 0.36;
-          profile.asymmetry += 0.28;
-          profile.saturation += 0.08;
+          p.contrast += 0.3;
+          p.crop += 0.34;
           break;
 
         case "bold":
-          profile.contrast += 0.28;
-          profile.saturation += 0.12;
-          profile.sharpness += 0.1;
-          profile.cropEnergy += 0.14;
+          p.contrast += 0.26;
+          p.saturation += 0.1;
           break;
 
         case "dynamic":
-          profile.cropEnergy += 0.3;
-          profile.asymmetry += 0.18;
-          profile.sharpness += 0.08;
+          p.crop += 0.3;
           break;
 
         case "energetic":
-          profile.saturation += 0.28;
-          profile.contrast += 0.18;
-          profile.brightness += 0.08;
-          profile.cropEnergy += 0.22;
+          p.saturation += 0.28;
+          p.contrast += 0.15;
+          p.crop += 0.2;
           break;
 
         case "playful":
-          profile.saturation += 0.22;
-          profile.warmth += 0.08;
-          profile.brightness += 0.1;
-          profile.softness += 0.08;
-          profile.asymmetry += 0.1;
+          p.saturation += 0.2;
+          p.warmth += 0.08;
+          p.softness += 0.08;
           break;
 
         case "youthful":
-          profile.saturation += 0.2;
-          profile.brightness += 0.14;
-          profile.cropEnergy += 0.15;
-          profile.asymmetry += 0.1;
+          p.saturation += 0.2;
+          p.crop += 0.15;
           break;
 
         case "friendly":
-          profile.warmth += 0.2;
-          profile.softness += 0.14;
-          profile.contrast -= 0.08;
-          profile.brightness += 0.08;
+          p.warmth += 0.2;
+          p.softness += 0.14;
+          p.contrast -= 0.08;
           break;
 
         case "organic":
-          profile.warmth += 0.24;
-          profile.grain += 0.15;
-          profile.texture += 0.18;
-          profile.softness += 0.12;
-          profile.sharpness -= 0.12;
+          p.warmth += 0.22;
+          p.grain += 0.14;
+          p.softness += 0.12;
           break;
 
         case "immersive":
-          profile.depth += 0.38;
-          profile.vignette += 0.1;
-          profile.glow += 0.1;
-          profile.cropEnergy += 0.1;
+          p.depth += 0.38;
+          p.crop += 0.1;
           break;
 
         case "cinematic":
-          profile.contrast += 0.24;
-          profile.grain += 0.18;
-          profile.vignette += 0.22;
-          profile.depth += 0.2;
-          profile.saturation -= 0.05;
+          p.contrast += 0.24;
+          p.grain += 0.18;
+          p.depth += 0.22;
           break;
 
         case "sporty":
-          profile.contrast += 0.24;
-          profile.sharpness += 0.22;
-          profile.cropEnergy += 0.34;
-          profile.saturation += 0.08;
-          profile.warmth -= 0.05;
+          p.contrast += 0.24;
+          p.crop += 0.32;
+          p.saturation += 0.08;
           break;
       }
     }
   );
 
-  return normalizeImageProfile(
-    profile
+  Object.keys(p).forEach(
+    (key) => {
+      const k =
+        key as keyof ImageProfile;
+
+      p[k] =
+        clamp(
+          p[k]
+        );
+    }
   );
+
+  return p;
 }
 
-function normalizeImageProfile(
-  profile: ImageProfile
-): ImageProfile {
-  return {
-    contrast:
-      clamp(
-        profile.contrast
-      ),
-
-    saturation:
-      clamp(
-        profile.saturation
-      ),
-
-    warmth:
-      clamp(
-        profile.warmth
-      ),
-
-    brightness:
-      clamp(
-        profile.brightness
-      ),
-
-    grain:
-      clamp(
-        profile.grain
-      ),
-
-    softness:
-      clamp(
-        profile.softness
-      ),
-
-    sharpness:
-      clamp(
-        profile.sharpness
-      ),
-
-    vignette:
-      clamp(
-        profile.vignette
-      ),
-
-    glow:
-      clamp(
-        profile.glow
-      ),
-
-    depth:
-      clamp(
-        profile.depth
-      ),
-
-    cropEnergy:
-      clamp(
-        profile.cropEnergy
-      ),
-
-    asymmetry:
-      clamp(
-        profile.asymmetry
-      ),
-
-    monochrome:
-      clamp(
-        profile.monochrome
-      ),
-
-    texture:
-      clamp(
-        profile.texture
-      ),
-  };
-}
-
-/* ------------------------------------------------ */
-/* PROFILE BLENDING                                 */
-/* ------------------------------------------------ */
-
-function blendImageProfiles(
+function blend(
   a: ImageProfile,
   b: ImageProfile,
-  aWeight: number
+  weight: number
 ): ImageProfile {
-  const bWeight =
-    1 - aWeight;
+  const inverse =
+    1 - weight;
 
   return {
     contrast:
-      a.contrast *
-        aWeight +
-      b.contrast *
-        bWeight,
+      a.contrast * weight +
+      b.contrast * inverse,
 
     saturation:
-      a.saturation *
-        aWeight +
-      b.saturation *
-        bWeight,
+      a.saturation * weight +
+      b.saturation * inverse,
 
     warmth:
-      a.warmth *
-        aWeight +
-      b.warmth *
-        bWeight,
-
-    brightness:
-      a.brightness *
-        aWeight +
-      b.brightness *
-        bWeight,
+      a.warmth * weight +
+      b.warmth * inverse,
 
     grain:
-      a.grain *
-        aWeight +
-      b.grain *
-        bWeight,
+      a.grain * weight +
+      b.grain * inverse,
 
     softness:
-      a.softness *
-        aWeight +
-      b.softness *
-        bWeight,
-
-    sharpness:
-      a.sharpness *
-        aWeight +
-      b.sharpness *
-        bWeight,
-
-    vignette:
-      a.vignette *
-        aWeight +
-      b.vignette *
-        bWeight,
-
-    glow:
-      a.glow *
-        aWeight +
-      b.glow *
-        bWeight,
+      a.softness * weight +
+      b.softness * inverse,
 
     depth:
-      a.depth *
-        aWeight +
-      b.depth *
-        bWeight,
+      a.depth * weight +
+      b.depth * inverse,
 
-    cropEnergy:
-      a.cropEnergy *
-        aWeight +
-      b.cropEnergy *
-        bWeight,
-
-    asymmetry:
-      a.asymmetry *
-        aWeight +
-      b.asymmetry *
-        bWeight,
-
-    monochrome:
-      a.monochrome *
-        aWeight +
-      b.monochrome *
-        bWeight,
-
-    texture:
-      a.texture *
-        aWeight +
-      b.texture *
-        bWeight,
+    crop:
+      a.crop * weight +
+      b.crop * inverse,
   };
 }
 
-/* ------------------------------------------------ */
-/* PARTNERSHIP PROFILE                              */
-/* ------------------------------------------------ */
-
-function getPartnershipImageProfile(
+function getProfile(
   model: PartnershipModelId,
-  brandA: ImageProfile,
-  brandB: ImageProfile
+  a: ImageProfile,
+  b: ImageProfile
 ) {
   switch (model) {
     case "axb":
-      return blendImageProfiles(
-        brandA,
-        brandB,
+      return blend(
+        a,
+        b,
         0.5
       );
 
     case "aandb":
-      return blendImageProfiles(
-        brandA,
-        brandB,
+      return blend(
+        a,
+        b,
         0.7
       );
 
     case "poweredByA":
-      return blendImageProfiles(
-        brandB,
-        brandA,
+      return blend(
+        b,
+        a,
         0.9
       );
 
     case "presentsB":
     default:
-      return brandA;
+      return a;
   }
 }
 
 /* ------------------------------------------------ */
-/* PARTNERSHIP CONFIG                               */
+/* IMAGE                                            */
 /* ------------------------------------------------ */
 
-function getTreatmentConfig(
-  model: PartnershipModelId,
-  brandAName: string,
-  brandBName: string
-): TreatmentConfig {
-  switch (model) {
-    case "axb":
-      return {
-        eyebrow:
-          "Shared image world",
-
-        intro:
-          "Both brands contribute to one coherent photographic and footage treatment. Source material may vary, but grade, contrast and texture should create a shared visual world.",
-
-        owner:
-          "Shared",
-
-        supportingRole:
-          `${brandAName} + ${brandBName}`,
-
-        doLabel:
-          "Unify different source material through one common treatment.",
-
-        dontLabel:
-          "Place two visibly different brand grades next to each other.",
-
-        rules: [
-          "One collaboration grade",
-          "Equal treatment of both brands",
-          "Accent colour stays secondary",
-        ],
-      };
-
-    case "aandb":
-      return {
-        eyebrow:
-          `${brandAName}-led image world`,
-
-        intro:
-          `${brandAName} defines the dominant photographic treatment. ${brandBName} imagery should be adapted enough to feel part of the same campaign without losing its source identity.`,
-
-        owner:
-          brandAName,
-
-        supportingRole:
-          brandBName,
-
-        doLabel:
-          `${brandAName}'s grade defines the visual world; ${brandBName} adapts to it.`,
-
-        dontLabel:
-          `${brandBName} introducing a stronger or unrelated image treatment.`,
-
-        rules: [
-          "≈ 70% Brand A image character",
-          "Brand B footage adapts",
-          "One tonal world",
-        ],
-      };
-
-    case "poweredByA":
-      return {
-        eyebrow:
-          `${brandBName}-owned image world`,
-
-        intro:
-          `${brandBName} owns the consumer-facing footage and photographic treatment. ${brandAName} should not impose its own colour grade, texture or crop language.`,
-
-        owner:
-          brandBName,
-
-        supportingRole:
-          `${brandAName} endorsement only`,
-
-        doLabel:
-          `${brandBName} controls footage treatment; ${brandAName} remains visually neutral.`,
-
-        dontLabel:
-          `${brandAName}'s image treatment becoming visible in the consumer experience.`,
-
-        rules: [
-          "≈ 90% Brand B image character",
-          "Brand A does not recolour content",
-          "Endorsement remains neutral",
-        ],
-      };
-
-    case "presentsB":
-    default:
-      return {
-        eyebrow:
-          `${brandAName} container / ${brandBName} imagery`,
-
-        intro:
-          `${brandAName} controls the presentation layer, framing and interface treatment. ${brandBName} may preserve a recognisable photographic identity inside the featured content.`,
-
-        owner:
-          `${brandAName} presentation`,
-
-        supportingRole:
-          `${brandBName} content`,
-
-        doLabel:
-          `${brandAName} frames the image; ${brandBName}'s content identity remains visible inside.`,
-
-        dontLabel:
-          `Do not force ${brandBName} footage into ${brandAName}'s complete image treatment.`,
-
-        rules: [
-          "Brand A = container treatment",
-          "Brand B = content treatment",
-          "Do not flatten both identities",
-        ],
-      };
-  }
-}
-
-/* ------------------------------------------------ */
-/* PERSONALITY                                      */
-/* ------------------------------------------------ */
-
-function getImagePersonality(
-  profile: ImageProfile
-) {
-  const tonal =
-    profile.contrast >
-    0.72
-      ? "Punchy"
-      : profile.softness >
-          0.62
-        ? "Soft"
-        : "Balanced";
-
-  const colour =
-    profile.saturation >
-    0.7
-      ? "Vivid"
-      : profile.monochrome >
-          0.45
-        ? "Desaturated"
-        : profile.saturation <
-            0.35
-          ? "Restrained"
-          : "Natural";
-
-  const frame =
-    profile.cropEnergy >
-    0.65
-      ? "Kinetic"
-      : profile.depth >
-          0.68
-        ? "Immersive"
-        : "Controlled";
-
-  return `${tonal} · ${colour} · ${frame}`;
-}
-
-function getImageDefinition(
-  profile: ImageProfile
-) {
-  const contrast =
-    profile.contrast >
-    0.68
-      ? "strong tonal separation"
-      : profile.contrast <
-          0.38
-        ? "soft tonal transitions"
-        : "balanced contrast";
-
-  const texture =
-    profile.grain >
-    0.55
-      ? "visible texture and grain"
-      : profile.texture >
-          0.45
-        ? "subtle material texture"
-        : "clean surfaces";
-
-  const framing =
-    profile.cropEnergy >
-    0.65
-      ? "confident, directional framing"
-      : "controlled framing";
-
-  return `Use ${contrast}, ${texture} and ${framing}. Treatment should support the source material rather than overpower it.`;
-}
-
-/* ------------------------------------------------ */
-/* RECIPES                                          */
-/* ------------------------------------------------ */
-
-function buildTreatmentRecipes(
-  profile: ImageProfile
-): TreatmentRecipe[] {
-  return [
-    {
-      label:
-        "Hero footage",
-
-      description:
-        "Main campaign and immersive video imagery.",
-
-      contrast:
-        describeContrast(
-          profile
-        ),
-
-      colour:
-        describeColour(
-          profile
-        ),
-
-      texture:
-        describeTexture(
-          profile
-        ),
-
-      framing:
-        describeFraming(
-          profile
-        ),
-    },
-
-    {
-      label:
-        "Photography",
-
-      description:
-        "Editorial stills, press imagery and promotional photography.",
-
-      contrast:
-        profile.contrast >
-        0.65
-          ? "Defined"
-          : "Natural",
-
-      colour:
-        profile.saturation >
-        0.65
-          ? "Rich"
-          : "Controlled",
-
-      texture:
-        profile.grain >
-        0.5
-          ? "Fine grain"
-          : "Clean",
-
-      framing:
-        profile.asymmetry >
-        0.55
-          ? "Asymmetric"
-          : "Stable",
-    },
-
-    {
-      label:
-        "UI imagery",
-
-      description:
-        "Thumbnails, cards and imagery behind interface elements.",
-
-      contrast:
-        "Reduced",
-
-      colour:
-        profile.monochrome >
-        0.4
-          ? "Near mono"
-          : "Neutral",
-
-      texture:
-        "Minimal",
-
-      framing:
-        "Clear subject",
-    },
-  ];
-}
-
-function describeContrast(
-  profile: ImageProfile
-) {
-  if (
-    profile.contrast >
-    0.75
-  ) {
-    return "High";
-  }
-
-  if (
-    profile.contrast <
-    0.35
-  ) {
-    return "Soft";
-  }
-
-  return "Balanced";
-}
-
-function describeColour(
-  profile: ImageProfile
-) {
-  if (
-    profile.monochrome >
-    0.5
-  ) {
-    return "Monochrome";
-  }
-
-  if (
-    profile.saturation >
-    0.72
-  ) {
-    return "Vivid";
-  }
-
-  if (
-    profile.saturation <
-    0.35
-  ) {
-    return "Restrained";
-  }
-
-  return profile.warmth >
-    0.62
-    ? "Warm"
-    : profile.warmth <
-        0.38
-      ? "Cool"
-      : "Neutral";
-}
-
-function describeTexture(
-  profile: ImageProfile
-) {
-  if (
-    profile.grain >
-    0.62
-  ) {
-    return "Grain";
-  }
-
-  if (
-    profile.softness >
-    0.62
-  ) {
-    return "Soft";
-  }
-
-  return "Clean";
-}
-
-function describeFraming(
-  profile: ImageProfile
-) {
-  if (
-    profile.cropEnergy >
-    0.7
-  ) {
-    return "Kinetic";
-  }
-
-  if (
-    profile.depth >
-    0.68
-  ) {
-    return "Layered";
-  }
-
-  if (
-    profile.asymmetry >
-    0.58
-  ) {
-    return "Off-centre";
-  }
-
-  return "Stable";
-}
-
-/* ------------------------------------------------ */
-/* CSS IMAGE FILTER                                 */
-/* ------------------------------------------------ */
-
-function getImageFilter(
-  profile: ImageProfile
-) {
-  const contrast =
-    0.82 +
-    profile.contrast *
-      0.55;
-
-  const saturation =
-    Math.max(
-      0.15,
-      0.45 +
-        profile.saturation *
-          1.25 -
-        profile.monochrome *
-          0.7
-    );
-
-  const brightness =
-    0.78 +
-    profile.brightness *
-      0.4;
-
-  const blur =
-    profile.softness *
-    1.6;
-
-  return `
-    contrast(${contrast})
-    saturate(${saturation})
-    brightness(${brightness})
-    blur(${blur}px)
-  `;
-}
-
-/* ------------------------------------------------ */
-/* CARD                                             */
-/* ------------------------------------------------ */
-
-function Card({
-  children,
-  className = "",
+function SmartImage({
+  number,
+  profile,
 }: {
-  children: ReactNode;
-  className?: string;
+  number: number;
+  profile: ImageProfile;
 }) {
+  const extensions = [
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+  ];
+
+  const [
+    extensionIndex,
+    setExtensionIndex,
+  ] = useState(0);
+
+  useEffect(
+    () => {
+      setExtensionIndex(0);
+    },
+    [number]
+  );
+
   return (
-    <div
-      className={`
-        rounded-[20px]
-        border
-        border-white/[0.07]
-        bg-white/[0.018]
-        ${className}
-      `}
-    >
-      {children}
-    </div>
+    <img
+      src={`/images/image${number}.${extensions[extensionIndex]}`}
+      alt=""
+      draggable={false}
+      onError={() => {
+        if (
+          extensionIndex <
+          extensions.length - 1
+        ) {
+          setExtensionIndex(
+            (current) =>
+              current + 1
+          );
+        }
+      }}
+      className="absolute inset-0 h-full w-full object-cover"
+      style={{
+        filter:
+          `contrast(${
+            0.8 +
+            profile.contrast *
+              0.6
+          })
+          saturate(${
+            0.45 +
+            profile.saturation *
+              1.25
+          })
+          brightness(.84)
+          blur(${
+            profile.softness *
+            1.2
+          }px)`,
+
+        transform:
+          `scale(${
+            1.03 +
+            profile.crop *
+              0.08
+          })`,
+      }}
+    />
   );
 }
 
@@ -1202,575 +383,334 @@ export default function Page12() {
     partnershipModel,
     brandA,
     brandB,
-  } = useGuidelineStore();
+  } =
+    useGuidelineStore();
 
   const model =
     partnershipModel as PartnershipModelId;
 
-  const brandAName =
-    brandA.name.trim() ||
-    "Brand A";
+  const aTraits =
+    getTraits(brandA);
 
-  const brandBName =
-    brandB.name.trim() ||
-    "Brand B";
+  const bTraits =
+    getTraits(brandB);
 
-  const brandAColor =
-    getBrandColour(
-      brandA,
+  const aProfile =
+    buildProfile(aTraits);
+
+  const bProfile =
+    buildProfile(bTraits);
+
+  const profile =
+    getProfile(
+      model,
+      aProfile,
+      bProfile
+    );
+
+  const aPrimary =
+    safeColour(
+      brandA.primaryColor,
       "#FF453A"
     );
 
-  const brandBColor =
-    getBrandColour(
-      brandB,
+  const aSecondary =
+    safeColour(
+      brandA.secondaryColor,
+      "#FF8A80"
+    );
+
+  const bPrimary =
+    safeColour(
+      brandB.primaryColor,
       "#3478F6"
     );
 
-  /* ---------------------------------------------- */
-  /* CHARACTER                                      */
-  /* ---------------------------------------------- */
-
-  const brandATraits =
-    getCharacterTraits(
-      brandA
+  const bSecondary =
+    safeColour(
+      brandB.secondaryColor,
+      "#64D2FF"
     );
 
-  const brandBTraits =
-    getCharacterTraits(
-      brandB
-    );
+  const leadPrimary =
+    model === "poweredByA"
+      ? bPrimary
+      : aPrimary;
 
-  const brandAProfile =
-    buildImageProfile(
-      brandATraits
-    );
+  const leadSecondary =
+    model === "poweredByA"
+      ? bSecondary
+      : aSecondary;
 
-  const brandBProfile =
-    buildImageProfile(
-      brandBTraits
-    );
+  const supportPrimary =
+    model === "poweredByA"
+      ? aPrimary
+      : bPrimary;
 
-  const sharedProfile =
-    getPartnershipImageProfile(
-      model,
-      brandAProfile,
-      brandBProfile
-    );
+  const supportSecondary =
+    model === "poweredByA"
+      ? aSecondary
+      : bSecondary;
 
-  const config =
-    getTreatmentConfig(
-      model,
-      brandAName,
-      brandBName
-    );
+  const recipes:
+    TreatmentRecipe[] = [
+    {
+      label:
+        "Hero footage",
 
-  const recipes =
-    buildTreatmentRecipes(
-      sharedProfile
-    );
+      contrast:
+        profile.contrast > 0.65
+          ? "Defined"
+          : "Balanced",
+
+      colour:
+        profile.saturation > 0.62
+          ? "Rich"
+          : "Controlled",
+
+      texture:
+        profile.grain > 0.5
+          ? "Fine grain"
+          : "Clean",
+
+      framing:
+        profile.crop > 0.62
+          ? "Kinetic"
+          : "Stable",
+    },
+
+    {
+      label:
+        "Photography",
+
+      contrast:
+        profile.contrast > 0.65
+          ? "Strong"
+          : "Natural",
+
+      colour:
+        profile.warmth > 0.6
+          ? "Warm"
+          : profile.warmth < 0.4
+            ? "Cool"
+            : "Neutral",
+
+      texture:
+        profile.grain > 0.45
+          ? "Textured"
+          : "Clean",
+
+      framing:
+        profile.crop > 0.55
+          ? "Editorial"
+          : "Controlled",
+    },
+
+    {
+      label:
+        "UI imagery",
+
+      contrast:
+        "Reduced",
+
+      colour:
+        "Neutral",
+
+      texture:
+        "Minimal",
+
+      framing:
+        "Clear subject",
+    },
+  ];
 
   return (
     <GuidelinePage>
-      {/* ================================================= */}
-      {/* HEADER                                            */}
-      {/* ================================================= */}
-
-      <header
-        className="
-          absolute
-          left-[70px]
-          right-[70px]
-          top-[46px]
-
-          flex
-          items-start
-          justify-between
-        "
-      >
-        <div
-          className="
-            max-w-[1040px]
-          "
-        >
-          <p
-            className="
-              text-[13px]
-              uppercase
-              tracking-[0.17em]
-
-              text-white/30
-            "
-          >
+      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
+        <div>
+          <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
             12 / Shared visual territory
           </p>
 
-          <h1
-            className="
-              mt-[12px]
-
-              whitespace-nowrap
-
-              text-[52px]
-              leading-none
-              tracking-[-0.045em]
-
-              text-white
-
-              oook-semibold
-            "
-          >
+          <h1 className="mt-[12px] text-[52px] leading-none tracking-[-0.045em] text-white oook-semibold">
             Shared visual territory — footage & image treatment
           </h1>
 
-          <p
-            className="
-              mt-[13px]
-
-              max-w-[900px]
-
-              text-[16px]
-              leading-[1.38]
-
-              text-white/45
-            "
-          >
-            A shared image world is defined through
-            colour, contrast, texture, framing and
-            depth — not by applying the same filter
-            indiscriminately to every asset.
+          <p className="mt-[13px] max-w-[890px] text-[16px] leading-[1.38] text-white/45">
+            Image treatment creates family resemblance through grade, contrast, texture, framing and depth without destroying source integrity.
           </p>
         </div>
 
-        <div
-          className="
-            max-w-[260px]
-
-            text-right
-          "
-        >
-          <p
-            className="
-              text-[9px]
-              uppercase
-              tracking-[0.16em]
-
-              text-white/24
-            "
-          >
-            Image model
-          </p>
-
-          <p
-            className="
-              mt-[6px]
-
-              text-[17px]
-              leading-[1.15]
-
-              text-white/58
-
-              oook-medium
-            "
-          >
-            {config.eyebrow}
-          </p>
-        </div>
+        <PartnershipLockup
+          model={model}
+          brandA={brandA}
+          brandB={brandB}
+        />
       </header>
 
-      {/* ================================================= */}
-      {/* LEFT COLUMN                                       */}
-      {/* ================================================= */}
+      {/* LEFT */}
 
-      <aside
-        className="
-          absolute
-
-          left-[70px]
-          top-[188px]
-
-          w-[300px]
-        "
-      >
-        {/* ---------------------------------------------- */}
-        {/* PERSONALITY                                    */}
-        {/* ---------------------------------------------- */}
-
-        <Card
-          className="
-            p-[16px]
-          "
-        >
+      <aside className="absolute left-[70px] top-[190px] w-[300px]">
+        <Card className="p-[16px]">
           <SectionLabel>
             Image personality
           </SectionLabel>
 
-          <p
-            className="
-              mt-[11px]
+          <h3 className="mt-[10px] text-[21px] tracking-[-0.03em] text-white/82 oook-medium">
+            {profile.contrast > 0.7
+              ? "Punchy"
+              : profile.softness > 0.55
+                ? "Soft"
+                : "Balanced"}
+            {" · "}
+            {profile.saturation > 0.65
+              ? "Vivid"
+              : "Restrained"}
+            {" · "}
+            {profile.depth > 0.65
+              ? "Immersive"
+              : "Controlled"}
+          </h3>
 
-              text-[21px]
-              leading-[1.05]
-              tracking-[-0.025em]
-
-              text-white/86
-
-              oook-medium
-            "
-          >
-            {getImagePersonality(
-              sharedProfile
-            )}
-          </p>
-
-          <p
-            className="
-              mt-[9px]
-
-              text-[11px]
-              leading-[1.42]
-
-              text-white/42
-            "
-          >
-            {getImageDefinition(
-              sharedProfile
-            )}
-          </p>
-
-          <div
-            className="
-              mt-[14px]
-
-              grid
-              grid-cols-2
-
-              gap-x-[14px]
-              gap-y-[11px]
-            "
-          >
-            <ImageMetric
+          <div className="mt-[15px] grid grid-cols-2 gap-x-[14px] gap-y-[11px]">
+            <Metric
               label="Contrast"
-              value={
-                sharedProfile.contrast
-              }
+              value={profile.contrast}
               left="Soft"
               right="Punchy"
             />
 
-            <ImageMetric
+            <Metric
               label="Colour"
-              value={
-                sharedProfile.saturation
-              }
+              value={profile.saturation}
               left="Quiet"
               right="Vivid"
             />
 
-            <ImageMetric
+            <Metric
               label="Temperature"
-              value={
-                sharedProfile.warmth
-              }
+              value={profile.warmth}
               left="Cool"
               right="Warm"
             />
 
-            <ImageMetric
+            <Metric
               label="Texture"
-              value={
-                Math.max(
-                  sharedProfile.texture,
-                  sharedProfile.grain
-                )
-              }
+              value={profile.grain}
               left="Clean"
-              right="Textured"
+              right="Grain"
             />
 
-            <ImageMetric
+            <Metric
               label="Framing"
-              value={
-                sharedProfile.cropEnergy
-              }
+              value={profile.crop}
               left="Stable"
               right="Kinetic"
             />
 
-            <ImageMetric
+            <Metric
               label="Depth"
-              value={
-                sharedProfile.depth
-              }
+              value={profile.depth}
               left="Flat"
               right="Immersive"
             />
           </div>
         </Card>
 
-        {/* ---------------------------------------------- */}
-        {/* PARTNERSHIP LOGIC                              */}
-        {/* ---------------------------------------------- */}
-
-        <Card
-          className="
-            mt-[11px]
-
-            p-[16px]
-          "
-        >
+        <Card className="mt-[10px] p-[16px]">
           <SectionLabel>
-            Partnership treatment
+            Colour treatment
           </SectionLabel>
 
-          <p
-            className="
-              mt-[10px]
-
-              text-[11px]
-              leading-[1.4]
-
-              text-white/42
-            "
-          >
-            {config.intro}
+          <p className="mt-[9px] text-[10px] leading-[1.4] text-white/35">
+            Primary colour may establish the grade. Secondary colour is reserved for atmospheric light, edge glow and subtle tonal separation.
           </p>
 
-          <div
-            className="
-              mt-[13px]
+          <div className="mt-[12px] flex gap-[5px]">
+            <span
+              className="h-[6px] flex-1 rounded-full"
+              style={{
+                backgroundColor:
+                  leadPrimary,
+              }}
+            />
 
-              space-y-[9px]
-            "
-          >
-            {config.rules.map(
-              (
-                rule,
-                index
-              ) => (
-                <div
-                  key={rule}
-                  className="
-                    grid
-                    grid-cols-[22px_minmax(0,1fr)]
+            <span
+              className="h-[6px] w-[40px] rounded-full"
+              style={{
+                backgroundColor:
+                  leadSecondary,
+              }}
+            />
 
-                    gap-[7px]
-                  "
-                >
-                  <span
-                    className="
-                      text-[9px]
-
-                      text-white/22
-                    "
-                  >
-                    0{index + 1}
-                  </span>
-
-                  <p
-                    className="
-                      text-[11px]
-                      leading-[1.3]
-
-                      text-white/54
-                    "
-                  >
-                    {rule}
-                  </p>
-                </div>
-              )
-            )}
+            <span
+              className="h-[6px] w-[18px] rounded-full"
+              style={{
+                backgroundColor:
+                  supportSecondary,
+              }}
+            />
           </div>
-        </Card>
-
-        {/* ---------------------------------------------- */}
-        {/* OWNERSHIP                                      */}
-        {/* ---------------------------------------------- */}
-
-        <Card
-          className="
-            mt-[11px]
-
-            p-[16px]
-          "
-        >
-          <SectionLabel>
-            Ownership
-          </SectionLabel>
-
-          <OwnershipRow
-            label="Treatment"
-            value={
-              config.owner
-            }
-          />
-
-          <OwnershipRow
-            label="Secondary"
-            value={
-              config.supportingRole
-            }
-          />
         </Card>
       </aside>
 
-      {/* ================================================= */}
-      {/* DO / DON'T                                        */}
-      {/* ================================================= */}
+      {/* DO / DON'T */}
 
-      <section
-        className="
-          absolute
-
-          left-[392px]
-          right-[70px]
-          top-[188px]
-
-          grid
-          grid-cols-2
-
-          gap-[13px]
-        "
-      >
-        <ComparisonCard
-          type="do"
+      <section className="absolute left-[395px] right-[70px] top-[190px] grid grid-cols-2 gap-[12px]">
+        <Comparison
+          good
           title="DO"
-          description={
-            config.doLabel
-          }
+          description="Create one coherent treatment while keeping colour and content believable."
         >
-          <TreatmentDo
-            model={model}
-
-            brandAName={
-              brandAName
+          <TreatmentExample
+            profile={
+              model ===
+              "presentsB"
+                ? bProfile
+                : profile
             }
 
-            brandBName={
-              brandBName
-            }
-
-            brandAColor={
-              brandAColor
-            }
-
-            brandBColor={
-              brandBColor
-            }
-
-            brandAProfile={
-              brandAProfile
-            }
-
-            brandBProfile={
-              brandBProfile
-            }
-
-            sharedProfile={
-              sharedProfile
-            }
+            primary={leadPrimary}
+            secondary={leadSecondary}
+            support={supportSecondary}
           />
-        </ComparisonCard>
+        </Comparison>
 
-        <ComparisonCard
-          type="dont"
+        <Comparison
           title="DON'T"
-          description={
-            config.dontLabel
-          }
+          description="Do not apply two aggressive competing brand grades to the same content."
         >
-          <TreatmentDont
-            model={model}
-
-            brandAColor={
-              brandAColor
-            }
-
-            brandBColor={
-              brandBColor
-            }
-
-            brandAProfile={
-              brandAProfile
-            }
-
-            brandBProfile={
-              brandBProfile
-            }
+          <BadTreatment
+            aProfile={aProfile}
+            bProfile={bProfile}
+            aPrimary={aPrimary}
+            bPrimary={bPrimary}
           />
-        </ComparisonCard>
+        </Comparison>
       </section>
 
-      {/* ================================================= */}
-      {/* TREATMENT RECIPES                                 */}
-      {/* ================================================= */}
+      {/* RECIPES */}
 
-      <section
-        className="
-          absolute
+      <section className="absolute left-[395px] right-[70px] top-[575px]">
+        <SectionLabel>
+          Treatment recipes
+        </SectionLabel>
 
-          left-[392px]
-          right-[70px]
-          top-[525px]
-        "
-      >
-        <div
-          className="
-            flex
-            items-end
-            justify-between
-          "
-        >
-          <div>
-            <SectionLabel>
-              Treatment recipes
-            </SectionLabel>
-
-            <p
-              className="
-                mt-[4px]
-
-                text-[10px]
-
-                text-white/31
-              "
-            >
-              Maintain one family resemblance while
-              adapting treatment to context.
-            </p>
-          </div>
-
-          <p
-            className="
-              text-[9px]
-              uppercase
-              tracking-[0.12em]
-
-              text-white/20
-            "
-          >
-            Contrast · colour · texture · framing
-          </p>
-        </div>
-
-        <div
-          className="
-            mt-[9px]
-
-            grid
-            grid-cols-3
-
-            gap-[9px]
-          "
-        >
+        <div className="mt-[8px] grid grid-cols-3 gap-[10px]">
           {recipes.map(
-            (recipe) => (
-              <TreatmentRecipeCard
-                key={
-                  recipe.label
+            (recipe, index) => (
+              <RecipeCard
+                key={recipe.label}
+                recipe={recipe}
+                primary={
+                  index === 2
+                    ? supportPrimary
+                    : leadPrimary
                 }
-                recipe={
-                  recipe
+                secondary={
+                  index === 2
+                    ? supportSecondary
+                    : leadSecondary
                 }
               />
             )
@@ -1778,206 +718,105 @@ export default function Page12() {
         </div>
       </section>
 
-      {/* ================================================= */}
-      {/* CHARACTER → IMAGE                                 */}
-      {/* ================================================= */}
+      {/* CHARACTER */}
 
-      <section
-        className="
-          absolute
-
-          left-[392px]
-          right-[70px]
-          top-[690px]
-
-          grid
-          grid-cols-2
-
-          gap-[13px]
-        "
-      >
-        <CharacterTreatmentCard
-          brandLabel="Brand A image character"
-          brandName={
-            brandAName
-          }
-          colour={
-            brandAColor
-          }
-          traits={
-            brandATraits
-          }
+      <section className="absolute left-[395px] right-[70px] top-[730px] grid grid-cols-2 gap-[10px]">
+        <CharacterSummary
+          label="Brand A image character"
+          traits={aTraits}
+          primary={aPrimary}
+          secondary={aSecondary}
         />
 
-        <CharacterTreatmentCard
-          brandLabel="Brand B image character"
-          brandName={
-            brandBName
-          }
-          colour={
-            brandBColor
-          }
-          traits={
-            brandBTraits
-          }
+        <CharacterSummary
+          label="Brand B image character"
+          traits={bTraits}
+          primary={bPrimary}
+          secondary={bSecondary}
         />
       </section>
 
-      {/* ================================================= */}
-      {/* BOTTOM RULE                                       */}
-      {/* ================================================= */}
+      <div className="absolute bottom-[24px] left-[70px] right-[70px] flex justify-between border-t border-white/[0.06] pt-[9px] text-[9px] text-white/24">
+        <span>
+          Preserve skin tones, uniforms, products and essential real-world colours.
+        </span>
 
-      <div
-        className="
-          absolute
-
-          bottom-[24px]
-          left-[392px]
-          right-[70px]
-
-          flex
-          items-center
-          justify-between
-
-          border-t
-          border-white/[0.06]
-
-          pt-[10px]
-        "
-      >
-        <p
-          className="
-            text-[9px]
-            uppercase
-            tracking-[0.14em]
-
-            text-white/27
-          "
-        >
-          Source integrity
-        </p>
-
-        <p
-          className="
-            max-w-[820px]
-
-            text-right
-            text-[10px]
-            leading-[1.35]
-
-            text-white/34
-          "
-        >
-          Never push a treatment so far that skin tones,
-          product colour, sports uniforms or essential
-          content information become inaccurate.
-        </p>
+        <span>
+          Secondary brand colour = atmosphere, not recolouring.
+        </span>
       </div>
     </GuidelinePage>
   );
 }
 
 /* ------------------------------------------------ */
-/* SECTION LABEL                                    */
+/* COMPONENTS                                       */
 /* ------------------------------------------------ */
+
+function Card({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`
+        rounded-[18px]
+        border
+        border-white/[0.07]
+        bg-white/[0.018]
+        ${className}
+      `}
+    >
+      {children}
+    </div>
+  );
+}
 
 function SectionLabel({
   children,
 }: {
-  children:
-    ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <p
-      className="
-        text-[10px]
-        uppercase
-        tracking-[0.15em]
-
-        text-white/31
-
-        oook-medium
-      "
-    >
+    <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
       {children}
     </p>
   );
 }
 
-/* ------------------------------------------------ */
-/* METRIC                                           */
-/* ------------------------------------------------ */
-
-function ImageMetric({
+function Metric({
   label,
   value,
   left,
   right,
 }: {
   label: string;
-
   value: number;
-
   left: string;
   right: string;
 }) {
   return (
     <div>
-      <p
-        className="
-          text-[8px]
-          uppercase
-          tracking-[0.11em]
-
-          text-white/28
-        "
-      >
+      <p className="text-[8px] uppercase tracking-[0.1em] text-white/25">
         {label}
       </p>
 
-      <div
-        className="
-          mt-[5px]
-
-          h-[4px]
-
-          overflow-hidden
-
-          rounded-full
-
-          bg-white/[0.07]
-        "
-      >
+      <div className="mt-[5px] h-[4px] rounded-full bg-white/[0.07]">
         <div
-          className="
-            h-full
-
-            rounded-full
-
-            bg-white/52
-          "
+          className="h-full rounded-full bg-white/50"
           style={{
             width:
               `${Math.round(
-                clamp(value) *
-                  100
+                value * 100
               )}%`,
           }}
         />
       </div>
 
-      <div
-        className="
-          mt-[4px]
-
-          flex
-          justify-between
-
-          text-[7px]
-
-          text-white/20
-        "
-      >
+      <div className="mt-[4px] flex justify-between text-[7px] text-white/18">
         <span>{left}</span>
         <span>{right}</span>
       </div>
@@ -1985,1125 +824,223 @@ function ImageMetric({
   );
 }
 
-/* ------------------------------------------------ */
-/* OWNERSHIP                                        */
-/* ------------------------------------------------ */
-
-function OwnershipRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div
-      className="
-        mt-[10px]
-
-        flex
-        items-start
-        justify-between
-
-        gap-[12px]
-      "
-    >
-      <p
-        className="
-          text-[9px]
-          uppercase
-          tracking-[0.11em]
-
-          text-white/25
-        "
-      >
-        {label}
-      </p>
-
-      <p
-        className="
-          max-w-[170px]
-
-          text-right
-          text-[11px]
-          leading-[1.25]
-
-          text-white/55
-        "
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* COMPARISON                                       */
-/* ------------------------------------------------ */
-
-function ComparisonCard({
-  type,
+function Comparison({
+  good = false,
   title,
   description,
   children,
 }: {
-  type:
-    | "do"
-    | "dont";
-
+  good?: boolean;
   title: string;
   description: string;
-
-  children:
-    ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <Card
-      className="
-        overflow-hidden
-
-        p-[13px]
-      "
-    >
-      <div
-        className="
-          flex
-          min-h-[36px]
-
-          items-start
-          justify-between
-
-          gap-[12px]
-        "
-      >
-        <div
-          className="
-            flex
-            items-center
-
-            gap-[8px]
-          "
-        >
-          <div
+    <Card className="p-[13px]">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-[8px]">
+          <span
             className={`
-              flex
-
-              h-[24px]
-              w-[24px]
-
-              shrink-0
-
-              items-center
-              justify-center
-
-              rounded-full
-
-              border
-
-              text-[11px]
+              flex h-[24px] w-[24px]
+              items-center justify-center
+              rounded-full text-[11px]
 
               ${
-                type === "do"
-                  ? `
-                      border-white
-                      bg-white
-                      text-black
-                    `
-                  : `
-                      border-white/14
-                      bg-white/[0.025]
-                      text-white/48
-                    `
+                good
+                  ? "bg-white text-black"
+                  : "border border-white/12 text-white/40"
               }
             `}
           >
-            {type === "do"
+            {good
               ? "✓"
               : "×"}
-          </div>
+          </span>
 
-          <p
-            className="
-              text-[15px]
-
-              text-white/84
-
-              oook-medium
-            "
-          >
+          <span className="text-[14px] text-white/72 oook-medium">
             {title}
-          </p>
+          </span>
         </div>
 
-        <p
-          className="
-            max-w-[270px]
-
-            text-right
-            text-[10px]
-            leading-[1.3]
-
-            text-white/38
-          "
-        >
+        <p className="max-w-[285px] text-right text-[9px] leading-[1.35] text-white/34">
           {description}
         </p>
       </div>
 
-      <div
-        className="
-          relative
-
-          mt-[10px]
-
-          h-[270px]
-
-          overflow-hidden
-
-          rounded-[14px]
-
-          border
-          border-white/[0.07]
-
-          bg-[#050506]
-        "
-      >
+      <div className="relative mt-[10px] h-[305px] overflow-hidden rounded-[13px] border border-white/[0.06] bg-[#050506]">
         {children}
       </div>
     </Card>
   );
 }
 
-/* ------------------------------------------------ */
-/* DO                                               */
-/* ------------------------------------------------ */
-
-function TreatmentDo({
-  model,
-
-  brandAName,
-  brandBName,
-
-  brandAColor,
-  brandBColor,
-
-  brandAProfile,
-  brandBProfile,
-  sharedProfile,
+function TreatmentExample({
+  profile,
+  primary,
+  secondary,
+  support,
 }: {
-  model:
-    PartnershipModelId;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandAColor: string;
-  brandBColor: string;
-
-  brandAProfile:
-    ImageProfile;
-
-  brandBProfile:
-    ImageProfile;
-
-  sharedProfile:
-    ImageProfile;
+  profile: ImageProfile;
+  primary: string;
+  secondary: string;
+  support: string;
 }) {
-  /* ============================================= */
-  /* A PRESENTS B                                  */
-  /* ============================================= */
-
-  if (
-    model === "presentsB"
-  ) {
-    return (
-      <>
-        <ImageFrame
-          imageNumber={7}
-          profile={
-            brandBProfile
-          }
-          className="
-            absolute
-            inset-[22px]
-          "
-        />
-
-        {/* A CONTAINER */}
-
-        <div
-          className="
-            pointer-events-none
-
-            absolute
-            inset-[22px]
-
-            rounded-[14px]
-
-            border
-            border-white/[0.11]
-          "
-        />
-
-        <div
-          className="
-            absolute
-
-            left-[34px]
-            right-[34px]
-            top-[34px]
-
-            flex
-            items-center
-          "
-        >
-          <div
-            className="
-              h-[5px]
-              w-[30px]
-
-              rounded-full
-            "
-            style={{
-              backgroundColor:
-                brandAColor,
-            }}
-          />
-
-          <p
-            className="
-              ml-[8px]
-
-              text-[8px]
-              uppercase
-              tracking-[0.12em]
-
-              text-white/38
-            "
-          >
-            {brandAName} frame
-          </p>
-        </div>
-
-        <div
-          className="
-            absolute
-
-            bottom-[32px]
-            left-[34px]
-
-            rounded-[10px]
-
-            border
-            border-white/[0.08]
-
-            bg-black/45
-
-            px-[10px]
-            py-[8px]
-
-            backdrop-blur-[10px]
-          "
-        >
-          <p
-            className="
-              text-[8px]
-
-              text-white/32
-            "
-          >
-            Presented content
-          </p>
-
-          <p
-            className="
-              mt-[2px]
-
-              text-[12px]
-
-              text-white/72
-
-              oook-medium
-            "
-          >
-            {brandBName}
-          </p>
-        </div>
-
-        <TreatmentBadge
-          text="B content treatment preserved"
-          colour={
-            brandBColor
-          }
-        />
-      </>
-    );
-  }
-
-  /* ============================================= */
-  /* OTHER MODELS                                  */
-  /* ============================================= */
-
-  const mainProfile =
-    model ===
-    "poweredByA"
-      ? brandBProfile
-      : model ===
-          "aandb"
-        ? brandAProfile
-        : sharedProfile;
-
-  const leadColor =
-    model ===
-    "poweredByA"
-      ? brandBColor
-      : brandAColor;
-
-  const supportColor =
-    model ===
-    "poweredByA"
-      ? brandAColor
-      : brandBColor;
-
   return (
     <>
-      <ImageFrame
-        imageNumber={4}
-        profile={
-          mainProfile
-        }
-        className="
-          absolute
-          inset-0
-        "
+      <SmartImage
+        number={4}
+        profile={profile}
       />
 
-      <ImageTreatmentEffects
-        profile={
-          mainProfile
-        }
-        accent={
-          leadColor
-        }
+      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-transparent to-black/20" />
+
+      <div
+        className="absolute -right-[80px] -top-[80px] h-[250px] w-[250px] rounded-full blur-[80px]"
+        style={{
+          backgroundColor:
+            `${secondary}38`,
+        }}
       />
 
       <div
-        className="
-          absolute
+        className="absolute -bottom-[60px] left-[10%] h-[170px] w-[300px] rounded-full blur-[70px]"
+        style={{
+          backgroundColor:
+            `${support}18`,
+        }}
+      />
 
-          bottom-[18px]
-          left-[18px]
-          right-[18px]
-
-          flex
-          items-center
-
-          rounded-[12px]
-
-          border
-          border-white/[0.08]
-
-          bg-black/48
-
-          px-[11px]
-          py-[9px]
-
-          backdrop-blur-[12px]
-        "
-      >
-        <div
-          className="
-            h-[5px]
-            w-[28px]
-
-            rounded-full
-          "
+      <div className="absolute bottom-[18px] left-[18px] right-[18px] flex items-center rounded-[10px] border border-white/[0.08] bg-black/50 px-[11px] py-[9px]">
+        <span
+          className="h-[5px] w-[36px] rounded-full"
           style={{
             backgroundColor:
-              leadColor,
+              primary,
           }}
         />
 
-        <p
-          className="
-            ml-[8px]
-
-            text-[9px]
-
-            text-white/58
-          "
-        >
-          {model === "axb"
-            ? "Shared collaboration grade"
-            : model === "aandb"
-              ? `${brandAName} grade leads`
-              : `${brandBName} treatment owns`}
-        </p>
-
-        <div
-          className="
-            ml-auto
-
-            h-[4px]
-            w-[18px]
-
-            rounded-full
-          "
+        <span
+          className="ml-[5px] h-[5px] w-[17px] rounded-full"
           style={{
             backgroundColor:
-              supportColor,
+              secondary,
           }}
         />
+
+        <span className="ml-[8px] text-[9px] text-white/42">
+          Shared image treatment
+        </span>
       </div>
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* DON'T                                            */
-/* ------------------------------------------------ */
-
-function TreatmentDont({
-  model,
-
-  brandAColor,
-  brandBColor,
-
-  brandAProfile,
-  brandBProfile,
+function BadTreatment({
+  aProfile,
+  bProfile,
+  aPrimary,
+  bPrimary,
 }: {
-  model:
-    PartnershipModelId;
-
-  brandAColor: string;
-  brandBColor: string;
-
-  brandAProfile:
-    ImageProfile;
-
-  brandBProfile:
-    ImageProfile;
-}) {
-  if (
-    model === "axb"
-  ) {
-    return (
-      <>
-        <div
-          className="
-            absolute
-            inset-y-0
-            left-0
-
-            w-1/2
-
-            overflow-hidden
-          "
-        >
-          <ImageFrame
-            imageNumber={4}
-            profile={
-              brandAProfile
-            }
-            className="
-              absolute
-              inset-0
-            "
-          />
-
-          <div
-            className="
-              absolute
-              inset-0
-            "
-            style={{
-              background:
-                alpha(
-                  brandAColor,
-                  0.18
-                ),
-            }}
-          />
-        </div>
-
-        <div
-          className="
-            absolute
-            inset-y-0
-            right-0
-
-            w-1/2
-
-            overflow-hidden
-          "
-        >
-          <ImageFrame
-            imageNumber={7}
-            profile={
-              brandBProfile
-            }
-            className="
-              absolute
-              inset-0
-            "
-          />
-
-          <div
-            className="
-              absolute
-              inset-0
-            "
-            style={{
-              background:
-                alpha(
-                  brandBColor,
-                  0.22
-                ),
-            }}
-          />
-        </div>
-
-        <DontLabel>
-          Two unrelated grades
-        </DontLabel>
-
-        <BigCross />
-      </>
-    );
-  }
-
-  const wrongProfile =
-    model === "aandb"
-      ? brandBProfile
-      : brandAProfile;
-
-  const wrongColor =
-    model === "aandb"
-      ? brandBColor
-      : brandAColor;
-
-  if (
-    model ===
-    "poweredByA" ||
-    model === "aandb"
-  ) {
-    return (
-      <>
-        <ImageFrame
-          imageNumber={4}
-          profile={
-            wrongProfile
-          }
-          className="
-            absolute
-            inset-0
-          "
-        />
-
-        <div
-          className="
-            absolute
-            inset-0
-          "
-          style={{
-            background:
-              `linear-gradient(
-                135deg,
-                ${alpha(
-                  wrongColor,
-                  0.36
-                )},
-                transparent 70%
-              )`,
-          }}
-        />
-
-        <DontLabel>
-          Wrong brand treatment dominates
-        </DontLabel>
-
-        <BigCross />
-      </>
-    );
-  }
-
-  /* PRESENTS */
-
-  return (
-    <>
-      <ImageFrame
-        imageNumber={7}
-        profile={
-          brandAProfile
-        }
-        className="
-          absolute
-          inset-0
-        "
-      />
-
-      <div
-        className="
-          absolute
-          inset-0
-        "
-        style={{
-          background:
-            `linear-gradient(
-              145deg,
-              ${alpha(
-                brandAColor,
-                0.48
-              )},
-              transparent 65%
-            )`,
-        }}
-      />
-
-      <div
-        className="
-          absolute
-
-          inset-[20px]
-
-          rounded-[16px]
-
-          border-2
-        "
-        style={{
-          borderColor:
-            alpha(
-              brandAColor,
-              0.75
-            ),
-        }}
-      />
-
-      <DontLabel>
-        Platform treatment overrides content
-      </DontLabel>
-
-      <BigCross />
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* IMAGE FRAME                                      */
-/* ------------------------------------------------ */
-
-function ImageFrame({
-  imageNumber,
-  profile,
-  className = "",
-}: {
-  imageNumber: number;
-
-  profile:
-    ImageProfile;
-
-  className?: string;
-}) {
-  const [
-    extensionIndex,
-    setExtensionIndex,
-  ] = useState(0);
-
-  const extensions = [
-    "jpg",
-    "jpeg",
-    "png",
-    "webp",
-  ];
-
-  useEffect(() => {
-    setExtensionIndex(0);
-  }, [imageNumber]);
-
-  const extension =
-    extensions[
-      extensionIndex
-    ];
-
-  const objectPosition =
-    `${50 +
-    (profile.asymmetry -
-      0.5) *
-      24}% 50%`;
-
-  const scale =
-    1 +
-    profile.cropEnergy *
-      0.12;
-
-  return (
-    <div
-      className={`
-        overflow-hidden
-
-        ${className}
-      `}
-    >
-      <img
-        src={`/images/image${imageNumber}.${extension}`}
-        alt=""
-
-        draggable={false}
-
-        onError={() => {
-          if (
-            extensionIndex <
-            extensions.length -
-              1
-          ) {
-            setExtensionIndex(
-              (
-                current
-              ) =>
-                current +
-                1
-            );
-          }
-        }}
-
-        className="
-          h-full
-          w-full
-
-          object-cover
-        "
-
-        style={{
-          objectPosition,
-
-          filter:
-            getImageFilter(
-              profile
-            ),
-
-          transform:
-            `scale(${scale})`,
-        }}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* TREATMENT EFFECTS                                */
-/* ------------------------------------------------ */
-
-function ImageTreatmentEffects({
-  profile,
-  accent,
-}: {
-  profile:
-    ImageProfile;
-
-  accent: string;
+  aProfile: ImageProfile;
+  bProfile: ImageProfile;
+  aPrimary: string;
+  bPrimary: string;
 }) {
   return (
     <>
-      {/* TEMPERATURE */}
+      <div className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">
+        <SmartImage
+          number={4}
+          profile={aProfile}
+        />
 
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-
-          mix-blend-soft-light
-        "
-        style={{
-          background:
-            profile.warmth >
-            0.55
-              ? `rgba(255,150,80,${
-                  (
-                    profile.warmth -
-                    0.5
-                  ) *
-                  0.2
-                })`
-              : `rgba(70,130,255,${
-                  (
-                    0.5 -
-                    profile.warmth
-                  ) *
-                  0.22
-                })`,
-        }}
-      />
-
-      {/* GLOW */}
-
-      {profile.glow >
-        0.22 && (
         <div
-          className="
-            pointer-events-none
-
-            absolute
-
-            -right-[15%]
-            -top-[30%]
-
-            h-[80%]
-            w-[55%]
-
-            rounded-full
-
-            blur-[60px]
-          "
+          className="absolute inset-0"
           style={{
             backgroundColor:
-              alpha(
-                accent,
-                profile.glow *
-                  0.18
-              ),
+              `${aPrimary}44`,
           }}
         />
-      )}
+      </div>
 
-      {/* VIGNETTE */}
+      <div className="absolute inset-y-0 right-0 w-1/2 overflow-hidden">
+        <SmartImage
+          number={4}
+          profile={bProfile}
+        />
 
-      {profile.vignette >
-        0.16 && (
         <div
-          className="
-            pointer-events-none
-
-            absolute
-            inset-0
-          "
+          className="absolute inset-0"
           style={{
-            background:
-              `radial-gradient(
-                circle at center,
-                transparent 45%,
-                rgba(0,0,0,${
-                  profile.vignette *
-                  0.6
-                }) 100%
-              )`,
+            backgroundColor:
+              `${bPrimary}44`,
           }}
         />
-      )}
+      </div>
 
-      {/* GRAIN */}
-
-      {profile.grain >
-        0.14 && (
-        <div
-          className="
-            pointer-events-none
-
-            absolute
-            inset-0
-
-            mix-blend-screen
-          "
-          style={{
-            opacity:
-              profile.grain *
-              0.16,
-
-            backgroundImage:
-              "repeating-linear-gradient(0deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 1px, transparent 1px, transparent 3px)",
-          }}
-        />
-      )}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-black/75 text-[20px] text-white">
+          ×
+        </span>
+      </div>
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* BADGE                                            */
-/* ------------------------------------------------ */
-
-function TreatmentBadge({
-  text,
-  colour,
-}: {
-  text: string;
-  colour: string;
-}) {
-  return (
-    <div
-      className="
-        absolute
-
-        bottom-[32px]
-        right-[34px]
-
-        flex
-        items-center
-
-        gap-[6px]
-
-        rounded-full
-
-        border
-        border-white/[0.08]
-
-        bg-black/45
-
-        px-[9px]
-        py-[6px]
-
-        backdrop-blur-[8px]
-      "
-    >
-      <div
-        className="
-          h-[4px]
-          w-[16px]
-
-          rounded-full
-        "
-        style={{
-          backgroundColor:
-            colour,
-        }}
-      />
-
-      <p
-        className="
-          text-[8px]
-
-          text-white/38
-        "
-      >
-        {text}
-      </p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* DON'T LABEL                                      */
-/* ------------------------------------------------ */
-
-function DontLabel({
-  children,
-}: {
-  children:
-    ReactNode;
-}) {
-  return (
-    <div
-      className="
-        absolute
-
-        left-1/2
-        top-1/2
-
-        -translate-x-1/2
-        -translate-y-1/2
-
-        whitespace-nowrap
-
-        rounded-full
-
-        border
-        border-white/12
-
-        bg-black/60
-
-        px-[14px]
-        py-[8px]
-
-        text-[11px]
-
-        text-white/67
-
-        backdrop-blur-[10px]
-      "
-    >
-      {children}
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* RECIPE                                           */
-/* ------------------------------------------------ */
-
-function TreatmentRecipeCard({
+function RecipeCard({
   recipe,
+  primary,
+  secondary,
 }: {
-  recipe:
-    TreatmentRecipe;
+  recipe: TreatmentRecipe;
+  primary: string;
+  secondary: string;
 }) {
   return (
-    <Card
-      className="
-        p-[13px]
-      "
-    >
-      <p
-        className="
-          text-[13px]
+    <Card className="p-[12px]">
+      <div className="flex justify-between">
+        <p className="text-[12px] text-white/68 oook-medium">
+          {recipe.label}
+        </p>
 
-          text-white/78
+        <div className="flex gap-[3px]">
+          <span
+            className="h-[5px] w-[20px] rounded-full"
+            style={{
+              backgroundColor:
+                primary,
+            }}
+          />
 
-          oook-medium
-        "
-      >
-        {recipe.label}
-      </p>
+          <span
+            className="h-[5px] w-[10px] rounded-full"
+            style={{
+              backgroundColor:
+                secondary,
+            }}
+          />
+        </div>
+      </div>
 
-      <p
-        className="
-          mt-[5px]
-
-          text-[9px]
-          leading-[1.35]
-
-          text-white/30
-        "
-      >
-        {recipe.description}
-      </p>
-
-      <div
-        className="
-          mt-[10px]
-
-          grid
-          grid-cols-4
-
-          gap-[5px]
-        "
-      >
+      <div className="mt-[11px] grid grid-cols-4 gap-[5px]">
         <RecipeValue
           label="Contrast"
-          value={
-            recipe.contrast
-          }
+          value={recipe.contrast}
         />
 
         <RecipeValue
           label="Colour"
-          value={
-            recipe.colour
-          }
+          value={recipe.colour}
         />
 
         <RecipeValue
           label="Texture"
-          value={
-            recipe.texture
-          }
+          value={recipe.texture}
         />
 
         <RecipeValue
           label="Frame"
-          value={
-            recipe.framing
-          }
+          value={recipe.framing}
         />
       </div>
     </Card>
@@ -3118,296 +1055,68 @@ function RecipeValue({
   value: string;
 }) {
   return (
-    <div
-      className="
-        min-w-0
-
-        rounded-[8px]
-
-        border
-        border-white/[0.055]
-
-        bg-white/[0.015]
-
-        px-[6px]
-        py-[7px]
-      "
-    >
-      <p
-        className="
-          text-[6px]
-          uppercase
-          tracking-[0.09em]
-
-          text-white/20
-        "
-      >
+    <div className="rounded-[7px] border border-white/[0.05] p-[6px]">
+      <p className="text-[6px] uppercase tracking-[0.08em] text-white/18">
         {label}
       </p>
 
-      <p
-        className="
-          mt-[3px]
-
-          truncate
-
-          text-[8px]
-
-          text-white/48
-        "
-      >
+      <p className="mt-[3px] text-[8px] text-white/45">
         {value}
       </p>
     </div>
   );
 }
 
-/* ------------------------------------------------ */
-/* CHARACTER → TREATMENT                            */
-/* ------------------------------------------------ */
-
-function CharacterTreatmentCard({
-  brandLabel,
-  brandName,
-  colour,
+function CharacterSummary({
+  label,
   traits,
+  primary,
+  secondary,
 }: {
-  brandLabel: string;
-  brandName: string;
-
-  colour: string;
-
+  label: string;
   traits:
     BrandCharacterTraitId[];
+  primary: string;
+  secondary: string;
 }) {
-  const definitions =
-    traits.flatMap(
-      (id) => {
-        const trait =
-          IMAGE_TRAITS.find(
-            (item) =>
-              item.id === id
-          );
-
-        const metadata =
-          brandCharacterTraits.find(
-            (item) =>
-              item.id === id
-          );
-
-        if (
-          !trait ||
-          !metadata
-        ) {
-          return [];
-        }
-
-        return [
-          {
-            label:
-              metadata.label,
-
-            implication:
-              trait.implication,
-          },
-        ];
-      }
-    );
-
   return (
-    <Card
-      className="
-        min-h-[126px]
+    <Card className="min-h-[94px] p-[12px]">
+      <div className="flex items-center gap-[4px]">
+        <span
+          className="h-[4px] w-[24px] rounded-full"
+          style={{
+            backgroundColor:
+              primary,
+          }}
+        />
 
-        p-[14px]
-      "
-    >
-      <div
-        className="
-          flex
-          items-center
-          justify-between
+        <span
+          className="h-[4px] w-[12px] rounded-full"
+          style={{
+            backgroundColor:
+              secondary,
+          }}
+        />
 
-          gap-[12px]
-        "
-      >
-        <div
-          className="
-            flex
-            min-w-0
-            items-center
-
-            gap-[8px]
-          "
-        >
-          <div
-            className="
-              h-[5px]
-              w-[22px]
-
-              shrink-0
-
-              rounded-full
-            "
-            style={{
-              backgroundColor:
-                colour,
-            }}
-          />
-
-          <p
-            className="
-              truncate
-
-              text-[9px]
-              uppercase
-              tracking-[0.12em]
-
-              text-white/35
-
-              oook-medium
-            "
-          >
-            {brandLabel}
-          </p>
-        </div>
-
-        <p
-          className="
-            max-w-[180px]
-
-            truncate
-
-            text-[9px]
-
-            text-white/27
-          "
-        >
-          {brandName}
-        </p>
+        <span className="ml-[5px] text-[9px] uppercase tracking-[0.1em] text-white/28">
+          {label}
+        </span>
       </div>
 
-      {definitions.length >
-      0 ? (
-        <div
-          className="
-            mt-[10px]
-
-            grid
-            grid-cols-1
-
-            gap-[5px]
-          "
-        >
-          {definitions.map(
-            (
-              definition
-            ) => (
-              <div
-                key={
-                  definition.label
-                }
-
-                className="
-                  grid
-                  grid-cols-[82px_minmax(0,1fr)]
-
-                  items-baseline
-
-                  gap-[9px]
-                "
-              >
-                <p
-                  className="
-                    truncate
-
-                    text-[9px]
-
-                    text-white/66
-
-                    oook-medium
-                  "
-                >
-                  {
-                    definition.label
-                  }
-                </p>
-
-                <p
-                  className="
-                    truncate
-
-                    text-[8px]
-                    leading-[1.3]
-
-                    text-white/34
-                  "
-                  title={
-                    definition.implication
-                  }
-                >
-                  {
-                    definition.implication
-                  }
-                </p>
-              </div>
-            )
-          )}
-        </div>
-      ) : (
-        <p
-          className="
-            mt-[11px]
-
-            text-[9px]
-
-            text-white/24
-          "
-        >
-          No character traits selected. A neutral,
-          natural image treatment is being used.
-        </p>
-      )}
+      <p className="mt-[9px] text-[9px] text-white/34">
+        {traits.length
+          ? traits
+              .map(
+                (id) =>
+                  brandCharacterTraits.find(
+                    (item) =>
+                      item.id === id
+                  )?.label
+              )
+              .filter(Boolean)
+              .join(" · ")
+          : "Neutral natural treatment"}
+      </p>
     </Card>
-  );
-}
-
-/* ------------------------------------------------ */
-/* CROSS                                            */
-/* ------------------------------------------------ */
-
-function BigCross() {
-  return (
-    <div
-      className="
-        absolute
-
-        right-[14px]
-        top-[14px]
-
-        flex
-
-        h-[32px]
-        w-[32px]
-
-        items-center
-        justify-center
-
-        rounded-full
-
-        border
-        border-white/14
-
-        bg-black/36
-
-        text-[18px]
-
-        text-white/62
-
-        backdrop-blur-[8px]
-      "
-    >
-      ×
-    </div>
   );
 }

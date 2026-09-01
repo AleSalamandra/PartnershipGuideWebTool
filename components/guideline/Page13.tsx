@@ -6,37 +6,18 @@ import {
 } from "react";
 
 import GuidelinePage from "./GuidelinePage";
+import PartnershipLockup from "./PartnershipLockup";
+
+import {
+  BrandCharacterTraitId,
+} from "@/data/brandCharacterTraits";
 
 import { useGuidelineStore } from "@/store/guidelineStore";
 import { PartnershipModelId } from "@/types/guideline";
 
-import type {
-  BrandCharacterTraitId,
-} from "@/data/brandCharacterTraits";
-
 /* ------------------------------------------------ */
 /* TYPES                                            */
 /* ------------------------------------------------ */
-
-interface SceneProfile {
-  roundness: number;
-
-  energy: number;
-
-  depth: number;
-
-  glow: number;
-
-  texture: number;
-
-  precision: number;
-
-  organic: number;
-
-  minimal: number;
-
-  expressiveTilt: number;
-}
 
 interface BrandView {
   name: string;
@@ -44,7 +25,6 @@ interface BrandView {
   logoUrl: string | null;
 
   primaryColor: string;
-
   secondaryColor: string;
 
   fontFamily: string;
@@ -53,157 +33,59 @@ interface BrandView {
     BrandCharacterTraitId[];
 }
 
-interface BrandIdentityProps {
-  brand: BrandView;
+interface SceneProfile {
+  roundness: number;
+  energy: number;
+  glow: number;
+  depth: number;
 
-  width: number;
-
-  height: number;
-
-  scale?: number;
-
-  textSize?: number;
-
-  align?:
-    | "left"
-    | "center"
-    | "right";
+  expressiveTilt: number;
 }
-
-/* ------------------------------------------------ */
-/* DEFAULTS                                         */
-/* ------------------------------------------------ */
-
-const DEFAULT_FONT =
-  '"oook-variable", sans-serif';
 
 /* ------------------------------------------------ */
 /* HELPERS                                          */
 /* ------------------------------------------------ */
 
+const DEFAULT_FONT =
+  '"oook-variable", sans-serif';
+
 function clamp(
-  value: number,
-  min = 0,
-  max = 1
+  value: number
 ) {
   return Math.min(
+    1,
     Math.max(
-      value,
-      min
-    ),
-    max
+      0,
+      value
+    )
   );
 }
 
-function normalizeHex(
+function safeColour(
   value: unknown,
   fallback: string
 ) {
-  if (
-    typeof value !==
-    "string"
-  ) {
-    return fallback;
-  }
-
-  const trimmed =
-    value.trim();
-
-  if (
-    /^#[0-9A-Fa-f]{6}$/.test(
-      trimmed
-    )
-  ) {
-    return trimmed;
-  }
-
-  if (
-    /^[0-9A-Fa-f]{6}$/.test(
-      trimmed
-    )
-  ) {
-    return `#${trimmed}`;
-  }
-
-  return fallback;
+  return typeof value === "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(value)
+    ? value
+    : fallback;
 }
 
-function hexToRgb(
-  colour: string
-) {
-  const safe =
-    normalizeHex(
-      colour,
-      "#FFFFFF"
-    );
-
-  const value =
-    parseInt(
-      safe.replace(
-        "#",
-        ""
-      ),
-      16
-    );
-
-  return {
-    r:
-      (value >> 16) &
-      255,
-
-    g:
-      (value >> 8) &
-      255,
-
-    b:
-      value &
-      255,
-  };
-}
-
-function alpha(
-  colour: string,
-  opacity: number
-) {
-  const {
-    r,
-    g,
-    b,
-  } = hexToRgb(
-    colour
-  );
-
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-}
-
-/* ------------------------------------------------ */
-/* BRAND DATA                                       */
-/* ------------------------------------------------ */
-
-function getBrandView(
+function getBrand(
   brand: unknown,
-
   fallbackName: string,
-
   fallbackPrimary: string,
-
   fallbackSecondary: string
 ): BrandView {
   const value =
     brand as {
       name?: string;
+      logoUrl?: string | null;
 
-      logoUrl?:
-        string | null;
+      primaryColor?: string;
+      secondaryColor?: string;
 
-      primaryColor?:
-        string;
-
-      secondaryColor?:
-        string;
-
-      fontFamily?:
-        string;
+      fontFamily?: string;
 
       characterTraits?:
         BrandCharacterTraitId[];
@@ -219,13 +101,13 @@ function getBrandView(
       null,
 
     primaryColor:
-      normalizeHex(
+      safeColour(
         value.primaryColor,
         fallbackPrimary
       ),
 
     secondaryColor:
-      normalizeHex(
+      safeColour(
         value.secondaryColor,
         fallbackSecondary
       ),
@@ -243,31 +125,16 @@ function getBrandView(
   };
 }
 
-/* ------------------------------------------------ */
-/* CHARACTER → SCENE PROFILE                        */
-/* ------------------------------------------------ */
-
-function buildSceneProfile(
+function buildProfile(
   traits:
     BrandCharacterTraitId[]
 ): SceneProfile {
-  const profile:
+  const p:
     SceneProfile = {
     roundness: 0.42,
-
     energy: 0.32,
-
-    depth: 0.4,
-
-    glow: 0.18,
-
-    texture: 0.12,
-
-    precision: 0.58,
-
-    organic: 0.18,
-
-    minimal: 0.52,
+    glow: 0.2,
+    depth: 0.42,
 
     expressiveTilt: 0,
   };
@@ -275,244 +142,43 @@ function buildSceneProfile(
   traits.forEach(
     (trait) => {
       switch (trait) {
-        case "classic":
-          profile.precision +=
-            0.2;
-
-          profile.energy -=
-            0.08;
-
-          profile.organic -=
-            0.08;
-
-          break;
-
-        case "elegant":
-          profile.minimal +=
-            0.22;
-
-          profile.energy -=
-            0.12;
-
-          profile.glow +=
-            0.04;
-
-          profile.roundness +=
-            0.04;
-
-          break;
-
         case "premium":
-          profile.minimal +=
-            0.18;
-
-          profile.depth +=
-            0.16;
-
-          profile.glow +=
-            0.08;
-
-          profile.texture +=
-            0.07;
-
-          break;
-
-        case "minimal":
-          profile.minimal +=
-            0.32;
-
-          profile.texture -=
-            0.1;
-
-          profile.glow -=
-            0.05;
-
-          profile.energy -=
-            0.08;
-
-          break;
-
-        case "editorial":
-          profile.precision +=
-            0.2;
-
-          profile.minimal +=
-            0.06;
-
-          break;
-
-        case "technical":
-          profile.precision +=
-            0.3;
-
-          profile.depth +=
-            0.08;
-
-          profile.glow +=
-            0.07;
-
-          break;
-
-        case "precise":
-          profile.precision +=
-            0.34;
-
-          profile.organic -=
-            0.16;
-
-          profile.expressiveTilt -=
-            0.2;
-
+        case "cinematic":
+          p.depth += 0.2;
+          p.glow += 0.1;
           break;
 
         case "futuristic":
-          profile.depth +=
-            0.28;
-
-          profile.glow +=
-            0.3;
-
-          profile.texture +=
-            0.05;
-
-          break;
-
         case "immersive":
-          profile.depth +=
-            0.42;
-
-          profile.glow +=
-            0.18;
-
-          break;
-
-        case "cinematic":
-          profile.depth +=
-            0.3;
-
-          profile.texture +=
-            0.18;
-
-          profile.glow +=
-            0.12;
-
-          profile.energy -=
-            0.05;
-
-          break;
-
-        case "bold":
-          profile.energy +=
-            0.18;
-
-          profile.minimal -=
-            0.08;
-
+          p.depth += 0.3;
+          p.glow += 0.22;
           break;
 
         case "dynamic":
-          profile.energy +=
-            0.3;
-
-          break;
-
-        case "energetic":
-          profile.energy +=
-            0.4;
-
-          profile.glow +=
-            0.12;
-
-          profile.texture +=
-            0.08;
-
-          break;
-
         case "sporty":
-          profile.energy +=
-            0.38;
-
-          profile.precision +=
-            0.08;
-
-          break;
-
-        case "youthful":
-          profile.energy +=
-            0.2;
-
-          profile.roundness +=
-            0.12;
-
+        case "energetic":
+          p.energy += 0.3;
           break;
 
         case "friendly":
-          profile.roundness +=
-            0.32;
-
-          profile.organic +=
-            0.12;
-
-          profile.energy -=
-            0.04;
-
-          break;
-
         case "organic":
-          profile.organic +=
-            0.5;
-
-          profile.roundness +=
-            0.18;
-
-          profile.texture +=
-            0.16;
-
-          profile.precision -=
-            0.12;
-
+          p.roundness += 0.25;
           break;
 
         case "playful":
-          profile.roundness +=
-            0.34;
-
-          profile.organic +=
-            0.18;
-
-          profile.energy +=
-            0.15;
-
-          profile.expressiveTilt +=
-            0.85;
-
+          p.roundness += 0.3;
+          p.energy += 0.15;
+          p.expressiveTilt += 0.8;
           break;
 
         case "experimental":
-          profile.organic +=
-            0.2;
-
-          profile.energy +=
-            0.12;
-
-          profile.texture +=
-            0.12;
-
-          profile.expressiveTilt +=
-            0.72;
-
+          p.expressiveTilt += 0.7;
+          p.energy += 0.14;
           break;
 
         case "disruptive":
-          profile.energy +=
-            0.28;
-
-          profile.minimal -=
-            0.08;
-
-          profile.expressiveTilt +=
-            0.58;
-
+          p.expressiveTilt += 0.55;
+          p.energy += 0.22;
           break;
       }
     }
@@ -521,153 +187,84 @@ function buildSceneProfile(
   return {
     roundness:
       clamp(
-        profile.roundness
+        p.roundness
       ),
 
     energy:
       clamp(
-        profile.energy
-      ),
-
-    depth:
-      clamp(
-        profile.depth
+        p.energy
       ),
 
     glow:
       clamp(
-        profile.glow
+        p.glow
       ),
 
-    texture:
+    depth:
       clamp(
-        profile.texture
-      ),
-
-    precision:
-      clamp(
-        profile.precision
-      ),
-
-    organic:
-      clamp(
-        profile.organic
-      ),
-
-    minimal:
-      clamp(
-        profile.minimal
+        p.depth
       ),
 
     expressiveTilt:
       clamp(
-        profile.expressiveTilt
+        p.expressiveTilt
       ),
   };
 }
 
-/* ------------------------------------------------ */
-/* BLEND PROFILES                                   */
-/* ------------------------------------------------ */
-
-function blendProfiles(
+function blend(
   a: SceneProfile,
-
   b: SceneProfile,
-
-  aWeight: number
+  weight: number
 ): SceneProfile {
-  const bWeight =
-    1 - aWeight;
+  const inverse =
+    1 - weight;
 
   return {
     roundness:
-      a.roundness *
-        aWeight +
-      b.roundness *
-        bWeight,
+      a.roundness * weight +
+      b.roundness * inverse,
 
     energy:
-      a.energy *
-        aWeight +
-      b.energy *
-        bWeight,
-
-    depth:
-      a.depth *
-        aWeight +
-      b.depth *
-        bWeight,
+      a.energy * weight +
+      b.energy * inverse,
 
     glow:
-      a.glow *
-        aWeight +
-      b.glow *
-        bWeight,
+      a.glow * weight +
+      b.glow * inverse,
 
-    texture:
-      a.texture *
-        aWeight +
-      b.texture *
-        bWeight,
-
-    precision:
-      a.precision *
-        aWeight +
-      b.precision *
-        bWeight,
-
-    organic:
-      a.organic *
-        aWeight +
-      b.organic *
-        bWeight,
-
-    minimal:
-      a.minimal *
-        aWeight +
-      b.minimal *
-        bWeight,
+    depth:
+      a.depth * weight +
+      b.depth * inverse,
 
     expressiveTilt:
-      a.expressiveTilt *
-        aWeight +
-      b.expressiveTilt *
-        bWeight,
+      a.expressiveTilt * weight +
+      b.expressiveTilt * inverse,
   };
 }
 
-/* ------------------------------------------------ */
-/* PARTNERSHIP PROFILE                              */
-/* ------------------------------------------------ */
-
 function getSharedProfile(
-  model:
-    PartnershipModelId,
-
-  a:
-    SceneProfile,
-
-  b:
-    SceneProfile
+  model: PartnershipModelId,
+  a: SceneProfile,
+  b: SceneProfile
 ) {
   switch (model) {
     case "axb":
-      return blendProfiles(
+      return blend(
         a,
         b,
         0.5
       );
 
     case "aandb":
-      return blendProfiles(
+      return blend(
         a,
         b,
         0.7
       );
 
     case "poweredByA":
-      return blendProfiles(
+      return blend(
         b,
         a,
         0.9
@@ -677,38 +274,6 @@ function getSharedProfile(
     default:
       return a;
   }
-}
-
-/* ------------------------------------------------ */
-/* EXPRESSIVE ROTATION                              */
-/* ------------------------------------------------ */
-
-function getExpressiveRotation(
-  profile:
-    SceneProfile,
-
-  maxDegrees = 6
-) {
-  if (
-    profile.expressiveTilt <
-    0.45
-  ) {
-    return 0;
-  }
-
-  const amount =
-    (
-      profile.expressiveTilt -
-      0.45
-    ) /
-    0.55;
-
-  return (
-    clamp(
-      amount
-    ) *
-    maxDegrees
-  );
 }
 
 /* ------------------------------------------------ */
@@ -727,7 +292,7 @@ export default function Page13() {
     partnershipModel as PartnershipModelId;
 
   const a =
-    getBrandView(
+    getBrand(
       brandA,
       "Brand A",
       "#FF453A",
@@ -735,7 +300,7 @@ export default function Page13() {
     );
 
   const b =
-    getBrandView(
+    getBrand(
       brandB,
       "Brand B",
       "#3478F6",
@@ -743,16 +308,16 @@ export default function Page13() {
     );
 
   const aProfile =
-    buildSceneProfile(
+    buildProfile(
       a.characterTraits
     );
 
   const bProfile =
-    buildSceneProfile(
+    buildProfile(
       b.characterTraits
     );
 
-  const sharedProfile =
+  const profile =
     getSharedProfile(
       model,
       aProfile,
@@ -761,195 +326,85 @@ export default function Page13() {
 
   return (
     <GuidelinePage>
-      {/* ================================================= */}
-      {/* HEADER                                            */}
-      {/* ================================================= */}
+      {/* HEADER */}
 
-      <header
-        className="
-          absolute
-
-          left-[70px]
-          right-[70px]
-          top-[46px]
-
-          flex
-          items-start
-          justify-between
-        "
-      >
+      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
         <div>
-          <p
-            className="
-              text-[13px]
-              uppercase
-              tracking-[0.17em]
-
-              text-white/30
-            "
-          >
+          <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
             13 / Shared visual territory
           </p>
 
-          <h1
-            className="
-              mt-[12px]
-
-              text-[52px]
-              leading-none
-              tracking-[-0.045em]
-
-              text-white
-
-              oook-semibold
-            "
-          >
+          <h1 className="mt-[12px] text-[52px] leading-none tracking-[-0.045em] text-white oook-semibold">
             Complete shared branding example
           </h1>
 
-          <p
-            className="
-              mt-[13px]
-
-              max-w-[820px]
-
-              text-[16px]
-              leading-[1.38]
-
-              text-white/45
-            "
-          >
-            A complete application of hierarchy,
-            colour, typography, graphic language,
-            image treatment and brand character.
+          <p className="mt-[13px] max-w-[850px] text-[16px] leading-[1.38] text-white/45">
+            A complete application of hierarchy, colour, typography, graphic language, image treatment and brand character.
           </p>
         </div>
 
-        <ModelLabel
-          model={
-            model
-          }
-
-          brandAName={
-            a.name
-          }
-
-          brandBName={
-            b.name
-          }
+        <PartnershipLockup
+          model={model}
+          brandA={brandA}
+          brandB={brandB}
         />
       </header>
 
-      {/* ================================================= */}
-      {/* HERO                                              */}
-      {/* ================================================= */}
+      {/* HERO */}
 
-      <section
-        className="
-          absolute
-
-          bottom-[58px]
-          left-[70px]
-          right-[70px]
-          top-[185px]
-        "
-      >
+      <section className="absolute bottom-[58px] left-[70px] right-[70px] top-[185px]">
         <div
-          className="
-            relative
-
-            h-full
-            w-full
-
-            overflow-hidden
-
-            border
-            border-white/[0.08]
-
-            bg-[#050506]
-          "
+          className="relative h-full w-full overflow-hidden border border-white/[0.08] bg-[#050506]"
           style={{
             borderRadius:
-              `${12 +
-              sharedProfile.roundness *
-                22}px`,
+              `${
+                12 +
+                profile.roundness *
+                  20
+              }px`,
           }}
         >
           <BackgroundImage
-            model={
-              model
-            }
-
-            profile={
-              model ===
-              "poweredByA"
-                ? bProfile
-                : model ===
-                    "presentsB"
-                  ? bProfile
-                  : sharedProfile
-            }
+            model={model}
+            profile={profile}
           />
 
           <SceneTreatment
-            profile={
-              sharedProfile
-            }
-
-            brandAColor={
+            profile={profile}
+            aPrimary={
               a.primaryColor
             }
-
-            brandBColor={
+            aSecondary={
+              a.secondaryColor
+            }
+            bPrimary={
               b.primaryColor
+            }
+            bSecondary={
+              b.secondaryColor
             }
           />
 
-          {model ===
-            "axb" && (
+          {model === "axb" && (
             <AXBExample
-              brandA={
-                a
-              }
-
-              brandB={
-                b
-              }
-
-              profile={
-                sharedProfile
-              }
+              a={a}
+              b={b}
             />
           )}
 
           {model ===
             "aandb" && (
-            <AAndBExample
-              brandA={
-                a
-              }
-
-              brandB={
-                b
-              }
-
-              profile={
-                sharedProfile
-              }
+            <AWithBExample
+              a={a}
+              b={b}
             />
           )}
 
           {model ===
             "poweredByA" && (
-            <PoweredByExample
-              brandA={
-                a
-              }
-
-              brandB={
-                b
-              }
-
+            <PoweredExample
+              a={a}
+              b={b}
               profile={
                 bProfile
               }
@@ -959,19 +414,12 @@ export default function Page13() {
           {model ===
             "presentsB" && (
             <PresentsExample
-              brandA={
-                a
-              }
-
-              brandB={
-                b
-              }
-
-              brandAProfile={
+              a={a}
+              b={b}
+              aProfile={
                 aProfile
               }
-
-              brandBProfile={
+              bProfile={
                 bProfile
               }
             />
@@ -979,116 +427,16 @@ export default function Page13() {
         </div>
       </section>
 
-      {/* ================================================= */}
-      {/* FOOTER                                            */}
-      {/* ================================================= */}
-
-      <div
-        className="
-          absolute
-
-          bottom-[24px]
-          left-[70px]
-          right-[70px]
-
-          flex
-          items-center
-          justify-between
-        "
-      >
-        <p
-          className="
-            text-[9px]
-            uppercase
-            tracking-[0.13em]
-
-            text-white/22
-          "
-        >
+      <div className="absolute bottom-[24px] left-[70px] right-[70px] flex justify-between text-[9px] text-white/22">
+        <span>
           Full application sample
-        </p>
+        </span>
 
-        <p
-          className="
-            text-[10px]
-
-            text-white/26
-          "
-        >
+        <span>
           Image · colour · type · graphic language · hierarchy
-        </p>
+        </span>
       </div>
     </GuidelinePage>
-  );
-}
-
-/* ------------------------------------------------ */
-/* MODEL LABEL                                      */
-/* ------------------------------------------------ */
-
-function ModelLabel({
-  model,
-
-  brandAName,
-  brandBName,
-}: {
-  model:
-    PartnershipModelId;
-
-  brandAName:
-    string;
-
-  brandBName:
-    string;
-}) {
-  const label =
-    model === "axb"
-      ? `${brandAName} × ${brandBName}`
-
-      : model === "aandb"
-        ? `${brandAName} with ${brandBName}`
-
-        : model ===
-            "poweredByA"
-          ? `${brandBName} powered by ${brandAName}`
-
-          : `${brandAName} presents ${brandBName}`;
-
-  return (
-    <div
-      className="
-        max-w-[320px]
-
-        text-right
-      "
-    >
-      <p
-        className="
-          text-[9px]
-          uppercase
-          tracking-[0.15em]
-
-          text-white/22
-        "
-      >
-        Partnership model
-      </p>
-
-      <p
-        className="
-          mt-[6px]
-
-          text-[17px]
-          leading-[1.25]
-
-          text-white/58
-
-          oook-medium
-        "
-      >
-        {label}
-      </p>
-    </div>
   );
 }
 
@@ -1109,21 +457,11 @@ function BackgroundImage({
   const imageNumber =
     model === "axb"
       ? 3
-
       : model === "aandb"
         ? 4
-
-        : model ===
-            "poweredByA"
+        : model === "poweredByA"
           ? 7
-
           : 9;
-
-  const [
-    extensionIndex,
-    setExtensionIndex,
-  ] =
-    useState(0);
 
   const extensions = [
     "jpg",
@@ -1132,87 +470,51 @@ function BackgroundImage({
     "webp",
   ];
 
+  const [
+    extension,
+    setExtension,
+  ] = useState(0);
+
   useEffect(
     () => {
-      setExtensionIndex(
-        0
-      );
+      setExtension(0);
     },
-    [
-      imageNumber,
-    ]
+    [imageNumber]
   );
-
-  const extension =
-    extensions[
-      extensionIndex
-    ];
-
-  const contrast =
-    0.88 +
-    profile.precision *
-      0.28;
-
-  const saturation =
-    0.65 +
-    profile.energy *
-      0.45;
-
-  const brightness =
-    0.68 +
-    profile.minimal *
-      0.12;
-
-  const scale =
-    1.04 +
-    profile.energy *
-      0.06;
 
   return (
     <img
-      src={`/images/image${imageNumber}.${extension}`}
-
+      src={`/images/image${imageNumber}.${extensions[extension]}`}
       alt=""
-
-      draggable={
-        false
-      }
-
+      draggable={false}
       onError={() => {
         if (
-          extensionIndex <
-          extensions.length -
-            1
+          extension <
+          extensions.length - 1
         ) {
-          setExtensionIndex(
-            (
-              current
-            ) =>
-              current +
-              1
+          setExtension(
+            (current) =>
+              current + 1
           );
         }
       }}
-
-      className="
-        absolute
-        inset-0
-
-        h-full
-        w-full
-
-        object-cover
-      "
-
+      className="absolute inset-0 h-full w-full object-cover"
       style={{
         filter:
-          `grayscale(0.22)
-          contrast(${contrast})
-          saturate(${saturation})
-          brightness(${brightness})`,
+          `grayscale(.22)
+           brightness(.69)
+           contrast(${
+             1 +
+             profile.depth *
+               0.18
+           })`,
 
         transform:
-          `scale(${scale})`,
+          `scale(${
+            1.04 +
+            profile.energy *
+              0.04
+          })`,
       }}
     />
   );
@@ -1224,950 +526,378 @@ function BackgroundImage({
 
 function SceneTreatment({
   profile,
-
-  brandAColor,
-  brandBColor,
+  aPrimary,
+  aSecondary,
+  bPrimary,
+  bSecondary,
 }: {
-  profile:
-    SceneProfile;
+  profile: SceneProfile;
 
-  brandAColor:
-    string;
+  aPrimary: string;
+  aSecondary: string;
 
-  brandBColor:
-    string;
+  bPrimary: string;
+  bSecondary: string;
 }) {
   return (
     <>
-      <div
-        className="
-          pointer-events-none
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-black/20" />
 
-          absolute
-          inset-0
-        "
-        style={{
-          background:
-            `linear-gradient(
-              90deg,
-              rgba(0,0,0,0.82) 0%,
-              rgba(0,0,0,0.38) 43%,
-              rgba(0,0,0,0.10) 72%,
-              rgba(0,0,0,0.30) 100%
-            )`,
-        }}
+      <Glow
+        colour={
+          aPrimary
+        }
+        secondary={
+          aSecondary
+        }
+        className="-left-[12%] -top-[25%]"
       />
 
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-        "
-        style={{
-          background:
-            `radial-gradient(
-              circle at 68% 35%,
-              transparent 20%,
-              rgba(0,0,0,${
-                0.18 +
-                profile.depth *
-                  0.24
-              }) 100%
-            )`,
-        }}
+      <Glow
+        colour={
+          bPrimary
+        }
+        secondary={
+          bSecondary
+        }
+        className="-bottom-[30%] right-[2%]"
       />
 
-      {profile.glow >
-        0.18 && (
-        <div
-          className="
-            pointer-events-none
-
-            absolute
-
-            -left-[8%]
-            -top-[30%]
-
-            h-[70%]
-            w-[45%]
-
-            rounded-full
-
-            blur-[100px]
-          "
-          style={{
-            backgroundColor:
-              alpha(
-                brandAColor,
-                profile.glow *
-                  0.14
-              ),
-          }}
-        />
-      )}
-
-      {profile.glow >
-        0.35 && (
-        <div
-          className="
-            pointer-events-none
-
-            absolute
-
-            -bottom-[28%]
-            right-[4%]
-
-            h-[65%]
-            w-[38%]
-
-            rounded-full
-
-            blur-[110px]
-          "
-          style={{
-            backgroundColor:
-              alpha(
-                brandBColor,
-                profile.glow *
-                  0.12
-              ),
-          }}
-        />
-      )}
-
-      {profile.texture >
-        0.18 && (
-        <div
-          className="
-            pointer-events-none
-
-            absolute
-            inset-0
-
-            mix-blend-screen
-          "
-          style={{
-            opacity:
-              profile.texture *
-              0.12,
-
-            backgroundImage:
-              "repeating-linear-gradient(0deg,rgba(255,255,255,0.08) 0px,rgba(255,255,255,0.08) 1px,transparent 1px,transparent 3px)",
-          }}
-        />
+      {profile.depth > 0.55 && (
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_35%,transparent_15%,rgba(0,0,0,.42)_100%)]" />
       )}
     </>
   );
 }
 
+function Glow({
+  colour,
+  secondary,
+  className,
+}: {
+  colour: string;
+  secondary: string;
+  className: string;
+}) {
+  return (
+    <div
+      className={`
+        absolute
+        h-[330px]
+        w-[330px]
+        rounded-full
+        blur-[120px]
+
+        ${className}
+      `}
+      style={{
+        background:
+          `radial-gradient(circle,
+            ${colour}28,
+            ${secondary}18,
+            transparent 70%
+          )`,
+      }}
+    />
+  );
+}
+
 /* ------------------------------------------------ */
-/* A × B                                            */
+/* MODEL EXAMPLES                                   */
 /* ------------------------------------------------ */
 
 function AXBExample({
-  brandA,
-  brandB,
-  profile,
+  a,
+  b,
 }: {
-  brandA:
-    BrandView;
-
-  brandB:
-    BrandView;
-
-  profile:
-    SceneProfile;
+  a: BrandView;
+  b: BrandView;
 }) {
   return (
     <>
-      {/* ======================================== */}
-      {/* HERO BRAND LOCKUP                        */}
-      {/* ======================================== */}
-
-      <div
-        className="
-          absolute
-
-          left-[42px]
-          top-[34px]
-
-          flex
-          items-center
-
-          gap-[20px]
-        "
-      >
+      <div className="absolute left-[42px] top-[36px] flex items-center gap-[20px]">
         <BrandIdentity
-          brand={
-            brandA
-          }
-
-          width={175}
-          height={48}
-
-          scale={1.08}
-
-          textSize={25}
+          brand={a}
+          width={180}
+          height={50}
         />
 
-        <span
-          className="
-            mx-[2px]
-
-            text-[24px]
-
-            text-white/44
-          "
-        >
+        <span className="text-[23px] text-white/38">
           ×
         </span>
 
         <BrandIdentity
-          brand={
-            brandB
-          }
-
-          width={175}
-          height={48}
-
-          scale={1.08}
-
-          textSize={25}
+          brand={b}
+          width={180}
+          height={50}
         />
       </div>
 
-      <AccentLines
-        colourA={
-          brandA.primaryColor
-        }
-
-        colourB={
-          brandB.primaryColor
-        }
-
-        profile={
-          profile
-        }
+      <HeroCopy
+        eyebrow="Shared immersive experience"
+        title="Experience the moment from inside."
+        family={DEFAULT_FONT}
       />
 
-      {/* ======================================== */}
-      {/* COPY                                     */}
-      {/* ======================================== */}
-
-      <div
-        className="
-          absolute
-
-          bottom-[125px]
-          left-[42px]
-
-          max-w-[720px]
-        "
-      >
-        <p
-          className="
-            text-[11px]
-            uppercase
-            tracking-[0.18em]
-
-            text-white/45
-          "
-        >
-          Shared immersive experience
-        </p>
-
-        <h2
-          className="
-            mt-[10px]
-
-            text-[54px]
-            leading-[0.95]
-            tracking-[-0.045em]
-
-            text-white
-
-            oook-semibold
-          "
-        >
-          Experience the moment
-          from inside.
-        </h2>
-
-        <p
-          className="
-            mt-[14px]
-
-            max-w-[590px]
-
-            text-[15px]
-            leading-[1.4]
-
-            text-white/52
-          "
-        >
-          One visual system, one shared experience,
-          equal brand presence.
-        </p>
-      </div>
-
-      <SharedLowerThird
-        brandA={
-          brandA
+      <AccentGraphic
+        primary={
+          a.primaryColor
         }
-
-        brandB={
-          brandB
+        secondary={
+          a.secondaryColor
+        }
+        support={
+          b.primaryColor
+        }
+        supportSecondary={
+          b.secondaryColor
         }
       />
 
       <CTA
-        label="Enter experience"
-
-        colour={
-          brandA.primaryColor
+        primary={
+          a.primaryColor
         }
+        secondary={
+          b.secondaryColor
+        }
+        label="Enter experience"
       />
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* A WITH B                                         */
-/* ------------------------------------------------ */
-
-function AAndBExample({
-  brandA,
-  brandB,
-  profile,
+function AWithBExample({
+  a,
+  b,
 }: {
-  brandA:
-    BrandView;
-
-  brandB:
-    BrandView;
-
-  profile:
-    SceneProfile;
+  a: BrandView;
+  b: BrandView;
 }) {
   return (
     <>
-      {/* ======================================== */}
-      {/* BRAND HIERARCHY                           */}
-      {/* ======================================== */}
-
-      <div
-        className="
-          absolute
-
-          left-[42px]
-          top-[32px]
-        "
-      >
-        {/* A = LEAD */}
-
+      <div className="absolute left-[42px] top-[34px]">
         <BrandIdentity
-          brand={
-            brandA
-          }
-
-          width={215}
-          height={56}
-
-          scale={1.08}
-
-          textSize={29}
+          brand={a}
+          width={220}
+          height={58}
         />
 
-        {/* B = SECONDARY */}
-
-        <div
-          className="
-            mt-[15px]
-
-            flex
-            items-center
-
-            gap-[10px]
-          "
-        >
-          <span
-            className="
-              text-[10px]
-              uppercase
-              tracking-[0.14em]
-
-              text-white/34
-            "
-          >
+        <div className="mt-[12px] flex items-center gap-[10px]">
+          <span className="text-[9px] uppercase tracking-[0.12em] text-white/28">
             with
           </span>
 
           <BrandIdentity
-            brand={
-              brandB
-            }
-
+            brand={b}
             width={105}
             height={30}
-
-            scale={1.06}
-
-            textSize={16}
           />
         </div>
       </div>
 
-      <DominantFrame
-        profile={
-          profile
-        }
-
-        colour={
-          brandA.primaryColor
-        }
+      <HeroCopy
+        eyebrow="A curated immersive experience"
+        title="See the event differently."
+        family={a.fontFamily}
       />
 
-      <div
-        className="
-          absolute
-
-          bottom-[112px]
-          left-[42px]
-
-          max-w-[700px]
-        "
-      >
-        <p
-          className="
-            text-[11px]
-            uppercase
-            tracking-[0.18em]
-
-            text-white/42
-          "
-        >
-          A curated experience
-        </p>
-
-        <h2
-          className="
-            mt-[10px]
-
-            text-[56px]
-            leading-[0.94]
-            tracking-[-0.045em]
-
-            text-white
-          "
-          style={{
-            fontFamily:
-              brandA.fontFamily,
-          }}
-        >
-          See the event
-          differently.
-        </h2>
-      </div>
-
-      <div
-        className="
-          absolute
-
-          right-[44px]
-          top-[42px]
-
-          h-[7px]
-          w-[56px]
-
-          rounded-full
-        "
-        style={{
-          backgroundColor:
-            brandB.primaryColor,
-        }}
-      />
-
-      <DataPanel
-        accent={
-          brandA.primaryColor
+      <AccentGraphic
+        primary={
+          a.primaryColor
         }
-
         secondary={
-          brandB.primaryColor
+          a.secondaryColor
+        }
+        support={
+          b.primaryColor
+        }
+        supportSecondary={
+          b.secondaryColor
         }
       />
 
       <CTA
-        label="Explore now"
-
-        colour={
-          brandA.primaryColor
+        primary={
+          a.primaryColor
         }
+        secondary={
+          a.secondaryColor
+        }
+        label="Explore now"
       />
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* POWERED BY                                       */
-/* ------------------------------------------------ */
-
-function PoweredByExample({
-  brandA,
-  brandB,
+function PoweredExample({
+  a,
+  b,
   profile,
 }: {
-  brandA:
-    BrandView;
-
-  brandB:
-    BrandView;
-
-  profile:
-    SceneProfile;
+  a: BrandView;
+  b: BrandView;
+  profile: SceneProfile;
 }) {
   return (
     <>
-      {/* ======================================== */}
-      {/* B MAIN IDENTITY                          */}
-      {/* ======================================== */}
-
-      <div
-        className="
-          absolute
-
-          left-[42px]
-          top-[32px]
-        "
-      >
+      <div className="absolute left-[42px] top-[34px]">
         <BrandIdentity
-          brand={
-            brandB
-          }
-
-          width={240}
-          height={62}
-
-          scale={1.1}
-
-          textSize={31}
+          brand={b}
+          width={245}
+          height={64}
         />
       </div>
 
-      <DynamicGraphic
-        profile={
-          profile
-        }
-
-        colour={
-          brandB.primaryColor
-        }
-      />
-
-      {/* ======================================== */}
-      {/* HERO COPY                                */}
-      {/* ======================================== */}
-
-      <div
-        className="
-          absolute
-
-          bottom-[112px]
-          left-[42px]
-
-          max-w-[760px]
-        "
-      >
-        <p
-          className="
-            text-[11px]
-            uppercase
-            tracking-[0.18em]
-
-            text-white/44
-          "
-        >
-          Live immersive coverage
-        </p>
-
-        <h2
-          className="
-            mt-[10px]
-
-            text-[56px]
-            leading-[0.94]
-            tracking-[-0.045em]
-
-            text-white
-          "
-          style={{
-            fontFamily:
-              brandB.fontFamily,
-          }}
-        >
-          Feel closer to
-          every moment.
-        </h2>
-
-        <p
-          className="
-            mt-[14px]
-
-            max-w-[600px]
-
-            text-[15px]
-            leading-[1.4]
-
-            text-white/52
-          "
-        >
-          The consumer-facing experience remains
-          unmistakably {brandB.name}.
-        </p>
-      </div>
-
-      {/* ======================================== */}
-      {/* POWERED BY ENDORSEMENT                   */}
-      {/* ======================================== */}
-
-      <div
-        className="
-          absolute
-
-          right-[38px]
-          top-[34px]
-
-          flex
-          min-h-[54px]
-
-          items-center
-
-          gap-[11px]
-
-          rounded-[15px]
-
-          border
-          border-white/[0.10]
-
-          bg-black/46
-
-          px-[15px]
-          py-[10px]
-
-          backdrop-blur-[14px]
-        "
-      >
-        <span
-          className="
-            text-[9px]
-            uppercase
-            tracking-[0.12em]
-
-            text-white/38
-          "
-        >
+      <div className="absolute right-[38px] top-[34px] flex items-center gap-[9px] rounded-[14px] border border-white/[0.09] bg-black/50 px-[14px] py-[9px]">
+        <span className="text-[8px] uppercase tracking-[0.11em] text-white/28">
           Powered by
         </span>
 
         <BrandIdentity
-          brand={
-            brandA
-          }
-
+          brand={a}
           width={105}
-          height={30}
-
-          scale={1.08}
-
-          textSize={16}
+          height={29}
         />
       </div>
 
-      <CTA
-        label="Watch live"
+      <HeroCopy
+        eyebrow="Live immersive coverage"
+        title="Feel closer to every moment."
+        family={b.fontFamily}
+      />
 
-        colour={
-          brandB.primaryColor
+      <Visualizer
+        profile={profile}
+        primary={
+          b.primaryColor
         }
+        secondary={
+          b.secondaryColor
+        }
+      />
+
+      <CTA
+        primary={
+          b.primaryColor
+        }
+        secondary={
+          b.secondaryColor
+        }
+        label="Watch live"
       />
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* PRESENTS                                         */
-/* ------------------------------------------------ */
-
 function PresentsExample({
-  brandA,
-  brandB,
-
-  brandAProfile,
-  brandBProfile,
+  a,
+  b,
+  aProfile,
+  bProfile,
 }: {
-  brandA:
-    BrandView;
+  a: BrandView;
+  b: BrandView;
 
-  brandB:
-    BrandView;
-
-  brandAProfile:
+  aProfile:
     SceneProfile;
 
-  brandBProfile:
+  bProfile:
     SceneProfile;
 }) {
   return (
     <>
-      {/* ======================================== */}
-      {/* BRAND A PLATFORM HEADER                  */}
-      {/* ======================================== */}
-
       <div
-        className="
-          absolute
-
-          left-[28px]
-          right-[28px]
-          top-[26px]
-
-          flex
-          h-[72px]
-
-          items-center
-
-          border
-          border-white/[0.09]
-
-          bg-black/46
-
-          px-[20px]
-
-          backdrop-blur-[16px]
-        "
+        className="absolute left-[26px] right-[26px] top-[24px] flex h-[72px] items-center border border-white/[0.09] bg-black/48 px-[19px] backdrop-blur-[14px]"
         style={{
           borderRadius:
-            `${8 +
-            brandAProfile.roundness *
-              18}px`,
+            `${
+              8 +
+              aProfile.roundness *
+                18
+            }px`,
         }}
       >
         <BrandIdentity
-          brand={
-            brandA
-          }
-
+          brand={a}
           width={160}
           height={42}
-
-          scale={1.08}
-
-          textSize={22}
         />
 
-        <div
-          className="
-            ml-[22px]
-
-            h-[25px]
-            w-px
-
-            bg-white/[0.10]
-          "
-        />
-
-        <span
-          className="
-            ml-[22px]
-
-            text-[10px]
-            uppercase
-            tracking-[0.14em]
-
-            text-white/38
-          "
-        >
+        <span className="ml-[20px] text-[9px] uppercase tracking-[0.12em] text-white/27">
           Presents
         </span>
 
-        <div
-          className="
-            ml-auto
-
-            flex
-            items-center
-
-            gap-[20px]
-
-            text-[10px]
-
-            text-white/35
-          "
-        >
+        <div className="ml-auto flex gap-[20px] text-[9px] text-white/28">
           <span>Live</span>
           <span>Highlights</span>
           <span>Explore</span>
         </div>
       </div>
 
-      {/* ======================================== */}
-      {/* B FEATURED CONTENT                       */}
-      {/* ======================================== */}
-
       <div
-        className="
-          absolute
-
-          bottom-[32px]
-          left-[32px]
-          right-[32px]
-          top-[114px]
-
-          overflow-hidden
-
-          border
-          border-white/[0.08]
-        "
+        className="absolute bottom-[28px] left-[30px] right-[30px] top-[112px] overflow-hidden border border-white/[0.08]"
         style={{
           borderRadius:
-            `${10 +
-            brandBProfile.roundness *
-              24}px`,
+            `${
+              10 +
+              bProfile.roundness *
+                24
+            }px`,
         }}
       >
-        <div
-          className="
-            absolute
-            inset-0
+        <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/20 to-transparent" />
 
-            bg-gradient-to-r
-
-            from-black/64
-            via-black/20
-            to-transparent
-          "
-        />
-
-        <div
-          className="
-            absolute
-
-            -bottom-[25%]
-            right-[4%]
-
-            h-[68%]
-            w-[38%]
-
-            rounded-full
-
-            blur-[85px]
-          "
-          style={{
-            backgroundColor:
-              alpha(
-                brandB.primaryColor,
-
-                0.16 +
-                  brandBProfile.glow *
-                    0.16
-              ),
-          }}
-        />
-
-        {/* ====================================== */}
-        {/* B IDENTITY                             */}
-        {/* ====================================== */}
-
-        <div
-          className="
-            absolute
-
-            bottom-[54px]
-            left-[38px]
-
-            max-w-[750px]
-          "
-        >
-          <div
-            className="
-              mb-[20px]
-
-              flex
-              items-center
-
-              gap-[14px]
-            "
-          >
+        <div className="absolute bottom-[55px] left-[38px]">
+          <div className="mb-[18px] flex items-center gap-[13px]">
             <BrandIdentity
-              brand={
-                brandB
-              }
-
+              brand={b}
               width={205}
               height={54}
-
-              scale={1.1}
-
-              textSize={28}
             />
 
-            <span
-              className="
-                text-[9px]
-                uppercase
-                tracking-[0.13em]
-
-                text-white/34
-              "
-            >
+            <span className="text-[8px] uppercase tracking-[0.11em] text-white/27">
               Featured content
             </span>
           </div>
 
           <h2
-            className="
-              text-[55px]
-              leading-[0.94]
-              tracking-[-0.045em]
-
-              text-white
-            "
+            className="max-w-[690px] text-[55px] leading-[0.94] tracking-[-0.045em] text-white"
             style={{
               fontFamily:
-                brandB.fontFamily,
+                b.fontFamily,
             }}
           >
-            Step into the
-            experience.
+            Step into the experience.
           </h2>
 
-          <p
-            className="
-              mt-[14px]
+          <div className="mt-[16px] flex gap-[5px]">
+            <span
+              className="h-[5px] w-[72px] rounded-full"
+              style={{
+                backgroundColor:
+                  b.primaryColor,
+              }}
+            />
 
-              max-w-[590px]
-
-              text-[15px]
-              leading-[1.4]
-
-              text-white/52
-            "
-          >
-            {brandB.name} owns the featured visual
-            expression while {brandA.name} remains
-            the presentation layer.
-          </p>
+            <span
+              className="h-[5px] w-[32px] rounded-full"
+              style={{
+                backgroundColor:
+                  b.secondaryColor,
+              }}
+            />
+          </div>
         </div>
 
         <CTA
-          label="Discover"
-
-          colour={
-            brandB.primaryColor
+          primary={
+            b.primaryColor
           }
-
+          secondary={
+            b.secondaryColor
+          }
+          label="Discover"
           inset
         />
       </div>
@@ -2176,138 +906,50 @@ function PresentsExample({
 }
 
 /* ------------------------------------------------ */
-/* BRAND IDENTITY                                   */
+/* HERO COMPONENTS                                  */
 /* ------------------------------------------------ */
 
 function BrandIdentity({
   brand,
-
   width,
   height,
-
-  scale = 1,
-
-  textSize = 20,
-
-  align = "left",
-}: BrandIdentityProps) {
-  const justifyContent =
-    align === "center"
-      ? "center"
-
-      : align === "right"
-        ? "flex-end"
-
-        : "flex-start";
-
-  /*
-    Real identity slot instead of
-    max-width/max-height.
-
-    This makes uploaded logos occupy a
-    predictable amount of optical space.
-  */
-
-  if (
-    brand.logoUrl
-  ) {
+}: {
+  brand: BrandView;
+  width: number;
+  height: number;
+}) {
+  if (brand.logoUrl) {
     return (
       <div
-        className="
-          flex
-          shrink-0
-
-          items-center
-        "
+        className="flex shrink-0 items-center"
         style={{
-          width:
-            `${width}px`,
-
-          height:
-            `${height}px`,
-
-          justifyContent,
+          width,
+          height,
         }}
       >
         <img
-          src={
-            brand.logoUrl
-          }
-
-          alt={
-            brand.name
-          }
-
-          draggable={
-            false
-          }
-
-          className="
-            block
-
-            h-full
-            w-full
-
-            object-contain
-
-            drop-shadow-[0_4px_20px_rgba(0,0,0,0.42)]
-          "
-
-          style={{
-            transform:
-              `scale(${scale})`,
-
-            transformOrigin:
-              align === "right"
-                ? "right center"
-                : align === "center"
-                  ? "center"
-                  : "left center",
-          }}
+          src={brand.logoUrl}
+          alt={brand.name}
+          draggable={false}
+          className="block h-full w-full object-contain object-left"
         />
       </div>
     );
   }
 
-  /*
-    Text fallback receives the same
-    visual importance as an uploaded logo.
-  */
-
   return (
     <div
-      className="
-        flex
-        shrink-0
-
-        items-center
-      "
+      className="flex items-center"
       style={{
-        width:
-          `${width}px`,
-
-        minHeight:
-          `${height}px`,
-
-        justifyContent,
+        width,
+        minHeight: height,
       }}
     >
       <span
-        className="
-          whitespace-nowrap
-
-          leading-none
-
-          text-white
-
-          oook-medium
-        "
+        className="whitespace-nowrap text-[23px] leading-none text-white"
         style={{
           fontFamily:
             brand.fontFamily,
-
-          fontSize:
-            `${textSize}px`,
         }}
       >
         {brand.name}
@@ -2316,19 +958,124 @@ function BrandIdentity({
   );
 }
 
-/* ------------------------------------------------ */
-/* CTA                                              */
-/* ------------------------------------------------ */
+function HeroCopy({
+  eyebrow,
+  title,
+  family,
+}: {
+  eyebrow: string;
+  title: string;
+  family: string;
+}) {
+  return (
+    <div className="absolute bottom-[110px] left-[42px] max-w-[760px]">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">
+        {eyebrow}
+      </p>
+
+      <h2
+        className="mt-[10px] text-[56px] leading-[0.94] tracking-[-0.045em] text-white"
+        style={{
+          fontFamily:
+            family,
+        }}
+      >
+        {title}
+      </h2>
+    </div>
+  );
+}
+
+function AccentGraphic({
+  primary,
+  secondary,
+  support,
+  supportSecondary,
+}: {
+  primary: string;
+  secondary: string;
+  support: string;
+  supportSecondary: string;
+}) {
+  return (
+    <div className="absolute right-[55px] top-[140px] flex h-[210px] w-[340px] items-end justify-end gap-[7px]">
+      {[70, 130, 96, 185, 120, 165, 82].map(
+        (height, index) => (
+          <div
+            key={index}
+            className="w-[6px] rounded-full"
+            style={{
+              height,
+
+              backgroundColor:
+                index % 4 === 0
+                  ? support
+                  : index % 3 === 0
+                    ? supportSecondary
+                    : index % 2 === 0
+                      ? secondary
+                      : primary,
+            }}
+          />
+        )
+      )}
+    </div>
+  );
+}
+
+function Visualizer({
+  profile,
+  primary,
+  secondary,
+}: {
+  profile: SceneProfile;
+  primary: string;
+  secondary: string;
+}) {
+  const count =
+    Math.round(
+      6 +
+      profile.energy *
+        8
+    );
+
+  return (
+    <div className="absolute right-[48px] top-[130px] flex h-[220px] w-[340px] items-end justify-end gap-[7px]">
+      {Array.from({
+        length:
+          count,
+      }).map(
+        (_, index) => (
+          <div
+            key={index}
+            className="w-[6px] rounded-full"
+            style={{
+              height:
+                45 +
+                ((index * 41) %
+                  155),
+
+              backgroundColor:
+                index % 3 === 0
+                  ? secondary
+                  : primary,
+            }}
+          />
+        )
+      )}
+    </div>
+  );
+}
 
 function CTA({
+  primary,
+  secondary,
   label,
-  colour,
   inset = false,
 }: {
+  primary: string;
+  secondary: string;
   label: string;
-
-  colour: string;
-
   inset?: boolean;
 }) {
   return (
@@ -2338,545 +1085,48 @@ function CTA({
 
         flex
         items-center
-
-        gap-[12px]
+        gap-[9px]
 
         rounded-full
 
         border
-        border-white/[0.12]
+        border-white/[0.1]
 
-        bg-black/48
+        bg-black/52
 
-        px-[17px]
-        py-[11px]
-
-        backdrop-blur-[14px]
+        px-[16px]
+        py-[10px]
 
         ${
           inset
-            ? "bottom-[40px] right-[36px]"
-            : "bottom-[42px] right-[42px]"
+            ? "bottom-[34px] right-[32px]"
+            : "bottom-[38px] right-[40px]"
         }
       `}
     >
-      <div
-        className="
-          h-[7px]
-          w-[7px]
-
-          rounded-full
-        "
+      <span
+        className="h-[7px] w-[7px] rounded-full"
         style={{
           backgroundColor:
-            colour,
-
-          boxShadow:
-            `0 0 14px ${alpha(
-              colour,
-              0.6
-            )}`,
+            primary,
         }}
       />
 
       <span
-        className="
-          text-[11px]
+        className="h-[4px] w-[10px] rounded-full"
+        style={{
+          backgroundColor:
+            secondary,
+        }}
+      />
 
-          text-white/72
-
-          oook-medium
-        "
-      >
+      <span className="text-[10px] text-white/67">
         {label}
       </span>
 
-      <span
-        className="
-          text-[13px]
-
-          text-white/35
-        "
-      >
+      <span className="text-[11px] text-white/30">
         →
       </span>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* SHARED LOWER THIRD                               */
-/* ------------------------------------------------ */
-
-function SharedLowerThird({
-  brandA,
-  brandB,
-}: {
-  brandA:
-    BrandView;
-
-  brandB:
-    BrandView;
-}) {
-  return (
-    <div
-      className="
-        absolute
-
-        bottom-[38px]
-        left-[42px]
-
-        flex
-        min-h-[52px]
-
-        items-center
-
-        gap-[13px]
-
-        rounded-[14px]
-
-        border
-        border-white/[0.09]
-
-        bg-black/50
-
-        px-[15px]
-        py-[9px]
-
-        backdrop-blur-[14px]
-      "
-    >
-      <BrandIdentity
-        brand={
-          brandA
-        }
-
-        width={92}
-        height={29}
-
-        scale={1.06}
-
-        textSize={14}
-      />
-
-      <span
-        className="
-          text-[11px]
-
-          text-white/30
-        "
-      >
-        ×
-      </span>
-
-      <BrandIdentity
-        brand={
-          brandB
-        }
-
-        width={92}
-        height={29}
-
-        scale={1.06}
-
-        textSize={14}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* ACCENT LINES                                     */
-/* ------------------------------------------------ */
-
-function AccentLines({
-  colourA,
-  colourB,
-  profile,
-}: {
-  colourA:
-    string;
-
-  colourB:
-    string;
-
-  profile:
-    SceneProfile;
-}) {
-  const rotation =
-    getExpressiveRotation(
-      profile,
-      8
-    );
-
-  return (
-    <div
-      className="
-        absolute
-
-        right-[7%]
-        top-[20%]
-
-        flex
-        w-[26%]
-
-        flex-col
-
-        gap-[10px]
-      "
-      style={{
-        transform:
-          rotation === 0
-            ? undefined
-            : `rotate(${rotation}deg)`,
-      }}
-    >
-      {[
-        86,
-        62,
-        100,
-        48,
-      ].map(
-        (
-          width,
-          index
-        ) => (
-          <div
-            key={
-              index
-            }
-
-            className="
-              h-[2px]
-
-              rounded-full
-            "
-
-            style={{
-              width:
-                `${width}%`,
-
-              marginLeft:
-                "auto",
-
-              backgroundColor:
-                index % 2 ===
-                0
-                  ? alpha(
-                      colourA,
-                      0.6
-                    )
-                  : alpha(
-                      colourB,
-                      0.6
-                    ),
-            }}
-          />
-        )
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* DOMINANT FRAME                                   */
-/* ------------------------------------------------ */
-
-function DominantFrame({
-  profile,
-  colour,
-}: {
-  profile:
-    SceneProfile;
-
-  colour:
-    string;
-}) {
-  const rotation =
-    getExpressiveRotation(
-      profile,
-      6
-    );
-
-  return (
-    <div
-      className="
-        absolute
-
-        right-[46px]
-        top-[120px]
-
-        h-[245px]
-        w-[345px]
-
-        border
-      "
-      style={{
-        borderColor:
-          alpha(
-            colour,
-            0.42
-          ),
-
-        borderRadius:
-          `${10 +
-          profile.roundness *
-            45}px`,
-
-        transform:
-          rotation === 0
-            ? undefined
-            : `rotate(${rotation}deg)`,
-
-        boxShadow:
-          profile.glow >
-          0.35
-            ? `0 0 55px ${alpha(
-                colour,
-                0.16
-              )}`
-            : undefined,
-      }}
-    />
-  );
-}
-
-/* ------------------------------------------------ */
-/* DYNAMIC GRAPHIC                                  */
-/* ------------------------------------------------ */
-
-function DynamicGraphic({
-  profile,
-  colour,
-}: {
-  profile:
-    SceneProfile;
-
-  colour:
-    string;
-}) {
-  const count =
-    Math.round(
-      5 +
-        profile.energy *
-          7
-    );
-
-  return (
-    <div
-      className="
-        absolute
-
-        right-[48px]
-        top-[120px]
-
-        flex
-        h-[220px]
-        w-[340px]
-
-        items-end
-        justify-end
-
-        gap-[7px]
-      "
-    >
-      {Array.from({
-        length:
-          count,
-      }).map(
-        (
-          _,
-          index
-        ) => (
-          <div
-            key={
-              index
-            }
-
-            className="
-              rounded-full
-            "
-
-            style={{
-              width:
-                4 +
-                profile.energy *
-                  2,
-
-              height:
-                40 +
-                ((index *
-                  37) %
-                  165),
-
-              backgroundColor:
-                index % 3 ===
-                0
-                  ? colour
-                  : alpha(
-                      colour,
-                      0.32
-                    ),
-
-              boxShadow:
-                profile.glow >
-                0.4
-                  ? `0 0 18px ${alpha(
-                      colour,
-                      0.26
-                    )}`
-                  : undefined,
-            }}
-          />
-        )
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* DATA PANEL                                       */
-/* ------------------------------------------------ */
-
-function DataPanel({
-  accent,
-  secondary,
-}: {
-  accent:
-    string;
-
-  secondary:
-    string;
-}) {
-  return (
-    <div
-      className="
-        absolute
-
-        bottom-[42px]
-        right-[210px]
-
-        grid
-        grid-cols-3
-
-        gap-[6px]
-
-        rounded-[12px]
-
-        border
-        border-white/[0.08]
-
-        bg-black/45
-
-        p-[7px]
-
-        backdrop-blur-[12px]
-      "
-    >
-      <DataItem
-        label="LIVE"
-        value="01"
-        colour={
-          accent
-        }
-      />
-
-      <DataItem
-        label="VIEW"
-        value="360°"
-        colour={
-          secondary
-        }
-      />
-
-      <DataItem
-        label="MODE"
-        value="XR"
-        colour="#FFFFFF"
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* DATA ITEM                                        */
-/* ------------------------------------------------ */
-
-function DataItem({
-  label,
-  value,
-  colour,
-}: {
-  label:
-    string;
-
-  value:
-    string;
-
-  colour:
-    string;
-}) {
-  return (
-    <div
-      className="
-        min-w-[58px]
-
-        rounded-[8px]
-
-        border
-        border-white/[0.06]
-
-        bg-white/[0.025]
-
-        px-[8px]
-        py-[7px]
-      "
-    >
-      <p
-        className="
-          text-[7px]
-          uppercase
-          tracking-[0.1em]
-
-          text-white/25
-        "
-      >
-        {label}
-      </p>
-
-      <div
-        className="
-          mt-[3px]
-
-          flex
-          items-center
-
-          gap-[5px]
-        "
-      >
-        <div
-          className="
-            h-[4px]
-            w-[4px]
-
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              colour,
-          }}
-        />
-
-        <p
-          className="
-            text-[10px]
-
-            text-white/58
-          "
-        >
-          {value}
-        </p>
-      </div>
     </div>
   );
 }
