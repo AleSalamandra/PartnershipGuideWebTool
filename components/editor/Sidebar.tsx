@@ -1,559 +1,1487 @@
 "use client";
 
+import {
+  ChangeEvent,
+  useRef,
+} from "react";
+
+import BrandCharacterSelector from "./BrandCharacterSelector";
+
 import { useGuidelineStore } from "@/store/guidelineStore";
+import { PartnershipModelId } from "@/types/guideline";
 
-import {
-  partnershipModels,
-  partnershipModelOptions,
-} from "@/data/partnershipModels";
+/* ------------------------------------------------ */
+/* TYPES                                            */
+/* ------------------------------------------------ */
 
-import {
-  BrandConfig,
-  PartnershipModelId,
-} from "@/types/guideline";
+type BrandSide = "A" | "B";
 
-import LogoUploader from "./LogoUploader";
-import FontUploader from "./FontUploader";
+interface BrandData {
+  name: string;
+  logoUrl: string | null;
+  primaryColor: string;
+  secondaryColor?: string;
+  fontFamily?: string;
+}
+
+/* ------------------------------------------------ */
+/* PARTNERSHIP MODELS                               */
+/* ------------------------------------------------ */
+
+const PARTNERSHIP_MODELS: {
+  id: PartnershipModelId;
+  label: string;
+  description: string;
+}[] = [
+  {
+    id: "axb",
+    label: "A × B",
+    description: "Equal collaboration",
+  },
+
+  {
+    id: "aandb",
+    label: "A with B",
+    description: "Brand A leads",
+  },
+
+  {
+    id: "poweredByA",
+    label: "B powered by A",
+    description: "Brand B owns experience",
+  },
+
+  {
+    id: "presentsB",
+    label: "A presents B",
+    description: "A platform / B content",
+  },
+];
+
+/* ------------------------------------------------ */
+/* DEFAULTS                                         */
+/* ------------------------------------------------ */
+
+const DEFAULT_A_PRIMARY =
+  "#FF453A";
+
+const DEFAULT_A_SECONDARY =
+  "#FF8A80";
+
+const DEFAULT_B_PRIMARY =
+  "#3478F6";
+
+const DEFAULT_B_SECONDARY =
+  "#64D2FF";
+
+const DEFAULT_FONT =
+  '"oook-variable", sans-serif';
+
+/* ------------------------------------------------ */
+/* SIDEBAR                                          */
+/* ------------------------------------------------ */
 
 export default function Sidebar() {
   const {
     partnershipModel,
-
     brandA,
     brandB,
-
-    commonFontFamily,
-
-    setPartnershipModel,
-
-    updateBrandA,
-    updateBrandB,
-
-    setCommonFontFamily,
-
-    reset,
   } = useGuidelineStore();
 
-  const model =
-    partnershipModels[
-      partnershipModel
-    ];
+  /* ---------------------------------------------- */
+  /* PARTNERSHIP MODEL                              */
+  /* ---------------------------------------------- */
+
+  const setPartnershipModel = (
+    model: PartnershipModelId
+  ) => {
+    useGuidelineStore.setState({
+      partnershipModel: model,
+    });
+  };
+
+  /* ---------------------------------------------- */
+  /* UPDATE BRAND                                   */
+  /* ---------------------------------------------- */
+
+  const updateBrand = (
+    side: BrandSide,
+    patch: Partial<BrandData>
+  ) => {
+    useGuidelineStore.setState(
+      (state) => {
+        if (side === "A") {
+          return {
+            brandA: {
+              ...state.brandA,
+              ...patch,
+            } as typeof state.brandA,
+          };
+        }
+
+        return {
+          brandB: {
+            ...state.brandB,
+            ...patch,
+          } as typeof state.brandB,
+        };
+      }
+    );
+  };
+
+  /* ---------------------------------------------- */
+  /* RENDER                                         */
+  /* ---------------------------------------------- */
 
   return (
     <aside
       className="
         flex
-        h-screen
-        w-[390px]
+        h-full
+        w-[340px]
         shrink-0
         flex-col
-        border-l
+
+        border-r
         border-white/[0.07]
-        bg-[#101011]
-        text-white
+
+        bg-[#0b0b0c]
       "
     >
-      {/* HEADER */}
-
-      <header
-        className="
-          shrink-0
-          border-b
-          border-white/[0.07]
-          px-[26px]
-          py-[24px]
-        "
-      >
-        <p className="text-[16px] oook-medium">
-          Configure
-        </p>
-
-        <p className="mt-[4px] text-[13px] text-white/35">
-          Partnership visual system
-        </p>
-      </header>
-
-      {/* CONTENT */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
       <div
         className="
-          flex-1
-          overflow-y-auto
-          px-[26px]
-          pb-[50px]
+          shrink-0
+
+          border-b
+          border-white/[0.07]
+
+          px-[22px]
+          py-[20px]
         "
       >
-        {/* PARTNERSHIP */}
+        <p
+          className="
+            text-[15px]
+            text-white
 
-        <section className="py-[28px]">
-          <SectionTitle>
-            Partnership model
-          </SectionTitle>
+            oook-medium
+          "
+        >
+          Partnership Guide
+        </p>
 
-          <select
-            value={partnershipModel}
-            onChange={(event) =>
-              setPartnershipModel(
-                event.target
-                  .value as PartnershipModelId
-              )
-            }
-            className="
-              mt-[16px]
-              h-[52px]
-              w-full
-              rounded-[14px]
-              border
-              border-white/10
-              bg-white/[0.035]
-              px-[16px]
-              text-[15px]
-              text-white
-              outline-none
-              transition
-              focus:border-white/25
-            "
-          >
-            {partnershipModelOptions.map(
-              (option) => (
-                <option
-                  key={option.id}
-                  value={option.id}
-                >
-                  {option.label}
-                </option>
-              )
-            )}
-          </select>
+        <p
+          className="
+            mt-[3px]
 
-          <p
-            className="
-              mt-[12px]
-              text-[13px]
-              leading-[1.45]
-              text-white/35
-            "
-          >
-            {model.description}
-          </p>
-        </section>
+            text-[11px]
+            leading-[1.4]
 
-        <Divider />
-
-        {/* BRAND A */}
-
-        <BrandSection
-          title="Brand A"
-          brand={brandA}
-          update={updateBrandA}
-        />
-
-        <Divider />
-
-        {/* BRAND B */}
-
-        <BrandSection
-          title="Brand B"
-          brand={brandB}
-          update={updateBrandB}
-        />
-
-        <Divider />
-
-        {/* COMMON TYPOGRAPHY */}
-
-        <section className="py-[28px]">
-          <SectionTitle>
-            Common typography
-          </SectionTitle>
-
-          <p
-            className="
-              mt-[10px]
-              text-[13px]
-              leading-[1.45]
-              text-white/35
-            "
-          >
-            Typeface used for shared
-            partnership messaging.
-          </p>
-
-          <div className="mt-[18px]">
-            <FieldLabel>
-              Typeface
-            </FieldLabel>
-
-            <FontUploader
-              label="Common Typography"
-              currentFont={
-                commonFontFamily
-              }
-              onChange={
-                setCommonFontFamily
-              }
-            />
-          </div>
-
-          {commonFontFamily !==
-            "oook-variable" && (
-            <button
-              onClick={() =>
-                setCommonFontFamily(
-                  "oook-variable"
-                )
-              }
-              className="
-                mt-[10px]
-                text-[12px]
-                text-white/30
-                transition
-                hover:text-white/65
-              "
-            >
-              Reset to Oook Variable
-            </button>
-          )}
-        </section>
+            text-white/30
+          "
+        >
+          Define the relationship and visual
+          identity of both brands.
+        </p>
       </div>
 
-      {/* FOOTER */}
+      {/* ======================================== */}
+      {/* SCROLLABLE CONTENT                       */}
+      {/* ======================================== */}
 
-      <footer
+      <div
         className="
-          shrink-0
-          space-y-[10px]
-          border-t
-          border-white/[0.07]
-          bg-[#101011]
-          p-[20px]
+          min-h-0
+          flex-1
+
+          overflow-y-auto
+
+          px-[22px]
+          py-[22px]
+
+          [scrollbar-width:thin]
+          [scrollbar-color:rgba(255,255,255,0.12)_transparent]
         "
       >
-        <button
-          onClick={reset}
-          className="
-            h-[48px]
-            w-full
-            rounded-[14px]
-            border
-            border-white/10
-            text-[14px]
-            text-white/50
-            transition
-            hover:bg-white/[0.04]
-            hover:text-white
-          "
-        >
-          Reset
-        </button>
+        {/* ====================================== */}
+        {/* PARTNERSHIP MODEL                      */}
+        {/* ====================================== */}
 
-        <button
-          className="
-            h-[50px]
-            w-full
-            rounded-[14px]
-            bg-white
-            text-[15px]
-            text-black
-            oook-medium
-            transition
-            hover:bg-white/90
-          "
+        <SidebarSection
+          eyebrow="01"
+          title="Partnership model"
+          description="Defines ownership, hierarchy and the relationship between both brands."
         >
-          Export PDF
-        </button>
-      </footer>
+          <div
+            className="
+              mt-[14px]
+
+              grid
+              grid-cols-2
+
+              gap-[7px]
+            "
+          >
+            {PARTNERSHIP_MODELS.map(
+              (model) => {
+                const active =
+                  partnershipModel ===
+                  model.id;
+
+                return (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() =>
+                      setPartnershipModel(
+                        model.id
+                      )
+                    }
+                    className={`
+                      min-h-[64px]
+
+                      rounded-[12px]
+
+                      border
+
+                      px-[11px]
+                      py-[10px]
+
+                      text-left
+
+                      transition-all
+                      duration-150
+
+                      ${
+                        active
+                          ? `
+                              border-white/32
+                              bg-white
+                            `
+                          : `
+                              border-white/[0.07]
+                              bg-white/[0.025]
+
+                              hover:border-white/15
+                              hover:bg-white/[0.045]
+                            `
+                      }
+                    `}
+                  >
+                    <p
+                      className={`
+                        text-[11px]
+
+                        oook-medium
+
+                        ${
+                          active
+                            ? "text-black"
+                            : "text-white/72"
+                        }
+                      `}
+                    >
+                      {model.label}
+                    </p>
+
+                    <p
+                      className={`
+                        mt-[3px]
+
+                        text-[8px]
+                        leading-[1.25]
+
+                        ${
+                          active
+                            ? "text-black/45"
+                            : "text-white/25"
+                        }
+                      `}
+                    >
+                      {
+                        model.description
+                      }
+                    </p>
+                  </button>
+                );
+              }
+            )}
+          </div>
+        </SidebarSection>
+
+        <Divider />
+
+        {/* ====================================== */}
+        {/* BRAND A                                */}
+        {/* ====================================== */}
+
+        <BrandEditor
+          side="A"
+          brand={
+            brandA as BrandData
+          }
+          defaultPrimary={
+            DEFAULT_A_PRIMARY
+          }
+          defaultSecondary={
+            DEFAULT_A_SECONDARY
+          }
+          onChange={updateBrand}
+        />
+
+        <Divider />
+
+        {/* ====================================== */}
+        {/* BRAND B                                */}
+        {/* ====================================== */}
+
+        <BrandEditor
+          side="B"
+          brand={
+            brandB as BrandData
+          }
+          defaultPrimary={
+            DEFAULT_B_PRIMARY
+          }
+          defaultSecondary={
+            DEFAULT_B_SECONDARY
+          }
+          onChange={updateBrand}
+        />
+
+        {/* BOTTOM SPACE */}
+
+        <div className="h-[30px]" />
+      </div>
     </aside>
   );
 }
 
-/* ---------------------------------------------- */
-/* BRAND SECTION                                  */
-/* ---------------------------------------------- */
+/* ------------------------------------------------ */
+/* BRAND EDITOR                                     */
+/* ------------------------------------------------ */
 
-interface BrandSectionProps {
-  title: string;
-
-  brand: BrandConfig;
-
-  update: (
-    data: Partial<BrandConfig>
-  ) => void;
-}
-
-function BrandSection({
-  title,
+function BrandEditor({
+  side,
   brand,
-  update,
-}: BrandSectionProps) {
+  defaultPrimary,
+  defaultSecondary,
+  onChange,
+}: {
+  side: BrandSide;
+
+  brand: BrandData;
+
+  defaultPrimary: string;
+  defaultSecondary: string;
+
+  onChange: (
+    side: BrandSide,
+    patch: Partial<BrandData>
+  ) => void;
+}) {
+  const brandLabel =
+    side === "A"
+      ? "Brand A"
+      : "Brand B";
+
+  const primaryColor =
+    brand.primaryColor ||
+    defaultPrimary;
+
+  const secondaryColor =
+    brand.secondaryColor ||
+    defaultSecondary;
+
+  const fontFamily =
+    brand.fontFamily ||
+    DEFAULT_FONT;
+
   return (
-    <section className="py-[28px]">
-      <SectionTitle>
-        {title}
-      </SectionTitle>
+    <SidebarSection
+      eyebrow={
+        side === "A"
+          ? "02"
+          : "03"
+      }
+      title={brandLabel}
+      description={
+        side === "A"
+          ? "Define Brand A's identity and personality."
+          : "Define Brand B's identity and personality."
+      }
+    >
+      {/* ======================================== */}
+      {/* NAME                                     */}
+      {/* ======================================== */}
 
-      {/* NAME */}
-
-      <div className="mt-[20px]">
-        <FieldLabel>
-          Brand name
-        </FieldLabel>
-
-        <TextField
-          value={brand.name}
-          placeholder={title}
-          onChange={(value) =>
-            update({
-              name: value,
-            })
-          }
-        />
-      </div>
-
-      {/* LOGO */}
-
-      <div className="mt-[24px]">
-        <FieldLabel>
-          Logo
-        </FieldLabel>
-
-        <LogoUploader
-          value={brand.logoUrl}
-          onChange={(logoUrl) =>
-            update({
-              logoUrl,
-            })
-          }
-        />
-      </div>
-
-      {/* PRIMARY */}
-
-      <div className="mt-[24px]">
-        <FieldLabel>
-          Primary color
-        </FieldLabel>
-
-        <ColorField
+      <EditorGroup
+        label="Brand name"
+      >
+        <input
+          type="text"
           value={
-            brand.primaryColor
+            brand.name ?? ""
           }
-          onChange={(value) =>
-            update({
-              primaryColor: value,
+          placeholder={
+            brandLabel
+          }
+          onChange={(
+            event
+          ) =>
+            onChange(side, {
+              name:
+                event.target
+                  .value,
             })
           }
+          className="
+            h-[38px]
+            w-full
+
+            rounded-[10px]
+
+            border
+            border-white/[0.08]
+
+            bg-white/[0.025]
+
+            px-[11px]
+
+            text-[11px]
+            text-white/78
+
+            outline-none
+
+            transition-all
+
+            placeholder:text-white/18
+
+            hover:border-white/12
+
+            focus:border-white/22
+            focus:bg-white/[0.035]
+          "
         />
-      </div>
+      </EditorGroup>
 
-      {/* SECONDARY */}
+      {/* ======================================== */}
+      {/* LOGO                                     */}
+      {/* ======================================== */}
 
-      <div className="mt-[18px]">
-        <FieldLabel>
-          Secondary color
-        </FieldLabel>
+      <EditorGroup
+        label="Logo"
+      >
+        <LogoControl
+          side={side}
+          brand={brand}
+          onChange={onChange}
+        />
+      </EditorGroup>
 
-        <ColorField
-          value={
-            brand.secondaryColor
-          }
-          onChange={(value) =>
-            update({
-              secondaryColor:
+      {/* ======================================== */}
+      {/* COLOURS                                  */}
+      {/* ======================================== */}
+
+      <EditorGroup
+        label="Colours"
+        description="Primary and secondary brand accents."
+      >
+        <div
+          className="
+            grid
+            grid-cols-2
+
+            gap-[8px]
+          "
+        >
+          <ColourControl
+            label="Primary"
+            value={
+              primaryColor
+            }
+            fallback={
+              defaultPrimary
+            }
+            onChange={(
+              colour
+            ) =>
+              onChange(side, {
+                primaryColor:
+                  colour,
+              })
+            }
+          />
+
+          <ColourControl
+            label="Secondary"
+            value={
+              secondaryColor
+            }
+            fallback={
+              defaultSecondary
+            }
+            onChange={(
+              colour
+            ) =>
+              onChange(side, {
+                secondaryColor:
+                  colour,
+              })
+            }
+          />
+        </div>
+      </EditorGroup>
+
+      {/* ======================================== */}
+      {/* TYPEFACE                                 */}
+      {/* ======================================== */}
+
+      <EditorGroup
+        label="Typeface"
+        description="Upload the brand font or enter an installed font family."
+      >
+        <TypefaceControl
+          side={side}
+          value={fontFamily}
+          onChange={(
+            value
+          ) =>
+            onChange(side, {
+              fontFamily:
                 value,
             })
           }
         />
+      </EditorGroup>
+
+      {/* ======================================== */}
+      {/* CHARACTER                                */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          mt-[22px]
+
+          border-t
+          border-white/[0.06]
+
+          pt-[18px]
+        "
+      >
+        <BrandCharacterSelector
+          brand={side}
+        />
       </div>
+    </SidebarSection>
+  );
+}
 
-      {/* TYPEFACE */}
+/* ------------------------------------------------ */
+/* LOGO                                             */
+/* ------------------------------------------------ */
 
-      <div className="mt-[24px]">
-        <FieldLabel>
-          Typeface
-        </FieldLabel>
+function LogoControl({
+  side,
+  brand,
+  onChange,
+}: {
+  side: BrandSide;
 
-        <FontUploader
-          label={title}
-          currentFont={
-            brand.fontFamily
-          }
-          onChange={(
-            fontFamily
-          ) =>
-            update({
-              fontFamily,
+  brand: BrandData;
+
+  onChange: (
+    side: BrandSide,
+    patch: Partial<BrandData>
+  ) => void;
+}) {
+  const inputRef =
+    useRef<HTMLInputElement>(
+      null
+    );
+
+  const handleUpload = (
+    event:
+      ChangeEvent<HTMLInputElement>
+  ) => {
+    const file =
+      event.target
+        .files?.[0];
+
+    if (!file) return;
+
+    const reader =
+      new FileReader();
+
+    reader.onload = () => {
+      if (
+        typeof reader.result ===
+        "string"
+      ) {
+        onChange(side, {
+          logoUrl:
+            reader.result,
+        });
+      }
+    };
+
+    reader.readAsDataURL(
+      file
+    );
+
+    event.target.value =
+      "";
+  };
+
+  const hasLogo =
+    Boolean(
+      brand.logoUrl
+    );
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="
+          image/png,
+          image/jpeg,
+          image/webp,
+          image/svg+xml
+        "
+        onChange={
+          handleUpload
+        }
+        className="hidden"
+      />
+
+      <button
+        type="button"
+        onClick={() =>
+          inputRef.current?.click()
+        }
+        className="
+          group
+
+          relative
+
+          flex
+          h-[86px]
+          w-full
+
+          items-center
+          justify-center
+
+          overflow-hidden
+
+          rounded-[11px]
+
+          border
+          border-dashed
+          border-white/[0.09]
+
+          bg-white/[0.018]
+
+          transition-all
+
+          hover:border-white/18
+          hover:bg-white/[0.03]
+        "
+      >
+        {hasLogo ? (
+          <>
+            <img
+              src={
+                brand.logoUrl ??
+                ""
+              }
+              alt=""
+              draggable={false}
+              className="
+                max-h-[42px]
+                max-w-[68%]
+
+                object-contain
+              "
+            />
+
+            <div
+              className="
+                absolute
+                inset-0
+
+                flex
+                items-center
+                justify-center
+
+                bg-black/65
+
+                opacity-0
+
+                backdrop-blur-[4px]
+
+                transition-opacity
+
+                group-hover:opacity-100
+              "
+            >
+              <span
+                className="
+                  text-[9px]
+
+                  text-white/70
+                "
+              >
+                Replace logo
+              </span>
+            </div>
+          </>
+        ) : (
+          <div
+            className="
+              text-center
+            "
+          >
+            <div
+              className="
+                mx-auto
+
+                flex
+                h-[24px]
+                w-[24px]
+
+                items-center
+                justify-center
+
+                rounded-full
+
+                border
+                border-white/[0.08]
+
+                text-[13px]
+
+                text-white/30
+              "
+            >
+              +
+            </div>
+
+            <p
+              className="
+                mt-[7px]
+
+                text-[9px]
+
+                text-white/28
+              "
+            >
+              Upload logo
+            </p>
+
+            <p
+              className="
+                mt-[2px]
+
+                text-[7px]
+
+                text-white/16
+              "
+            >
+              SVG · PNG · WEBP
+            </p>
+          </div>
+        )}
+      </button>
+
+      {hasLogo && (
+        <button
+          type="button"
+          onClick={() =>
+            onChange(side, {
+              logoUrl: null,
             })
           }
+          className="
+            mt-[6px]
+
+            text-[8px]
+
+            text-white/22
+
+            transition-colors
+
+            hover:text-white/55
+          "
+        >
+          Remove
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* COLOUR                                           */
+/* ------------------------------------------------ */
+
+function ColourControl({
+  label,
+  value,
+  fallback,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  fallback: string;
+
+  onChange: (
+    colour: string
+  ) => void;
+}) {
+  const safeValue =
+    normalizeColour(
+      value,
+      fallback
+    );
+
+  return (
+    <div
+      className="
+        rounded-[10px]
+
+        border
+        border-white/[0.07]
+
+        bg-white/[0.018]
+
+        p-[9px]
+      "
+    >
+      <p
+        className="
+          text-[7px]
+          uppercase
+          tracking-[0.13em]
+
+          text-white/20
+        "
+      >
+        {label}
+      </p>
+
+      <div
+        className="
+          mt-[7px]
+
+          flex
+          items-center
+
+          gap-[7px]
+        "
+      >
+        {/* COLOUR PICKER */}
+
+        <label
+          className="
+            relative
+
+            h-[22px]
+            w-[22px]
+
+            shrink-0
+
+            cursor-pointer
+
+            overflow-hidden
+
+            rounded-full
+
+            border
+            border-white/10
+          "
+          style={{
+            backgroundColor:
+              safeValue,
+          }}
+        >
+          <input
+            type="color"
+            value={
+              safeValue
+            }
+            onChange={(
+              event
+            ) =>
+              onChange(
+                event.target
+                  .value
+              )
+            }
+            className="
+              absolute
+              inset-0
+
+              h-full
+              w-full
+
+              cursor-pointer
+
+              opacity-0
+            "
+          />
+        </label>
+
+        {/* HEX */}
+
+        <input
+          type="text"
+          value={value}
+          onChange={(
+            event
+          ) =>
+            onChange(
+              event.target
+                .value
+            )
+          }
+          onBlur={() => {
+            if (
+              !isHexColour(
+                value
+              )
+            ) {
+              onChange(
+                fallback
+              );
+            }
+          }}
+          spellCheck={false}
+          className="
+            min-w-0
+            flex-1
+
+            bg-transparent
+
+            text-[9px]
+            uppercase
+
+            text-white/46
+
+            outline-none
+          "
         />
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* TYPEFACE                                         */
+/* ------------------------------------------------ */
+
+function TypefaceControl({
+  side,
+  value,
+  onChange,
+}: {
+  side: BrandSide;
+  value: string;
+
+  onChange: (
+    value: string
+  ) => void;
+}) {
+  const inputRef =
+    useRef<HTMLInputElement>(
+      null
+    );
+
+  const handleFontUpload =
+    async (
+      event:
+        ChangeEvent<HTMLInputElement>
+    ) => {
+      const file =
+        event.target
+          .files?.[0];
+
+      if (!file) return;
+
+      try {
+        const dataUrl =
+          await readFileAsDataUrl(
+            file
+          );
+
+        const fontName =
+          `brand-${side.toLowerCase()}-${Date.now()}`;
+
+        const font =
+          new FontFace(
+            fontName,
+            `url(${dataUrl})`
+          );
+
+        const loadedFont =
+          await font.load();
+
+        document.fonts.add(
+          loadedFont
+        );
+
+        onChange(
+          `"${fontName}", sans-serif`
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          "Unable to load font:",
+          error
+        );
+      }
+
+      event.target.value =
+        "";
+    };
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="
+          .ttf,
+          .otf,
+          .woff,
+          .woff2,
+          font/ttf,
+          font/otf,
+          font/woff,
+          font/woff2
+        "
+        onChange={
+          handleFontUpload
+        }
+        className="hidden"
+      />
+
+      {/* PREVIEW */}
+
+      <div
+        className="
+          rounded-[11px]
+
+          border
+          border-white/[0.07]
+
+          bg-white/[0.018]
+
+          px-[12px]
+          py-[12px]
+        "
+      >
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+
+            gap-[10px]
+          "
+        >
+          <p
+            className="
+              text-[7px]
+              uppercase
+              tracking-[0.13em]
+
+              text-white/20
+            "
+          >
+            Preview
+          </p>
+
+          <p
+            className="
+              max-w-[150px]
+
+              truncate
+
+              text-[7px]
+
+              text-white/18
+            "
+          >
+            {cleanFontName(
+              value
+            )}
+          </p>
+        </div>
+
+        <p
+          className="
+            mt-[9px]
+
+            truncate
+
+            text-[22px]
+            leading-none
+
+            text-white/78
+          "
+          style={{
+            fontFamily:
+              value,
+          }}
+        >
+          Aa Bb Cc
+        </p>
+
+        <p
+          className="
+            mt-[6px]
+
+            truncate
+
+            text-[9px]
+
+            text-white/34
+          "
+          style={{
+            fontFamily:
+              value,
+          }}
+        >
+          Immersive experiences
+        </p>
+      </div>
+
+      {/* CONTROLS */}
+
+      <div
+        className="
+          mt-[7px]
+
+          flex
+
+          gap-[6px]
+        "
+      >
+        <input
+          type="text"
+          value={value}
+          placeholder="Font family"
+          onChange={(
+            event
+          ) =>
+            onChange(
+              event.target
+                .value
+            )
+          }
+          className="
+            h-[34px]
+            min-w-0
+            flex-1
+
+            rounded-[9px]
+
+            border
+            border-white/[0.07]
+
+            bg-white/[0.02]
+
+            px-[9px]
+
+            text-[8px]
+
+            text-white/42
+
+            outline-none
+
+            placeholder:text-white/16
+
+            focus:border-white/16
+          "
+        />
+
+        <button
+          type="button"
+          onClick={() =>
+            inputRef.current?.click()
+          }
+          className="
+            h-[34px]
+
+            shrink-0
+
+            rounded-[9px]
+
+            border
+            border-white/[0.08]
+
+            bg-white/[0.025]
+
+            px-[10px]
+
+            text-[8px]
+
+            text-white/42
+
+            transition-all
+
+            hover:border-white/16
+            hover:bg-white/[0.05]
+            hover:text-white/70
+          "
+        >
+          Upload
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* SIDEBAR SECTION                                  */
+/* ------------------------------------------------ */
+
+function SidebarSection({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  children:
+    React.ReactNode;
+}) {
+  return (
+    <section>
+      <div
+        className="
+          flex
+          items-start
+
+          gap-[10px]
+        "
+      >
+        <p
+          className="
+            mt-[3px]
+
+            shrink-0
+
+            text-[8px]
+            tracking-[0.12em]
+
+            text-white/15
+          "
+        >
+          {eyebrow}
+        </p>
+
+        <div>
+          <h2
+            className="
+              text-[13px]
+
+              text-white/78
+
+              oook-medium
+            "
+          >
+            {title}
+          </h2>
+
+          {description && (
+            <p
+              className="
+                mt-[3px]
+
+                max-w-[245px]
+
+                text-[9px]
+                leading-[1.4]
+
+                text-white/26
+              "
+            >
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div
+        className="
+          mt-[14px]
+        "
+      >
+        {children}
       </div>
     </section>
   );
 }
 
-/* ---------------------------------------------- */
-/* TEXT FIELD                                     */
-/* ---------------------------------------------- */
+/* ------------------------------------------------ */
+/* EDITOR GROUP                                     */
+/* ------------------------------------------------ */
 
-function TextField({
-  value,
-  placeholder,
-  onChange,
+function EditorGroup({
+  label,
+  description,
+  children,
 }: {
-  value: string;
-  placeholder?: string;
-
-  onChange: (
-    value: string
-  ) => void;
+  label: string;
+  description?: string;
+  children:
+    React.ReactNode;
 }) {
   return (
-    <input
-      type="text"
-      value={value}
-      placeholder={placeholder}
-      onChange={(event) =>
-        onChange(
-          event.target.value
-        )
-      }
+    <div
       className="
-        h-[48px]
+        mt-[18px]
+
+        first:mt-0
+      "
+    >
+      <div
+        className="
+          mb-[8px]
+        "
+      >
+        <p
+          className="
+            text-[9px]
+            uppercase
+            tracking-[0.14em]
+
+            text-white/28
+          "
+        >
+          {label}
+        </p>
+
+        {description && (
+          <p
+            className="
+              mt-[2px]
+
+              text-[8px]
+              leading-[1.35]
+
+              text-white/18
+            "
+          >
+            {description}
+          </p>
+        )}
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* DIVIDER                                          */
+/* ------------------------------------------------ */
+
+function Divider() {
+  return (
+    <div
+      className="
+        my-[24px]
+
+        h-px
         w-full
-        rounded-[14px]
-        border
-        border-white/10
-        bg-white/[0.025]
-        px-[15px]
-        text-[14px]
-        text-white
-        outline-none
-        transition
-        placeholder:text-white/20
-        hover:border-white/15
-        focus:border-white/25
-        focus:bg-white/[0.035]
+
+        bg-white/[0.06]
       "
     />
   );
 }
 
-/* ---------------------------------------------- */
-/* COLOR                                          */
-/* ---------------------------------------------- */
+/* ------------------------------------------------ */
+/* HELPERS                                          */
+/* ------------------------------------------------ */
 
-function ColorField({
-  value,
-  onChange,
-}: {
-  value: string;
+function isHexColour(
+  value: string
+) {
+  return /^#[0-9a-fA-F]{6}$/.test(
+    value.trim()
+  );
+}
 
-  onChange: (
-    value: string
-  ) => void;
-}) {
-  return (
-    <div
-      className="
-        flex
-        h-[48px]
-        items-center
-        gap-[12px]
-        rounded-[14px]
-        border
-        border-white/10
-        bg-white/[0.025]
-        px-[12px]
-        transition
-        hover:border-white/15
-        focus-within:border-white/25
-      "
-    >
-      <input
-        type="color"
-        value={value}
-        onChange={(event) =>
-          onChange(
-            event.target.value
-          )
+function normalizeColour(
+  value: string,
+  fallback: string
+) {
+  if (
+    isHexColour(value)
+  ) {
+    return value;
+  }
+
+  return fallback;
+}
+
+function cleanFontName(
+  value: string
+) {
+  return value
+    .replace(/["']/g, "")
+    .split(",")[0]
+    .trim();
+}
+
+function readFileAsDataUrl(
+  file: File
+) {
+  return new Promise<string>(
+    (
+      resolve,
+      reject
+    ) => {
+      const reader =
+        new FileReader();
+
+      reader.onload = () => {
+        if (
+          typeof reader.result ===
+          "string"
+        ) {
+          resolve(
+            reader.result
+          );
+        } else {
+          reject(
+            new Error(
+              "Invalid file result"
+            )
+          );
         }
-        className="
-          h-[27px]
-          w-[27px]
-          shrink-0
-          cursor-pointer
-          border-0
-          bg-transparent
-          p-0
-        "
-      />
+      };
 
-      <input
-        type="text"
-        value={value}
-        onChange={(event) =>
-          onChange(
-            event.target.value
-          )
-        }
-        className="
-          min-w-0
-          flex-1
-          bg-transparent
-          font-mono
-          text-[13px]
-          uppercase
-          text-white/75
-          outline-none
-        "
-      />
-    </div>
-  );
-}
+      reader.onerror =
+        () => {
+          reject(
+            reader.error
+          );
+        };
 
-/* ---------------------------------------------- */
-/* SMALL COMPONENTS                               */
-/* ---------------------------------------------- */
-
-function SectionTitle({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <p
-      className="
-        text-[12px]
-        uppercase
-        tracking-[0.16em]
-        text-white/40
-      "
-    >
-      {children}
-    </p>
-  );
-}
-
-function FieldLabel({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <p
-      className="
-        mb-[9px]
-        text-[13px]
-        text-white/45
-      "
-    >
-      {children}
-    </p>
-  );
-}
-
-function Divider() {
-  return (
-    <div className="h-px bg-white/[0.07]" />
+      reader.readAsDataURL(
+        file
+      );
+    }
   );
 }

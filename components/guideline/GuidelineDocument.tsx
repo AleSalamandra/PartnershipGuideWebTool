@@ -1,5 +1,9 @@
 "use client";
 
+import type {
+  ComponentType,
+} from "react";
+
 import CoverPage from "./CoverPage";
 import PartnershipPrinciple from "./PartnershipPrinciple";
 
@@ -13,6 +17,9 @@ import Page07 from "./Page07";
 import Page08 from "./Page08";
 import Page09 from "./Page09";
 import Page10 from "./Page10";
+import Page11 from "./Page11";
+import Page12 from "./Page12";
+import Page13 from "./Page13";
 
 /* ------------------------------------------------ */
 /* TYPES                                            */
@@ -22,7 +29,7 @@ export interface GuidelinePageDefinition {
   id: string;
   number: string;
   title: string;
-  component: React.ComponentType;
+  component: ComponentType;
 }
 
 interface GuidelineDocumentProps {
@@ -34,98 +41,141 @@ interface GuidelineDocumentProps {
 /* ------------------------------------------------ */
 
 /*
-  This is now the SINGLE SOURCE OF TRUTH
-  for the document structure.
+  SINGLE SOURCE OF TRUTH
 
-  Adding a page here automatically adds it
-  to the viewer navigation.
+  01  Cover
+  02  Partnership Principle
+  03  Partnership Model
+  04  Corporate Visuals
+  05  Logo Positioning
+  06  Brand Hierarchy
+  07  Video Opening
+  08  Content Branding
+  09  Video Closing
+  10  Shared Visual Territory — Colour
+  11  Shared Visual Territory — Typography
+  12  Shared Visual Territory — Graphic Language
+  13  Page11
+  14  Page12
+  15  Page13
 */
 
-export const GUIDELINE_PAGES: GuidelinePageDefinition[] = [
-  {
-    id: "cover",
-    number: "01",
-    title: "Style Guide",
-    component: CoverPage,
-  },
+export const GUIDELINE_PAGES: GuidelinePageDefinition[] =
+  [
+    {
+      id: "cover",
+      number: "01",
+      title: "Style Guide",
+      component: CoverPage,
+    },
 
-  {
-    id: "partnership-principle",
-    number: "02",
-    title: "Partnership Principle",
-    component: PartnershipPrinciple,
-  },
+    {
+      id: "partnership-principle",
+      number: "02",
+      title: "Partnership Principle",
+      component:
+        PartnershipPrinciple,
+    },
 
-  {
-    id: "partnership-model",
-    number: "03",
-    title: "Partnership Model",
-    component: Page01,
-  },
+    {
+      id: "partnership-model",
+      number: "03",
+      title: "Partnership Model",
+      component: Page01,
+    },
 
-  {
-    id: "corporate-visuals",
-    number: "04",
-    title: "Corporate Visuals",
-    component: Page02,
-  },
+    {
+      id: "corporate-visuals",
+      number: "04",
+      title: "Corporate Visuals",
+      component: Page02,
+    },
 
-  {
-    id: "logo-positioning",
-    number: "05",
-    title: "Logo Positioning Suggestions",
-    component: Page03,
-  },
+    {
+      id: "logo-positioning",
+      number: "05",
+      title:
+        "Logo Positioning Suggestions",
+      component: Page03,
+    },
 
-  {
-    id: "brand-hierarchy",
-    number: "06",
-    title: "Brand Hierarchy Across Media",
-    component: Page04,
-  },
+    {
+      id: "brand-hierarchy",
+      number: "06",
+      title:
+        "Brand Hierarchy Across Media",
+      component: Page04,
+    },
 
-  {
-    id: "opening-motion",
-    number: "07",
-    title: "Video Opening Keyframes",
-    component: Page05,
-  },
+    {
+      id: "video-opening",
+      number: "07",
+      title:
+        "Video Opening Keyframes",
+      component: Page05,
+    },
 
-  {
-    id: "content-identity",
-    number: "08",
-    title: "Content Branding Applications",
-    component: Page06,
-  },
+    {
+      id: "content-branding",
+      number: "08",
+      title:
+        "Content Branding Applications",
+      component: Page06,
+    },
 
-  {
-    id: "closing-identity",
-    number: "09",
-    title: "Video Closing Applications",
-    component: Page07,
-  },
+    {
+      id: "video-closing",
+      number: "09",
+      title:
+        "Video Closing Applications",
+      component: Page07,
+    },
 
-  {
-    id: "page-08",
-    number: "10",
-    title: "Guideline 08",
-    component: Page08,
-  },
+    {
+      id: "shared-colour",
+      number: "10",
+      title:
+        "Shared Visual Territory — Colour",
+      component: Page08,
+    },
 
-  {
-    id: "page-09",
-    number: "11",
-    title: "Guideline 09",
-    component: Page09,
-  },
+    {
+      id: "shared-typography",
+      number: "11",
+      title:
+        "Shared Visual Territory — Typography",
+      component: Page09,
+    },
 
-  {
-    id: "page-10",
-    number: "12",
-    title: "Guideline 10",
-    component: Page10,
-  },
-];
+    {
+      id: "shared-graphic-language",
+      number: "12",
+      title:
+        "Shared Visual Territory — Graphic Language",
+      component: Page10,
+    },
+
+    {
+      id: "page-11",
+      number: "13",
+      title: "Guideline 11",
+      component: Page11,
+    },
+
+    {
+      id: "page-12",
+      number: "14",
+      title: "Guideline 12",
+      component: Page12,
+    },
+
+    {
+      id: "page-13",
+      number: "15",
+      title: "Guideline 13",
+      component: Page13,
+    },
+  ];
 
 /* ------------------------------------------------ */
 /* PAGE COUNT                                       */
@@ -141,18 +191,20 @@ export const GUIDELINE_PAGE_COUNT =
 export default function GuidelineDocument({
   currentPage,
 }: GuidelineDocumentProps) {
-  /*
-    Protect against indexes outside the
-    available document range.
-  */
-
-  const safePage = Math.min(
-    Math.max(currentPage, 0),
-    GUIDELINE_PAGES.length - 1
-  );
+  const safePageIndex =
+    Math.min(
+      Math.max(
+        currentPage,
+        0
+      ),
+      GUIDELINE_PAGES.length -
+        1
+    );
 
   const pageDefinition =
-    GUIDELINE_PAGES[safePage];
+    GUIDELINE_PAGES[
+      safePageIndex
+    ];
 
   const CurrentPage =
     pageDefinition.component;
