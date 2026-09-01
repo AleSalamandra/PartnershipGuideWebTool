@@ -1,6 +1,7 @@
 "use client";
 
-import React, {
+import {
+  ReactNode,
   useEffect,
   useState,
 } from "react";
@@ -12,14 +13,22 @@ import { useGuidelineStore } from "@/store/guidelineStore";
 import { PartnershipModelId } from "@/types/guideline";
 
 /* ------------------------------------------------ */
-/* IMAGES                                           */
+/* BACKGROUND IMAGES                                */
 /* ------------------------------------------------ */
 
-const BACKGROUND_IMAGES = Array.from(
+const BACKGROUND_IMAGE_IDS = Array.from(
   { length: 10 },
-  (_, index) =>
-    `/images/image${index + 1}.png`
+  (_, index) => index + 1
 );
+
+const RESERVED_BRAND_IMAGE = 6;
+
+const IMAGE_EXTENSIONS = [
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+];
 
 /* ------------------------------------------------ */
 /* TYPES                                            */
@@ -29,16 +38,25 @@ type FrameVariant =
   | "atmosphere"
   | "brandAHero"
   | "brandBHero"
+  | "connectorEqual"
   | "connectorWith"
   | "connectorPowered"
   | "connectorPresents"
   | "equalLockup"
   | "withLockup"
   | "poweredLockup"
+  | "presentsLockup"
   | "contentEqual"
   | "contentWith"
   | "contentPowered"
   | "contentPresents";
+
+type VideoLogoSize =
+  | "hero"
+  | "primary"
+  | "secondary"
+  | "credit"
+  | "footer";
 
 interface FrameSpec {
   id: string;
@@ -53,26 +71,85 @@ interface OpeningFlow {
     string,
     string,
     string,
+    string,
     string
   ];
 
-  frames: FrameSpec[];
+  frames: [
+    FrameSpec,
+    FrameSpec,
+    FrameSpec,
+    FrameSpec,
+    FrameSpec,
+    FrameSpec
+  ];
 }
 
 /* ------------------------------------------------ */
 /* RANDOM IMAGES                                    */
 /* ------------------------------------------------ */
 
-function getRandomFrameImages() {
-  const shuffled = [
-    ...BACKGROUND_IMAGES,
-  ].sort(() => Math.random() - 0.5);
+function getRandomFrameImages(): number[] {
+  /*
+    image6 is completely reserved.
 
-  return shuffled.slice(0, 5);
+    It may ONLY be used by:
+    - Keyframe 02
+    - Keyframe 04
+
+    It is explicitly removed from
+    the random image pool.
+  */
+
+  const availableImages =
+    BACKGROUND_IMAGE_IDS.filter(
+      (imageId) =>
+        imageId !== RESERVED_BRAND_IMAGE
+    );
+
+  /*
+    Fisher-Yates shuffle.
+  */
+
+  for (
+    let i =
+      availableImages.length - 1;
+    i > 0;
+    i--
+  ) {
+    const j = Math.floor(
+      Math.random() * (i + 1)
+    );
+
+    [
+      availableImages[i],
+      availableImages[j],
+    ] = [
+      availableImages[j],
+      availableImages[i],
+    ];
+  }
+
+  /*
+    We need four random images because
+    KF02 and KF04 are fixed to image6.
+  */
+
+  const randomImages =
+    availableImages.slice(0, 4);
+
+  return [
+    randomImages[0],        // KF01
+    RESERVED_BRAND_IMAGE,   // KF02
+    randomImages[1],        // KF03
+    RESERVED_BRAND_IMAGE,   // KF04
+    randomImages[2],        // KF05
+    randomImages[3],        // KF06
+  ];
 }
 
 /* ------------------------------------------------ */
-/* FLOW DATA                                        */
+/* OPENING FLOW DATA                                */
 /* ------------------------------------------------ */
 
 function getOpeningFlow(
@@ -81,9 +158,9 @@ function getOpeningFlow(
   brandBName: string
 ): OpeningFlow {
   switch (model) {
-    /* -------------------------------------------- */
-    /* A × B                                        */
-    /* -------------------------------------------- */
+    /* ================================================= */
+    /* A × B                                             */
+    /* ================================================= */
 
     case "axb":
       return {
@@ -92,7 +169,8 @@ function getOpeningFlow(
 
         transitions: [
           "fade in",
-          "crossfade",
+          "introduce",
+          "reveal",
           "merge",
           "enter",
         ],
@@ -103,32 +181,47 @@ function getOpeningFlow(
             title: "Atmosphere",
             variant: "atmosphere",
           },
+
           {
             id: "02",
             title: brandAName,
             variant: "brandAHero",
           },
+
           {
             id: "03",
+            title: "×",
+            variant:
+              "connectorEqual",
+          },
+
+          {
+            id: "04",
             title: brandBName,
             variant: "brandBHero",
           },
-          {
-            id: "04",
-            title: `${brandAName} × ${brandBName}`,
-            variant: "equalLockup",
-          },
+
           {
             id: "05",
-            title: "Content starts",
-            variant: "contentEqual",
+            title:
+              `${brandAName} × ${brandBName}`,
+            variant:
+              "equalLockup",
+          },
+
+          {
+            id: "06",
+            title:
+              "Content starts",
+            variant:
+              "contentEqual",
           },
         ],
       };
 
-    /* -------------------------------------------- */
-    /* A WITH B                                     */
-    /* -------------------------------------------- */
+    /* ================================================= */
+    /* A WITH B                                          */
+    /* ================================================= */
 
     case "aandb":
       return {
@@ -138,6 +231,7 @@ function getOpeningFlow(
         transitions: [
           "fade in",
           "type in",
+          "reveal",
           "resolve",
           "enter",
         ],
@@ -148,32 +242,47 @@ function getOpeningFlow(
             title: "Atmosphere",
             variant: "atmosphere",
           },
+
           {
             id: "02",
             title: brandAName,
             variant: "brandAHero",
           },
+
           {
             id: "03",
             title: "with",
-            variant: "connectorWith",
+            variant:
+              "connectorWith",
           },
+
           {
             id: "04",
-            title: `${brandAName} with ${brandBName}`,
-            variant: "withLockup",
+            title: brandBName,
+            variant: "brandBHero",
           },
+
           {
             id: "05",
-            title: "Content starts",
-            variant: "contentWith",
+            title:
+              `${brandAName} with ${brandBName}`,
+            variant:
+              "withLockup",
+          },
+
+          {
+            id: "06",
+            title:
+              "Content starts",
+            variant:
+              "contentWith",
           },
         ],
       };
 
-    /* -------------------------------------------- */
-    /* B POWERED BY A                               */
-    /* -------------------------------------------- */
+    /* ================================================= */
+    /* B POWERED BY A                                    */
+    /* ================================================= */
 
     case "poweredByA":
       return {
@@ -182,7 +291,8 @@ function getOpeningFlow(
 
         transitions: [
           "fade in",
-          "crossfade",
+          "type in",
+          "reveal",
           "resolve",
           "enter",
         ],
@@ -193,43 +303,59 @@ function getOpeningFlow(
             title: "Atmosphere",
             variant: "atmosphere",
           },
+
           {
             id: "02",
             title: brandBName,
             variant: "brandBHero",
           },
+
           {
             id: "03",
             title: "Powered by",
-            variant: "connectorPowered",
+            variant:
+              "connectorPowered",
           },
+
           {
             id: "04",
-            title: `${brandBName} powered by ${brandAName}`,
-            variant: "poweredLockup",
+            title: brandAName,
+            variant: "brandAHero",
           },
+
           {
             id: "05",
-            title: "Content starts",
-            variant: "contentPowered",
+            title:
+              `${brandBName} powered by ${brandAName}`,
+            variant:
+              "poweredLockup",
+          },
+
+          {
+            id: "06",
+            title:
+              "Content starts",
+            variant:
+              "contentPowered",
           },
         ],
       };
 
-    /* -------------------------------------------- */
-    /* A PRESENTS B                                 */
-    /* -------------------------------------------- */
+    /* ================================================= */
+    /* A PRESENTS B                                      */
+    /* ================================================= */
 
     case "presentsB":
     default:
       return {
         description:
-          `${brandAName} establishes the platform first and then introduces ${brandBName} as the featured content.`,
+          `${brandAName} establishes ownership first and then introduces ${brandBName} as the featured content.`,
 
         transitions: [
           "fade in",
           "type in",
           "reveal",
+          "resolve",
           "enter",
         ],
 
@@ -239,25 +365,40 @@ function getOpeningFlow(
             title: "Atmosphere",
             variant: "atmosphere",
           },
+
           {
             id: "02",
             title: brandAName,
             variant: "brandAHero",
           },
+
           {
             id: "03",
             title: "presents",
-            variant: "connectorPresents",
+            variant:
+              "connectorPresents",
           },
+
           {
             id: "04",
             title: brandBName,
             variant: "brandBHero",
           },
+
           {
             id: "05",
-            title: "Content starts",
-            variant: "contentPresents",
+            title:
+              `${brandAName} presents ${brandBName}`,
+            variant:
+              "presentsLockup",
+          },
+
+          {
+            id: "06",
+            title:
+              "Content starts",
+            variant:
+              "contentPresents",
           },
         ],
       };
@@ -279,31 +420,42 @@ export default function Page05() {
     partnershipModel as PartnershipModelId;
 
   const brandAName =
-    brandA.name.trim() || "Brand A";
+    brandA.name.trim() ||
+    "Brand A";
 
   const brandBName =
-    brandB.name.trim() || "Brand B";
+    brandB.name.trim() ||
+    "Brand B";
 
-  const flow = getOpeningFlow(
-    model,
-    brandAName,
-    brandBName
-  );
-
-  const [frameImages, setFrameImages] =
-    useState<string[]>([
-      BACKGROUND_IMAGES[0],
-      BACKGROUND_IMAGES[1],
-      BACKGROUND_IMAGES[2],
-      BACKGROUND_IMAGES[3],
-      BACKGROUND_IMAGES[4],
-    ]);
+  const flow =
+    getOpeningFlow(
+      model,
+      brandAName,
+      brandBName
+    );
 
   /*
-    Escoge 5 fondos al entrar en la página.
+    Initial state already respects
+    image6 reservation.
+  */
 
-    También cambia la selección si el usuario
-    cambia de partnership model.
+  const [
+    frameImages,
+    setFrameImages,
+  ] = useState<number[]>([
+    1,
+    RESERVED_BRAND_IMAGE,
+    2,
+    RESERVED_BRAND_IMAGE,
+    3,
+    4,
+  ]);
+
+  /*
+    Generate a fresh image sequence
+    whenever partnership model changes.
+
+    image6 will never enter random slots.
   */
 
   useEffect(() => {
@@ -375,13 +527,17 @@ export default function Page05() {
           model={model}
           brandAName={brandAName}
           brandBName={brandBName}
-          brandALogo={brandA.logoUrl}
-          brandBLogo={brandB.logoUrl}
+          brandALogo={
+            brandA.logoUrl
+          }
+          brandBLogo={
+            brandB.logoUrl
+          }
         />
       </header>
 
       {/* ------------------------------------------ */}
-      {/* KEYFRAME FLOW                              */}
+      {/* FLOW                                       */}
       {/* ------------------------------------------ */}
 
       <section
@@ -393,24 +549,39 @@ export default function Page05() {
           bottom-[66px]
         "
       >
-        {/* TOP ROW */}
+        {/* ======================================== */}
+        {/* ROW 01                                   */}
+        {/* ======================================== */}
 
         <div
           className="
             grid
-            grid-cols-[1fr_62px_1fr_62px_1fr]
+
+            grid-cols-[1fr_58px_1fr_58px_1fr]
 
             items-center
-            gap-[14px]
+            gap-[12px]
           "
         >
           <KeyframeCard
-            frame={flow.frames[0]}
-            image={frameImages[0]}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandA.logoUrl}
-            brandBLogo={brandB.logoUrl}
+            frame={
+              flow.frames[0]
+            }
+            imageId={
+              frameImages[0]
+            }
+            brandAName={
+              brandAName
+            }
+            brandBName={
+              brandBName
+            }
+            brandALogo={
+              brandA.logoUrl
+            }
+            brandBLogo={
+              brandB.logoUrl
+            }
           />
 
           <Transition
@@ -420,12 +591,24 @@ export default function Page05() {
           />
 
           <KeyframeCard
-            frame={flow.frames[1]}
-            image={frameImages[1]}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandA.logoUrl}
-            brandBLogo={brandB.logoUrl}
+            frame={
+              flow.frames[1]
+            }
+            imageId={
+              frameImages[1]
+            }
+            brandAName={
+              brandAName
+            }
+            brandBName={
+              brandBName
+            }
+            brandALogo={
+              brandA.logoUrl
+            }
+            brandBLogo={
+              brandB.logoUrl
+            }
           />
 
           <Transition
@@ -435,101 +618,70 @@ export default function Page05() {
           />
 
           <KeyframeCard
-            frame={flow.frames[2]}
-            image={frameImages[2]}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandA.logoUrl}
-            brandBLogo={brandB.logoUrl}
+            frame={
+              flow.frames[2]
+            }
+            imageId={
+              frameImages[2]
+            }
+            brandAName={
+              brandAName
+            }
+            brandBName={
+              brandBName
+            }
+            brandALogo={
+              brandA.logoUrl
+            }
+            brandBLogo={
+              brandB.logoUrl
+            }
           />
         </div>
 
-        {/* FLOW TURN */}
+        {/* ======================================== */}
+        {/* TURN 03 → 04                             */}
+        {/* ======================================== */}
 
-        <div
-          className="
-            relative
-            h-[62px]
-          "
-        >
-          <div
-            className="
-              absolute
+        <FlowTurn
+          label={
+            flow.transitions[2]
+          }
+        />
 
-              right-[16%]
-              top-[18px]
-
-              h-px
-              w-[63%]
-
-              bg-white/[0.10]
-            "
-          />
-
-          <div
-            className="
-              absolute
-
-              left-[21%]
-              top-[18px]
-
-              h-[25px]
-              w-px
-
-              bg-white/[0.10]
-            "
-          />
-
-          <div
-            className="
-              absolute
-
-              left-[21%]
-              top-[42px]
-
-              h-px
-              w-[26%]
-
-              bg-white/[0.10]
-            "
-          />
-
-          <div
-            className="
-              absolute
-              left-[44%]
-              top-[26px]
-            "
-          >
-            <Transition
-              label={
-                flow.transitions[2]
-              }
-              compact
-            />
-          </div>
-        </div>
-
-        {/* BOTTOM ROW */}
+        {/* ======================================== */}
+        {/* ROW 02                                   */}
+        {/* ======================================== */}
 
         <div
           className="
             grid
-            max-w-[940px]
 
-            grid-cols-[1fr_62px_1fr]
+            grid-cols-[1fr_58px_1fr_58px_1fr]
 
             items-center
-            gap-[14px]
+            gap-[12px]
           "
         >
           <KeyframeCard
-            frame={flow.frames[3]}
-            image={frameImages[3]}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandA.logoUrl}
-            brandBLogo={brandB.logoUrl}
+            frame={
+              flow.frames[3]
+            }
+            imageId={
+              frameImages[3]
+            }
+            brandAName={
+              brandAName
+            }
+            brandBName={
+              brandBName
+            }
+            brandALogo={
+              brandA.logoUrl
+            }
+            brandBLogo={
+              brandB.logoUrl
+            }
           />
 
           <Transition
@@ -539,16 +691,57 @@ export default function Page05() {
           />
 
           <KeyframeCard
-            frame={flow.frames[4]}
-            image={frameImages[4]}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandA.logoUrl}
-            brandBLogo={brandB.logoUrl}
+            frame={
+              flow.frames[4]
+            }
+            imageId={
+              frameImages[4]
+            }
+            brandAName={
+              brandAName
+            }
+            brandBName={
+              brandBName
+            }
+            brandALogo={
+              brandA.logoUrl
+            }
+            brandBLogo={
+              brandB.logoUrl
+            }
+          />
+
+          <Transition
+            label={
+              flow.transitions[4]
+            }
+          />
+
+          <KeyframeCard
+            frame={
+              flow.frames[5]
+            }
+            imageId={
+              frameImages[5]
+            }
+            brandAName={
+              brandAName
+            }
+            brandBName={
+              brandBName
+            }
+            brandALogo={
+              brandA.logoUrl
+            }
+            brandBLogo={
+              brandB.logoUrl
+            }
           />
         </div>
 
-        {/* FOOTNOTE */}
+        {/* ======================================== */}
+        {/* FOOTNOTE                                 */}
+        {/* ======================================== */}
 
         <div
           className="
@@ -573,8 +766,9 @@ export default function Page05() {
               text-white/20
             "
           >
-            Suggested sequence — timing and
-            transitions may adapt to each format.
+            Suggested sequence — timing
+            and transitions may adapt to
+            each format.
           </p>
 
           <p
@@ -583,8 +777,8 @@ export default function Page05() {
               text-white/20
             "
           >
-            Image · Gaussian blur · Noise · Glass ·
-            Refraction
+            Image · Gaussian blur · Noise ·
+            Glass · Refraction
           </p>
         </div>
       </section>
@@ -598,7 +792,7 @@ export default function Page05() {
 
 function KeyframeCard({
   frame,
-  image,
+  imageId,
 
   brandAName,
   brandBName,
@@ -608,7 +802,7 @@ function KeyframeCard({
 }: {
   frame: FrameSpec;
 
-  image: string;
+  imageId: number;
 
   brandAName: string;
   brandBName: string;
@@ -618,17 +812,18 @@ function KeyframeCard({
 }) {
   return (
     <article>
-      {/* VISUAL */}
+      {/* VIDEO FRAME */}
 
       <div
         className="
           relative
 
-          h-[215px]
+          aspect-video
+          w-full
 
           overflow-hidden
 
-          rounded-[26px]
+          rounded-[20px]
 
           border
           border-white/[0.10]
@@ -637,17 +832,27 @@ function KeyframeCard({
         "
       >
         <FrameBackground
-          src={image}
+          imageId={imageId}
         />
 
         <FrameEffects />
 
         <FrameContent
-          variant={frame.variant}
-          brandAName={brandAName}
-          brandBName={brandBName}
-          brandALogo={brandALogo}
-          brandBLogo={brandBLogo}
+          variant={
+            frame.variant
+          }
+          brandAName={
+            brandAName
+          }
+          brandBName={
+            brandBName
+          }
+          brandALogo={
+            brandALogo
+          }
+          brandBLogo={
+            brandBLogo
+          }
         />
       </div>
 
@@ -655,20 +860,21 @@ function KeyframeCard({
 
       <div
         className="
-          mt-[10px]
+          mt-[8px]
 
           flex
           items-baseline
           justify-between
-          gap-[15px]
+
+          gap-[12px]
         "
       >
         <p
           className="
-            text-[9px]
+            text-[8px]
             uppercase
             tracking-[0.14em]
-            text-white/22
+            text-white/20
           "
         >
           Key frame {frame.id}
@@ -676,11 +882,12 @@ function KeyframeCard({
 
         <p
           className="
+            max-w-[66%]
             truncate
 
             text-right
-            text-[13px]
-            text-white/58
+            text-[11px]
+            text-white/56
 
             oook-medium
           "
@@ -697,62 +904,110 @@ function KeyframeCard({
 /* ------------------------------------------------ */
 
 function FrameBackground({
-  src,
+  imageId,
 }: {
-  src: string;
+  imageId: number;
 }) {
+  const [
+    extensionIndex,
+    setExtensionIndex,
+  ] = useState(0);
+
+  const [
+    failed,
+    setFailed,
+  ] = useState(false);
+
+  useEffect(() => {
+    setExtensionIndex(0);
+    setFailed(false);
+  }, [imageId]);
+
+  const src =
+    `/images/image${imageId}.${IMAGE_EXTENSIONS[extensionIndex]}`;
+
   return (
     <>
-      <img
-        src={src}
-        alt=""
-        draggable={false}
-        className="
-          absolute
-          inset-0
+      {/* IMAGE */}
 
-          h-full
-          w-full
+      {!failed && (
+        <img
+          src={src}
+          alt=""
+          draggable={false}
+          onError={() => {
+            if (
+              extensionIndex <
+              IMAGE_EXTENSIONS.length - 1
+            ) {
+              setExtensionIndex(
+                (current) =>
+                  current + 1
+              );
+            } else {
+              setFailed(true);
+            }
+          }}
+          className="
+            absolute
+            inset-0
 
-          scale-[1.04]
+            h-full
+            w-full
 
-          object-cover
+            scale-[1.03]
 
-          opacity-[0.82]
+            object-cover
 
-          grayscale
+            grayscale
+            saturate-0
 
-          saturate-0
-        "
-      />
+            opacity-[0.92]
+          "
+        />
+      )}
 
-      {/* cinematic darkening */}
+      {/* FALLBACK */}
+
+      {failed && (
+        <div
+          className="
+            absolute
+            inset-0
+
+            bg-[radial-gradient(circle_at_70%_12%,rgba(255,255,255,0.08),transparent_35%),linear-gradient(180deg,#111_0%,#050505_100%)]
+          "
+        />
+      )}
+
+      {/* CINEMATIC CONTRAST */}
 
       <div
         className="
           absolute
           inset-0
 
-          bg-[linear-gradient(180deg,rgba(0,0,0,0.10)_0%,rgba(0,0,0,0.18)_45%,rgba(0,0,0,0.62)_100%)]
+          bg-[linear-gradient(180deg,rgba(0,0,0,0.02)_0%,rgba(0,0,0,0.08)_48%,rgba(0,0,0,0.48)_100%)]
         "
       />
 
-      {/* optical glow */}
+      {/* SOFT LIGHT */}
 
       <div
         className="
           absolute
-          -right-[18%]
-          -top-[30%]
+
+          -right-[20%]
+          -top-[32%]
 
           h-[80%]
-          w-[70%]
+          w-[72%]
 
           rounded-full
 
-          bg-white/[0.09]
+          bg-white/[0.055]
 
-          blur-[70px]
+          blur-[68px]
         "
       />
     </>
@@ -760,7 +1015,7 @@ function FrameBackground({
 }
 
 /* ------------------------------------------------ */
-/* APPLE-LIKE EFFECTS                               */
+/* FRAME EFFECTS                                    */
 /* ------------------------------------------------ */
 
 function FrameEffects() {
@@ -773,28 +1028,30 @@ function FrameEffects() {
           pointer-events-none
 
           absolute
-          -left-[18%]
-          top-[4%]
 
-          h-[58%]
-          w-[85%]
+          -left-[18%]
+          top-[3%]
+
+          h-[56%]
+          w-[82%]
 
           rotate-[-13deg]
 
-          bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,0.06)_48%,transparent_72%)]
+          bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,0.05)_48%,transparent_72%)]
 
           blur-[8px]
         "
       />
 
-      {/* REFRACTION BAND */}
+      {/* REFRACTION */}
 
       <div
         className="
           pointer-events-none
 
           absolute
-          -bottom-[15%]
+
+          -bottom-[18%]
           left-[5%]
 
           h-[48%]
@@ -805,11 +1062,11 @@ function FrameEffects() {
           rounded-[50%]
 
           border
-          border-white/[0.05]
+          border-white/[0.045]
 
-          bg-white/[0.015]
+          bg-white/[0.01]
 
-          backdrop-blur-[7px]
+          backdrop-blur-[6px]
         "
       />
 
@@ -822,7 +1079,7 @@ function FrameEffects() {
           absolute
           inset-0
 
-          opacity-[0.11]
+          opacity-[0.09]
 
           mix-blend-screen
 
@@ -830,7 +1087,7 @@ function FrameEffects() {
         "
       />
 
-      {/* EDGE LIGHT */}
+      {/* EDGE */}
 
       <div
         className="
@@ -839,7 +1096,7 @@ function FrameEffects() {
           absolute
           inset-0
 
-          rounded-[26px]
+          rounded-[20px]
 
           shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
         "
@@ -869,9 +1126,9 @@ function FrameContent({
   brandALogo: string | null;
   brandBLogo: string | null;
 }) {
-  /* -------------------------------------------- */
-  /* ATMOSPHERE                                   */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* ATMOSPHERE                                        */
+  /* ================================================= */
 
   if (
     variant ===
@@ -881,48 +1138,47 @@ function FrameContent({
       <div
         className="
           absolute
-          bottom-[18px]
-          left-[18px]
-          right-[18px]
+
+          bottom-[7%]
+          left-[6%]
+
+          max-w-[68%]
         "
       >
-        <GlassLowerThird>
-          <div>
-            <p
-              className="
-                text-[9px]
-                uppercase
-                tracking-[0.15em]
-                text-white/35
-              "
-            >
-              Opening atmosphere
-            </p>
+        <VideoGlass>
+          <p
+            className="
+              text-[6px]
+              uppercase
+              tracking-[0.16em]
 
-            <p
-              className="
-                mt-[5px]
+              text-white/30
+            "
+          >
+            Opening atmosphere
+          </p>
 
-                max-w-[250px]
+          <p
+            className="
+              mt-[4px]
 
-                text-[14px]
-                leading-[1.35]
+              text-[10px]
+              leading-[1.35]
 
-                text-white/72
-              "
-            >
-              Establish mood before
-              introducing identity.
-            </p>
-          </div>
-        </GlassLowerThird>
+              text-white/68
+            "
+          >
+            Establish mood before
+            introducing identity.
+          </p>
+        </VideoGlass>
       </div>
     );
   }
 
-  /* -------------------------------------------- */
-  /* BRAND A                                      */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* BRAND A                                           */
+  /* ================================================= */
 
   if (
     variant ===
@@ -930,15 +1186,19 @@ function FrameContent({
   ) {
     return (
       <BareHeroLogo
-        logoUrl={brandALogo}
-        fallback={brandAName}
+        logoUrl={
+          brandALogo
+        }
+        fallback={
+          brandAName
+        }
       />
     );
   }
 
-  /* -------------------------------------------- */
-  /* BRAND B                                      */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* BRAND B                                           */
+  /* ================================================= */
 
   if (
     variant ===
@@ -946,15 +1206,30 @@ function FrameContent({
   ) {
     return (
       <BareHeroLogo
-        logoUrl={brandBLogo}
-        fallback={brandBName}
+        logoUrl={
+          brandBLogo
+        }
+        fallback={
+          brandBName
+        }
       />
     );
   }
 
-  /* -------------------------------------------- */
-  /* WORDS                                        */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* RELATIONSHIP                                      */
+  /* ================================================= */
+
+  if (
+    variant ===
+    "connectorEqual"
+  ) {
+    return (
+      <FloatingWord symbol>
+        ×
+      </FloatingWord>
+    );
+  }
 
   if (
     variant ===
@@ -989,9 +1264,9 @@ function FrameContent({
     );
   }
 
-  /* -------------------------------------------- */
-  /* EQUAL LOCKUP                                 */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* FINAL LOCKUP — A × B                              */
+  /* ================================================= */
 
   if (
     variant ===
@@ -1001,8 +1276,8 @@ function FrameContent({
       <div
         className="
           absolute
-          left-[12%]
-          right-[12%]
+
+          inset-x-[6%]
           top-1/2
 
           flex
@@ -1011,20 +1286,27 @@ function FrameContent({
           items-center
           justify-center
 
-          gap-[22px]
+          gap-[5%]
         "
       >
-        <Logo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          width="145px"
-          height="48px"
+        <VideoLogo
+          logoUrl={
+            brandALogo
+          }
+          fallback={
+            brandAName
+          }
+          size="primary"
+          floating
         />
 
         <span
           className="
-            text-[27px]
-            text-white/58
+            text-[18px]
+
+            text-white/78
+
+            drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]
 
             oook-light
           "
@@ -1032,19 +1314,23 @@ function FrameContent({
           ×
         </span>
 
-        <Logo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="145px"
-          height="48px"
+        <VideoLogo
+          logoUrl={
+            brandBLogo
+          }
+          fallback={
+            brandBName
+          }
+          size="primary"
+          floating
         />
       </div>
     );
   }
 
-  /* -------------------------------------------- */
-  /* WITH LOCKUP                                  */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* FINAL LOCKUP — WITH                               */
+  /* ================================================= */
 
   if (
     variant ===
@@ -1054,48 +1340,58 @@ function FrameContent({
       <div
         className="
           absolute
-          left-1/2
-          top-1/2
+          inset-0
 
           flex
-          -translate-x-1/2
-          -translate-y-1/2
-
           flex-col
           items-center
+          justify-center
         "
       >
-        <Logo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          width="165px"
-          height="48px"
+        <VideoLogo
+          logoUrl={
+            brandALogo
+          }
+          fallback={
+            brandAName
+          }
+          size="primary"
+          floating
         />
 
         <p
           className="
-            my-[7px]
+            my-[2%]
 
-            text-[12px]
-            text-white/55
+            text-[8px]
+            uppercase
+            tracking-[0.12em]
+
+            text-white/70
+
+            drop-shadow-[0_4px_8px_rgba(0,0,0,0.85)]
           "
         >
           with
         </p>
 
-        <Logo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="125px"
-          height="38px"
+        <VideoLogo
+          logoUrl={
+            brandBLogo
+          }
+          fallback={
+            brandBName
+          }
+          size="secondary"
+          floating
         />
       </div>
     );
   }
 
-  /* -------------------------------------------- */
-  /* POWERED LOCKUP                               */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* FINAL LOCKUP — POWERED                            */
+  /* ================================================= */
 
   if (
     variant ===
@@ -1105,51 +1401,117 @@ function FrameContent({
       <div
         className="
           absolute
-          left-1/2
-          top-1/2
+          inset-0
 
           flex
-          -translate-x-1/2
-          -translate-y-1/2
-
           flex-col
           items-center
+          justify-center
         "
       >
-        <Logo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="170px"
-          height="54px"
+        <VideoLogo
+          logoUrl={
+            brandBLogo
+          }
+          fallback={
+            brandBName
+          }
+          size="hero"
+          floating
         />
 
         <p
           className="
-            my-[8px]
+            my-[2%]
 
-            text-[9px]
+            text-[7px]
             uppercase
-            tracking-[0.18em]
+            tracking-[0.2em]
 
-            text-white/40
+            text-white/64
+
+            drop-shadow-[0_4px_8px_rgba(0,0,0,0.85)]
           "
         >
           Powered by
         </p>
 
-        <Logo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          width="100px"
-          height="30px"
+        <VideoLogo
+          logoUrl={
+            brandALogo
+          }
+          fallback={
+            brandAName
+          }
+          size="credit"
+          floating
         />
       </div>
     );
   }
 
-  /* -------------------------------------------- */
-  /* CONTENT                                      */
-  /* -------------------------------------------- */
+  /* ================================================= */
+  /* FINAL LOCKUP — PRESENTS                           */
+  /* ================================================= */
+
+  if (
+    variant ===
+    "presentsLockup"
+  ) {
+    return (
+      <div
+        className="
+          absolute
+          inset-0
+
+          flex
+          flex-col
+          items-center
+          justify-center
+        "
+      >
+        <VideoLogo
+          logoUrl={
+            brandALogo
+          }
+          fallback={
+            brandAName
+          }
+          size="credit"
+          floating
+        />
+
+        <p
+          className="
+            my-[2%]
+
+            text-[8px]
+
+            text-white/72
+
+            drop-shadow-[0_4px_8px_rgba(0,0,0,0.85)]
+          "
+        >
+          presents
+        </p>
+
+        <VideoLogo
+          logoUrl={
+            brandBLogo
+          }
+          fallback={
+            brandBName
+          }
+          size="hero"
+          floating
+        />
+      </div>
+    );
+  }
+
+  /* ================================================= */
+  /* CONTENT — EQUAL                                   */
+  /* ================================================= */
 
   if (
     variant ===
@@ -1159,24 +1521,34 @@ function FrameContent({
       <ContentFrame
         headline="Shared experience"
         left={
-          <Logo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="82px"
-            height="22px"
+          <VideoLogo
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            size="footer"
           />
         }
         right={
-          <Logo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="82px"
-            height="22px"
+          <VideoLogo
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            size="footer"
           />
         }
       />
     );
   }
+
+  /* ================================================= */
+  /* CONTENT — WITH                                    */
+  /* ================================================= */
 
   if (
     variant ===
@@ -1184,26 +1556,38 @@ function FrameContent({
   ) {
     return (
       <ContentFrame
-        headline={`${brandAName} experience`}
+        headline={
+          `${brandAName} experience`
+        }
         left={
-          <Logo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="90px"
-            height="24px"
+          <VideoLogo
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            size="footer"
           />
         }
         right={
-          <Logo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="64px"
-            height="20px"
+          <VideoLogo
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            size="credit"
           />
         }
       />
     );
   }
+
+  /* ================================================= */
+  /* CONTENT — POWERED                                 */
+  /* ================================================= */
 
   if (
     variant ===
@@ -1211,13 +1595,18 @@ function FrameContent({
   ) {
     return (
       <ContentFrame
-        headline={`${brandBName} experience`}
+        headline={
+          `${brandBName} experience`
+        }
         left={
-          <Logo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="90px"
-            height="24px"
+          <VideoLogo
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            size="footer"
           />
         }
         right={
@@ -1225,25 +1614,33 @@ function FrameContent({
             className="
               flex
               items-center
-              gap-[7px]
+              justify-end
+
+              gap-[5px]
             "
           >
             <span
               className="
-                text-[8px]
+                whitespace-nowrap
+
+                text-[5px]
                 uppercase
                 tracking-[0.14em]
-                text-white/35
+
+                text-white/32
               "
             >
               Powered by
             </span>
 
-            <Logo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-              width="56px"
-              height="18px"
+            <VideoLogo
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+              size="credit"
             />
           </div>
         }
@@ -1251,28 +1648,41 @@ function FrameContent({
     );
   }
 
+  /* ================================================= */
+  /* CONTENT — PRESENTS                                */
+  /* ================================================= */
+
   return (
     <ContentFrame
-      headline={`${brandBName} content`}
+      headline={
+        `${brandBName} content`
+      }
       left={
         <div
           className="
             flex
             items-center
-            gap-[6px]
+
+            gap-[5px]
           "
         >
-          <Logo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="58px"
-            height="18px"
+          <VideoLogo
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            size="credit"
           />
 
           <span
             className="
-              text-[8px]
-              text-white/35
+              whitespace-nowrap
+
+              text-[5px]
+
+              text-white/34
             "
           >
             presents
@@ -1280,11 +1690,14 @@ function FrameContent({
         </div>
       }
       right={
-        <Logo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="84px"
-          height="24px"
+        <VideoLogo
+          logoUrl={
+            brandBLogo
+          }
+          fallback={
+            brandBName
+          }
+          size="footer"
         />
       }
     />
@@ -1292,7 +1705,7 @@ function FrameContent({
 }
 
 /* ------------------------------------------------ */
-/* BARE LOGO                                        */
+/* HERO LOGO                                        */
 /* ------------------------------------------------ */
 
 function BareHeroLogo({
@@ -1303,66 +1716,141 @@ function BareHeroLogo({
   fallback: string;
 }) {
   return (
-    <>
-      {/* subtle bloom behind logo */}
+    <div
+      className="
+        absolute
+        inset-0
+
+        flex
+        items-center
+        justify-center
+      "
+    >
+      {/* LOCAL CONTRAST */}
 
       <div
         className="
           absolute
+
           left-1/2
           top-1/2
 
-          h-[65px]
-          w-[190px]
+          h-[35%]
+          w-[52%]
 
           -translate-x-1/2
           -translate-y-1/2
 
           rounded-full
 
-          bg-white/[0.08]
+          bg-black/28
 
-          blur-[42px]
+          blur-[30px]
         "
       />
 
-      <div
-        className="
-          absolute
-          left-1/2
-          top-1/2
-
-          h-[62px]
-          w-[190px]
-
-          -translate-x-1/2
-          -translate-y-1/2
-        "
-      >
-        <BrandLogo
-          logoUrl={logoUrl}
-          fallback={fallback}
-        />
-      </div>
-    </>
+      <VideoLogo
+        logoUrl={
+          logoUrl
+        }
+        fallback={
+          fallback
+        }
+        size="hero"
+        floating
+      />
+    </div>
   );
 }
 
 /* ------------------------------------------------ */
-/* FLOATING WORD                                    */
+/* VIDEO LOGO                                       */
+/* ------------------------------------------------ */
+
+function VideoLogo({
+  logoUrl,
+  fallback,
+
+  size = "primary",
+
+  floating = false,
+}: {
+  logoUrl: string | null;
+  fallback: string;
+
+  size?: VideoLogoSize;
+
+  floating?: boolean;
+}) {
+  const sizeClasses: Record<
+    VideoLogoSize,
+    string
+  > = {
+    hero:
+      "w-[36%] aspect-[3/1]",
+
+    primary:
+      "w-[26%] aspect-[3/1]",
+
+    secondary:
+      "w-[20%] aspect-[3/1]",
+
+    credit:
+      "w-[14%] aspect-[3/1]",
+
+    footer:
+      "w-[16%] aspect-[3/1]",
+  };
+
+  return (
+    <div
+      className={`
+        ${sizeClasses[size]}
+        shrink-0
+      `}
+      style={{
+        filter: floating
+          ? `
+              drop-shadow(
+                0 10px 22px
+                rgba(0,0,0,0.68)
+              )
+              drop-shadow(
+                0 2px 6px
+                rgba(0,0,0,0.78)
+              )
+            `
+          : "none",
+      }}
+    >
+      <BrandLogo
+        logoUrl={logoUrl}
+        fallback={fallback}
+      />
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* FLOATING RELATIONSHIP                            */
 /* ------------------------------------------------ */
 
 function FloatingWord({
   children,
+
   spaced = false,
+  symbol = false,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
+
   spaced?: boolean;
+  symbol?: boolean;
 }) {
   return (
     <div
       className="
         absolute
+
         left-1/2
         top-1/2
 
@@ -1374,77 +1862,21 @@ function FloatingWord({
         className={`
           whitespace-nowrap
 
-          text-white/88
+          text-white/92
+
+          drop-shadow-[0_7px_16px_rgba(0,0,0,0.85)]
 
           ${
-            spaced
-              ? "text-[17px] uppercase tracking-[0.28em]"
-              : "text-[29px] tracking-[-0.03em]"
+            symbol
+              ? "text-[34px] oook-light"
+              : spaced
+                ? "text-[13px] uppercase tracking-[0.28em] oook-medium"
+                : "text-[22px] tracking-[-0.03em] oook-medium"
           }
-
-          oook-medium
         `}
       >
         {children}
       </p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* GLASS LOWER THIRD                                */
-/* ------------------------------------------------ */
-
-function GlassLowerThird({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className="
-        relative
-
-        overflow-hidden
-
-        rounded-[18px]
-
-        border
-        border-white/[0.12]
-
-        bg-black/35
-
-        px-[15px]
-        py-[12px]
-
-        backdrop-blur-[20px]
-
-        shadow-[0_14px_40px_rgba(0,0,0,0.28)]
-      "
-    >
-      {/* reflection */}
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-x-0
-          top-0
-
-          h-px
-
-          bg-gradient-to-r
-
-          from-transparent
-          via-white/25
-          to-transparent
-        "
-      />
-
-      <div className="relative">
-        {children}
-      </div>
     </div>
   );
 }
@@ -1460,106 +1892,232 @@ function ContentFrame({
 }: {
   headline: string;
 
-  left: React.ReactNode;
-  right: React.ReactNode;
+  left: ReactNode;
+  right: ReactNode;
 }) {
   return (
     <>
-      {/* HEADER GLASS */}
+      {/* HEADER */}
 
       <div
         className="
           absolute
 
-          left-[16px]
-          right-[16px]
-          top-[16px]
+          left-[6%]
+          right-[6%]
+          top-[7%]
         "
       >
-        <GlassLowerThird>
+        <VideoGlass>
           <p
             className="
               truncate
 
-              text-[14px]
-              text-white/75
+              text-[8px]
+
+              tracking-[-0.01em]
+
+              text-white/72
             "
           >
             {headline}
           </p>
-        </GlassLowerThird>
+        </VideoGlass>
       </div>
 
-      {/* LOWER THIRD */}
+      {/* FOOTER */}
 
       <div
         className="
           absolute
 
-          bottom-[16px]
-          left-[16px]
-          right-[16px]
+          bottom-[7%]
+          left-[6%]
+          right-[6%]
         "
       >
-        <GlassLowerThird>
+        <VideoGlass>
           <div
             className="
               flex
-              items-center
-              justify-between
 
-              gap-[16px]
+              min-h-[20px]
+
+              items-center
+
+              gap-[8px]
             "
           >
-            <div className="shrink-0">
+            <div
+              className="
+                flex
+                min-w-0
+                flex-1
+                items-center
+              "
+            >
               {left}
             </div>
 
             <div
               className="
                 h-px
-                flex-1
-                bg-white/[0.12]
+                min-w-[12px]
+                flex-[1.8]
+
+                bg-white/[0.11]
               "
             />
 
-            <div className="shrink-0">
+            <div
+              className="
+                flex
+                min-w-0
+                flex-1
+
+                items-center
+                justify-end
+              "
+            >
               {right}
             </div>
           </div>
-        </GlassLowerThird>
+        </VideoGlass>
       </div>
     </>
   );
 }
 
 /* ------------------------------------------------ */
-/* LOGO                                             */
+/* VIDEO GLASS                                      */
 /* ------------------------------------------------ */
 
-function Logo({
-  logoUrl,
-  fallback,
-  width,
-  height,
+function VideoGlass({
+  children,
 }: {
-  logoUrl: string | null;
-  fallback: string;
-
-  width: string;
-  height: string;
+  children: ReactNode;
 }) {
   return (
     <div
-      style={{
-        width,
-        height,
-      }}
+      className="
+        relative
+
+        overflow-hidden
+
+        rounded-[9px]
+
+        border
+        border-white/[0.10]
+
+        bg-black/38
+
+        px-[9px]
+        py-[6px]
+
+        backdrop-blur-[14px]
+
+        shadow-[0_8px_24px_rgba(0,0,0,0.22)]
+      "
     >
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
+      {/* SPECULAR EDGE */}
+
+      <div
+        className="
+          pointer-events-none
+
+          absolute
+
+          left-[8%]
+          right-[8%]
+          top-0
+
+          h-px
+
+          bg-gradient-to-r
+          from-transparent
+          via-white/25
+          to-transparent
+        "
       />
+
+      <div className="relative">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* FLOW TURN                                        */
+/* ------------------------------------------------ */
+
+function FlowTurn({
+  label,
+}: {
+  label: string;
+}) {
+  return (
+    <div
+      className="
+        relative
+        h-[54px]
+      "
+    >
+      <div
+        className="
+          absolute
+
+          right-[15%]
+          top-[16px]
+
+          h-px
+          w-[61%]
+
+          bg-white/[0.10]
+        "
+      />
+
+      <div
+        className="
+          absolute
+
+          left-[20%]
+          top-[16px]
+
+          h-[22px]
+          w-px
+
+          bg-white/[0.10]
+        "
+      />
+
+      <div
+        className="
+          absolute
+
+          left-[20%]
+          top-[37px]
+
+          h-px
+          w-[28%]
+
+          bg-white/[0.10]
+        "
+      />
+
+      <div
+        className="
+          absolute
+
+          left-[45%]
+          top-[22px]
+        "
+      >
+        <Transition
+          label={label}
+          compact
+        />
+      </div>
     </div>
   );
 }
@@ -1570,9 +2128,11 @@ function Logo({
 
 function Transition({
   label,
+
   compact = false,
 }: {
   label: string;
+
   compact?: boolean;
 }) {
   return (
@@ -1586,6 +2146,7 @@ function Transition({
       <div
         className={`
           flex
+
           items-center
           justify-center
 
@@ -1594,23 +2155,23 @@ function Transition({
           border
           border-white/[0.10]
 
-          bg-white/[0.035]
+          bg-black/35
 
           backdrop-blur-[16px]
 
           ${
             compact
-              ? "h-[30px] px-[10px]"
-              : "h-[34px] px-[11px]"
+              ? "h-[26px] px-[8px]"
+              : "h-[30px] px-[9px]"
           }
         `}
       >
         <span
           className="
-            mr-[6px]
+            mr-[5px]
 
-            text-[11px]
-            text-white/50
+            text-[9px]
+            text-white/48
           "
         >
           →
@@ -1620,12 +2181,12 @@ function Transition({
           className={`
             whitespace-nowrap
 
-            text-white/45
+            text-white/42
 
             ${
               compact
-                ? "text-[9px]"
-                : "text-[10px]"
+                ? "text-[7px]"
+                : "text-[8px]"
             }
           `}
         >
@@ -1637,7 +2198,7 @@ function Transition({
 }
 
 /* ------------------------------------------------ */
-/* TOP RIGHT PARTNERSHIP LOCKUP                     */
+/* TOP RIGHT LOCKUP                                 */
 /* ------------------------------------------------ */
 
 function PartnershipLockup({
@@ -1722,7 +2283,7 @@ function PartnershipLockup({
     );
   }
 
-  /* B POWERED BY A */
+  /* POWERED BY */
 
   if (
     model ===
@@ -1762,6 +2323,7 @@ function PartnershipLockup({
               text-[7px]
               uppercase
               tracking-[0.14em]
+
               text-white/20
             "
           >
@@ -1784,7 +2346,7 @@ function PartnershipLockup({
     );
   }
 
-  /* A PRESENTS B */
+  /* PRESENTS */
 
   return (
     <div
@@ -1863,6 +2425,7 @@ function TopLogo({
 
 function TopLabeledLogo({
   label,
+
   logoUrl,
   fallback,
 }: {
