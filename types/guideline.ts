@@ -5,6 +5,7 @@ export type PartnershipModelId =
   | "presentsB";
 
 export interface BrandConfig {
+  name: string;
   logoUrl: string | null;
   primaryColor: string;
   secondaryColor: string;
@@ -17,10 +18,23 @@ export interface GuidelineState {
   brandA: BrandConfig;
   brandB: BrandConfig;
 
-  setPartnershipModel: (model: PartnershipModelId) => void;
+  commonFontFamily: string;
 
-  updateBrandA: (data: Partial<BrandConfig>) => void;
-  updateBrandB: (data: Partial<BrandConfig>) => void;
+  setPartnershipModel: (
+    model: PartnershipModelId
+  ) => void;
+
+  updateBrandA: (
+    data: Partial<BrandConfig>
+  ) => void;
+
+  updateBrandB: (
+    data: Partial<BrandConfig>
+  ) => void;
+
+  setCommonFontFamily: (
+    fontFamily: string
+  ) => void;
 
   reset: () => void;
 }

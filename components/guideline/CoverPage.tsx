@@ -2,6 +2,7 @@
 
 import BrandLogo from "./BrandLogo";
 import GuidelinePage from "./GuidelinePage";
+
 import { useGuidelineStore } from "@/store/guidelineStore";
 
 export default function CoverPage() {
@@ -10,10 +11,16 @@ export default function CoverPage() {
     brandB,
   } = useGuidelineStore();
 
+  const brandAName =
+    brandA.name.trim() || "Brand A";
+
+  const brandBName =
+    brandB.name.trim() || "Brand B";
+
   return (
     <GuidelinePage>
-
       {/* TOP LABEL */}
+
       <header
         className="
           absolute
@@ -34,6 +41,7 @@ export default function CoverPage() {
       </header>
 
       {/* HERO */}
+
       <section
         className="
           absolute
@@ -75,6 +83,7 @@ export default function CoverPage() {
       </section>
 
       {/* BRAND RELATIONSHIP */}
+
       <section
         className="
           absolute
@@ -94,9 +103,9 @@ export default function CoverPage() {
           "
         >
           <BrandCard
-            eyebrow="Brand A"
+            eyebrow={brandAName}
             logoUrl={brandA.logoUrl}
-            fallback="Brand A"
+            fallback={brandAName}
           />
 
           <div className="flex items-center justify-center">
@@ -112,16 +121,19 @@ export default function CoverPage() {
           </div>
 
           <BrandCard
-            eyebrow="Brand B"
+            eyebrow={brandBName}
             logoUrl={brandB.logoUrl}
-            fallback="Brand B"
+            fallback={brandBName}
           />
         </div>
       </section>
-
     </GuidelinePage>
   );
 }
+
+/* ------------------------------------------------ */
+/* BRAND CARD                                       */
+/* ------------------------------------------------ */
 
 interface BrandCardProps {
   eyebrow: string;
@@ -151,6 +163,8 @@ function BrandCard({
           absolute
           left-[28px]
           top-[22px]
+          max-w-[85%]
+          truncate
           text-[14px]
           uppercase
           tracking-[0.16em]
@@ -172,7 +186,6 @@ function BrandCard({
         <BrandLogo
           logoUrl={logoUrl}
           fallback={fallback}
-          className="justify-start"
         />
       </div>
     </div>

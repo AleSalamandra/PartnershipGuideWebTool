@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+
 import {
   BrandConfig,
   GuidelineState,
@@ -8,6 +9,7 @@ import {
 } from "@/types/guideline";
 
 const defaultBrandA: BrandConfig = {
+  name: "Brand A",
   logoUrl: null,
   primaryColor: "#FFFFFF",
   secondaryColor: "#8A8A8A",
@@ -15,43 +17,72 @@ const defaultBrandA: BrandConfig = {
 };
 
 const defaultBrandB: BrandConfig = {
+  name: "Brand B",
   logoUrl: null,
   primaryColor: "#FFFFFF",
   secondaryColor: "#8A8A8A",
   fontFamily: "Arial",
 };
 
-export const useGuidelineStore = create<GuidelineState>((set) => ({
-  partnershipModel: "axb",
+export const useGuidelineStore =
+  create<GuidelineState>((set) => ({
+    partnershipModel: "axb",
 
-  brandA: defaultBrandA,
-  brandB: defaultBrandB,
+    brandA: {
+      ...defaultBrandA,
+    },
 
-  setPartnershipModel: (model: PartnershipModelId) =>
-    set({
-      partnershipModel: model,
-    }),
+    brandB: {
+      ...defaultBrandB,
+    },
 
-  updateBrandA: (data) =>
-    set((state) => ({
-      brandA: {
-        ...state.brandA,
-        ...data,
-      },
-    })),
+    commonFontFamily:
+      "oook-variable",
 
-  updateBrandB: (data) =>
-    set((state) => ({
-      brandB: {
-        ...state.brandB,
-        ...data,
-      },
-    })),
+    setPartnershipModel: (
+      model: PartnershipModelId
+    ) =>
+      set({
+        partnershipModel: model,
+      }),
 
-  reset: () =>
-    set({
-      partnershipModel: "axb",
-      brandA: defaultBrandA,
-      brandB: defaultBrandB,
-    }),
-}));
+    updateBrandA: (data) =>
+      set((state) => ({
+        brandA: {
+          ...state.brandA,
+          ...data,
+        },
+      })),
+
+    updateBrandB: (data) =>
+      set((state) => ({
+        brandB: {
+          ...state.brandB,
+          ...data,
+        },
+      })),
+
+    setCommonFontFamily: (
+      fontFamily
+    ) =>
+      set({
+        commonFontFamily:
+          fontFamily,
+      }),
+
+    reset: () =>
+      set({
+        partnershipModel: "axb",
+
+        brandA: {
+          ...defaultBrandA,
+        },
+
+        brandB: {
+          ...defaultBrandB,
+        },
+
+        commonFontFamily:
+          "oook-variable",
+      }),
+  }));
