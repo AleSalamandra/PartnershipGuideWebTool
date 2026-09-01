@@ -18,18 +18,19 @@ import { useGuidelineStore } from "@/store/guidelineStore";
 const PAGE_WIDTH = 1600;
 const PAGE_HEIGHT = 900;
 
-/*
-  The guideline is already designed
-  natively at 1600 × 900.
-
-  Scale 1 gives us the most faithful
-  interpretation of borders and radii.
-*/
-
 const EXPORT_SCALE = 1;
 
+/*
+  Uploaded logos are rasterised internally at 2×
+  so they remain sharp in the PDF.
+
+  Their CSS dimensions stay unchanged.
+*/
+
+const LOGO_RASTER_SCALE = 2;
+
 /* ------------------------------------------------ */
-/* WAIT                                             */
+/* WAIT HELPERS                                     */
 /* ------------------------------------------------ */
 
 function wait(
@@ -62,8 +63,66 @@ function waitForFrame() {
 }
 
 /* ------------------------------------------------ */
-/* IMAGES                                           */
+/* IMAGE LOADING                                    */
 /* ------------------------------------------------ */
+
+async function waitForSingleImage(
+  image: HTMLImageElement
+) {
+  if (
+    image.complete &&
+    image.naturalWidth > 0
+  ) {
+    try {
+      await image.decode();
+    } catch {
+      // Image is already usable.
+    }
+
+    return;
+  }
+
+  await new Promise<void>(
+    (resolve) => {
+      const finish =
+        async () => {
+          image.removeEventListener(
+            "load",
+            finish
+          );
+
+          image.removeEventListener(
+            "error",
+            finish
+          );
+
+          try {
+            await image.decode();
+          } catch {
+            // Continue anyway.
+          }
+
+          resolve();
+        };
+
+      image.addEventListener(
+        "load",
+        finish,
+        {
+          once: true,
+        }
+      );
+
+      image.addEventListener(
+        "error",
+        finish,
+        {
+          once: true,
+        }
+      );
+    }
+  );
+}
 
 async function waitForImages(
   container: HTMLElement
@@ -77,93 +136,549 @@ async function waitForImages(
 
   await Promise.all(
     images.map(
-      async (image) => {
-        /*
-          If it has loaded, still wait
-          for decode where possible.
-        */
-
-        if (
-          image.complete &&
-          image.naturalWidth > 0
-        ) {
-          try {
-            await image.decode();
-          } catch {
-            // Already usable.
-          }
-
-          return;
-        }
-
-        await new Promise<void>(
-          (resolve) => {
-            const finish =
-              async () => {
-                image.removeEventListener(
-                  "load",
-                  finish
-                );
-
-                image.removeEventListener(
-                  "error",
-                  finish
-                );
-
-                try {
-                  await image.decode();
-                } catch {
-                  // Continue.
-                }
-
-                resolve();
-              };
-
-            image.addEventListener(
-              "load",
-              finish,
-              {
-                once: true,
-              }
-            );
-
-            image.addEventListener(
-              "error",
-              finish,
-              {
-                once: true,
-              }
-            );
-          }
-        );
-      }
+      (image) =>
+        waitForSingleImage(
+          image
+        )
     )
   );
 }
 
 /* ------------------------------------------------ */
-/* PAGE READY                                       */
+/* IDENTIFY UPLOADED ASSETS                         */
+/* ------------------------------------------------ */
+
+function isUploadedImage(
+  image: HTMLImageElement
+) {
+  const src =
+    image.currentSrc ||
+    image.src ||
+    "";
+
+  /*
+    LogoUploader / FileReader generates
+    data:image/... URLs.
+
+    blob: is included as a future-safe option.
+  */
+
+  return (
+    src.startsWith(
+      "data:image/"
+    ) ||
+    src.startsWith(
+      "blob:"
+    )
+  );
+}
+
+/* ------------------------------------------------ */
+/* OBJECT POSITION                                  */
+/* ------------------------------------------------ */
+
+function getPositionFactor(
+  value: string,
+  axis:
+    | "x"
+    | "y"
+) {
+  const normalized =
+    value
+      .trim()
+      .toLowerCase();
+
+  if (
+    normalized.includes(
+      axis === "x"
+        ? "left"
+        : "top"
+    )
+  ) {
+    return 0;
+  }
+
+  if (
+    normalized.includes(
+      axis === "x"
+        ? "right"
+        : "bottom"
+    )
+  ) {
+    return 1;
+  }
+
+  const parts =
+    normalized.split(
+      /\s+/
+    );
+
+  const relevant =
+    axis === "x"
+      ? parts[0]
+      : parts[1] ??
+        parts[0];
+
+  if (
+    relevant?.endsWith(
+      "%"
+    )
+  ) {
+    const number =
+      parseFloat(
+        relevant
+      );
+
+    if (
+      Number.isFinite(
+        number
+      )
+    ) {
+      return Math.min(
+        1,
+        Math.max(
+          0,
+          number / 100
+        )
+      );
+    }
+  }
+
+  /*
+    CSS default:
+    object-position: 50% 50%
+  */
+
+  return 0.5;
+}
+
+/* ------------------------------------------------ */
+/* DRAW IMAGE USING CSS OBJECT-FIT                  */
+/* ------------------------------------------------ */
+
+function drawImageWithObjectFit(
+  context:
+    CanvasRenderingContext2D,
+
+  image:
+    HTMLImageElement,
+
+  destinationWidth:
+    number,
+
+  destinationHeight:
+    number,
+
+  objectFit:
+    string,
+
+  objectPosition:
+    string
+) {
+  const sourceWidth =
+    image.naturalWidth;
+
+  const sourceHeight =
+    image.naturalHeight;
+
+  if (
+    sourceWidth <= 0 ||
+    sourceHeight <= 0
+  ) {
+    return;
+  }
+
+  const xFactor =
+    getPositionFactor(
+      objectPosition,
+      "x"
+    );
+
+  const yFactor =
+    getPositionFactor(
+      objectPosition,
+      "y"
+    );
+
+  /* ---------------------------------------------- */
+  /* FILL                                           */
+  /* ---------------------------------------------- */
+
+  if (
+    objectFit === "fill"
+  ) {
+    context.drawImage(
+      image,
+
+      0,
+      0,
+
+      destinationWidth,
+      destinationHeight
+    );
+
+    return;
+  }
+
+  /* ---------------------------------------------- */
+  /* NONE                                           */
+  /* ---------------------------------------------- */
+
+  if (
+    objectFit === "none"
+  ) {
+    const x =
+      (
+        destinationWidth -
+        sourceWidth
+      ) *
+      xFactor;
+
+    const y =
+      (
+        destinationHeight -
+        sourceHeight
+      ) *
+      yFactor;
+
+    context.drawImage(
+      image,
+      x,
+      y,
+      sourceWidth,
+      sourceHeight
+    );
+
+    return;
+  }
+
+  /* ---------------------------------------------- */
+  /* CONTAIN / COVER / SCALE-DOWN                    */
+  /* ---------------------------------------------- */
+
+  const containScale =
+    Math.min(
+      destinationWidth /
+        sourceWidth,
+
+      destinationHeight /
+        sourceHeight
+    );
+
+  const coverScale =
+    Math.max(
+      destinationWidth /
+        sourceWidth,
+
+      destinationHeight /
+        sourceHeight
+    );
+
+  let scale =
+    containScale;
+
+  if (
+    objectFit === "cover"
+  ) {
+    scale =
+      coverScale;
+  }
+
+  if (
+    objectFit ===
+    "scale-down"
+  ) {
+    scale =
+      Math.min(
+        1,
+        containScale
+      );
+  }
+
+  const renderWidth =
+    sourceWidth *
+    scale;
+
+  const renderHeight =
+    sourceHeight *
+    scale;
+
+  const x =
+    (
+      destinationWidth -
+      renderWidth
+    ) *
+    xFactor;
+
+  const y =
+    (
+      destinationHeight -
+      renderHeight
+    ) *
+    yFactor;
+
+  context.drawImage(
+    image,
+
+    x,
+    y,
+
+    renderWidth,
+    renderHeight
+  );
+}
+
+/* ------------------------------------------------ */
+/* RASTERISE ONE UPLOADED LOGO                      */
+/* ------------------------------------------------ */
+
+async function rasterizeUploadedImage(
+  image: HTMLImageElement
+) {
+  await waitForSingleImage(
+    image
+  );
+
+  /*
+    offsetWidth / offsetHeight are intentional.
+
+    Unlike getBoundingClientRect(), these values
+    do NOT include transform: scale(...).
+
+    This means Page13 can keep its 1.08 / 1.10
+    optical logo scaling without us applying
+    that scale twice.
+  */
+
+  const width =
+    image.offsetWidth;
+
+  const height =
+    image.offsetHeight;
+
+  if (
+    width <= 0 ||
+    height <= 0
+  ) {
+    return;
+  }
+
+  if (
+    image.naturalWidth <=
+      0 ||
+    image.naturalHeight <=
+      0
+  ) {
+    return;
+  }
+
+  const computed =
+    window.getComputedStyle(
+      image
+    );
+
+  const objectFit =
+    computed.objectFit ||
+    "fill";
+
+  const objectPosition =
+    computed.objectPosition ||
+    "50% 50%";
+
+  /* ---------------------------------------------- */
+  /* CREATE HIGH RES PNG                            */
+  /* ---------------------------------------------- */
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width =
+    Math.max(
+      1,
+      Math.round(
+        width *
+          LOGO_RASTER_SCALE
+      )
+    );
+
+  canvas.height =
+    Math.max(
+      1,
+      Math.round(
+        height *
+          LOGO_RASTER_SCALE
+      )
+    );
+
+  const context =
+    canvas.getContext(
+      "2d"
+    );
+
+  if (!context) {
+    return;
+  }
+
+  context.imageSmoothingEnabled =
+    true;
+
+  context.imageSmoothingQuality =
+    "high";
+
+  context.scale(
+    LOGO_RASTER_SCALE,
+    LOGO_RASTER_SCALE
+  );
+
+  context.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  drawImageWithObjectFit(
+    context,
+
+    image,
+
+    width,
+    height,
+
+    objectFit,
+    objectPosition
+  );
+
+  const rasterUrl =
+    canvas.toDataURL(
+      "image/png"
+    );
+
+  /* ---------------------------------------------- */
+  /* FREEZE THE EXACT BROWSER SIZE                  */
+  /* ---------------------------------------------- */
+
+  /*
+    This is the important part.
+
+    Once converted to PNG, html2canvas no longer
+    gets a chance to reinterpret the SVG viewport
+    or intrinsic dimensions.
+  */
+
+  image.style.width =
+    `${width}px`;
+
+  image.style.height =
+    `${height}px`;
+
+  image.style.minWidth =
+    `${width}px`;
+
+  image.style.minHeight =
+    `${height}px`;
+
+  image.style.maxWidth =
+    "none";
+
+  image.style.maxHeight =
+    "none";
+
+  /*
+    The content is ALREADY fitted into the PNG.
+
+    We therefore make the replacement image fill
+    its frozen box exactly.
+  */
+
+  image.style.objectFit =
+    "fill";
+
+  image.style.objectPosition =
+    "50% 50%";
+
+  /*
+    Avoid srcset overriding our raster source.
+  */
+
+  image.removeAttribute(
+    "srcset"
+  );
+
+  image.removeAttribute(
+    "sizes"
+  );
+
+  image.src =
+    rasterUrl;
+
+  /*
+    Keep CSS transform untouched.
+
+    This preserves any intentional Page13 scale()
+    or other optical adjustment.
+  */
+
+  try {
+    await image.decode();
+  } catch {
+    // Continue.
+  }
+
+  canvas.width = 1;
+  canvas.height = 1;
+}
+
+/* ------------------------------------------------ */
+/* STABILISE ALL UPLOADED LOGOS                     */
+/* ------------------------------------------------ */
+
+async function stabilizeUploadedImages(
+  container: HTMLElement
+) {
+  const images =
+    Array.from(
+      container.querySelectorAll(
+        "img"
+      )
+    );
+
+  const uploadedImages =
+    images.filter(
+      isUploadedImage
+    );
+
+  await Promise.all(
+    uploadedImages.map(
+      (image) =>
+        rasterizeUploadedImage(
+          image
+        )
+    )
+  );
+}
+
+/* ------------------------------------------------ */
+/* WAIT FOR COMPLETE PAGE                           */
 /* ------------------------------------------------ */
 
 async function waitForPage(
   container: HTMLElement
 ) {
-  /*
-    React commit.
-  */
+  /* React commit */
 
   await waitForFrame();
 
   /*
-    Pages 05–13 have various effects,
-    image fallbacks and state changes.
+    Pages with random image selection,
+    extension fallback, etc.
   */
 
   await wait(120);
 
-  /*
-    Fonts.
-  */
+  /* Fonts */
 
   try {
     await document.fonts.ready;
@@ -171,17 +686,30 @@ async function waitForPage(
     // Continue.
   }
 
-  /*
-    Images.
-  */
+  /* Original images */
 
   await waitForImages(
     container
   );
 
   /*
-    Final browser paint.
+    IMPORTANT:
+
+    Convert user-uploaded logos into exact-size
+    raster images BEFORE html2canvas sees them.
   */
+
+  await stabilizeUploadedImages(
+    container
+  );
+
+  /* Raster replacements */
+
+  await waitForImages(
+    container
+  );
+
+  /* Final browser paint */
 
   await waitForFrame();
 
@@ -248,18 +776,6 @@ function createExportHost() {
     "true"
   );
 
-  /*
-    Keep it rendered normally.
-
-    It must NOT use:
-    display:none
-    visibility:hidden
-    opacity:0
-
-    Otherwise screenshot libraries
-    may capture an empty element.
-  */
-
   Object.assign(
     host.style,
     {
@@ -312,7 +828,7 @@ function createExportHost() {
 }
 
 /* ------------------------------------------------ */
-/* CLEAN EXPORT CLONE                               */
+/* PREPARE HTML2CANVAS CLONE                        */
 /* ------------------------------------------------ */
 
 function prepareCloneForExport(
@@ -323,10 +839,12 @@ function prepareCloneForExport(
       '[data-guideline-export-page="true"]'
     ) as HTMLElement | null;
 
-  if (!page) return;
+  if (!page) {
+    return;
+  }
 
   /* ---------------------------------------------- */
-  /* FORCE EXACT PAGE SIZE                          */
+  /* EXACT PAGE SIZE                                */
   /* ---------------------------------------------- */
 
   Object.assign(
@@ -374,17 +892,14 @@ function prepareCloneForExport(
   );
 
   /* ---------------------------------------------- */
-  /* FIX HTML2CANVAS SHADOW ARTIFACTS               */
+  /* REMOVE SHADOW ARTEFACTS                        */
   /* ---------------------------------------------- */
 
   /*
-    html2canvas may turn subtle card /
-    frame shadows into large grey halos.
+    Keep the fix that already solved the
+    giant border / halo problem.
 
-    We remove ONLY box-shadow in the
-    export clone.
-
-    This does not modify the viewer.
+    Only the export clone is modified.
   */
 
   const elements =
@@ -395,7 +910,10 @@ function prepareCloneForExport(
   elements.forEach(
     (node) => {
       if (
-        !(node instanceof HTMLElement)
+        !(
+          node instanceof
+          HTMLElement
+        )
       ) {
         return;
       }
@@ -431,11 +949,12 @@ export async function exportGuidelinePdf() {
     );
 
   let pdf:
-    jsPDF | null = null;
+    jsPDF | null =
+    null;
 
   try {
     /* ============================================ */
-    /* EXPORT EVERY PAGE                            */
+    /* PAGE LOOP                                    */
     /* ============================================ */
 
     for (
@@ -451,6 +970,7 @@ export async function exportGuidelinePdf() {
       root.render(
         <div
           data-guideline-export-page="true"
+
           style={{
             position:
               "relative",
@@ -495,7 +1015,7 @@ export async function exportGuidelinePdf() {
       );
 
       /* ------------------------------------------ */
-      /* WAIT                                       */
+      /* WAIT + STABILISE LOGOS                     */
       /* ------------------------------------------ */
 
       await waitForPage(
@@ -507,7 +1027,9 @@ export async function exportGuidelinePdf() {
           '[data-guideline-export-page="true"]'
         ) as HTMLElement | null;
 
-      if (!pageNode) {
+      if (
+        !pageNode
+      ) {
         throw new Error(
           `Unable to render guideline page ${
             pageIndex + 1
@@ -538,23 +1060,7 @@ export async function exportGuidelinePdf() {
             windowHeight:
               PAGE_HEIGHT,
 
-            /*
-              IMPORTANT:
-              Do NOT enable this.
-
-              It was responsible for
-              the blank pages.
-            */
-
             foreignObjectRendering:
-              false,
-
-            /*
-              Keep DOM transforms rather
-              than normalising the design.
-            */
-
-            normalizeDom:
               false,
 
             useCORS:
@@ -578,11 +1084,6 @@ export async function exportGuidelinePdf() {
             removeContainer:
               true,
 
-            /*
-              Modify ONLY the cloned DOM,
-              never the real guideline.
-            */
-
             onclone: (
               clonedDocument
             ) => {
@@ -603,7 +1104,7 @@ export async function exportGuidelinePdf() {
         );
 
       /* ------------------------------------------ */
-      /* CREATE PDF                                 */
+      /* PDF                                        */
       /* ------------------------------------------ */
 
       if (
@@ -651,10 +1152,6 @@ export async function exportGuidelinePdf() {
       const pdfHeight =
         pdf.internal.pageSize.getHeight();
 
-      /* ------------------------------------------ */
-      /* ADD CAPTURE                                */
-      /* ------------------------------------------ */
-
       pdf.addImage(
         imageData,
 
@@ -672,7 +1169,7 @@ export async function exportGuidelinePdf() {
       );
 
       /* ------------------------------------------ */
-      /* RELEASE MEMORY                             */
+      /* MEMORY                                     */
       /* ------------------------------------------ */
 
       canvas.width = 1;
