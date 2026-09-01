@@ -3,12 +3,18 @@
 import {
   ChangeEvent,
   useRef,
+  useState,
+  type ReactNode,
 } from "react";
 
 import BrandCharacterSelector from "./BrandCharacterSelector";
 
 import { useGuidelineStore } from "@/store/guidelineStore";
 import { PartnershipModelId } from "@/types/guideline";
+
+import {
+  exportGuidelinePdf,
+} from "@/utils/exportGuidelinePdf";
 
 /* ------------------------------------------------ */
 /* TYPES                                            */
@@ -41,28 +47,36 @@ const PARTNERSHIP_MODELS: {
 }[] = [
   {
     id: "axb",
+
     label: "A × B",
+
     description:
       "Equal collaboration",
   },
 
   {
     id: "aandb",
+
     label: "A with B",
+
     description:
       "Brand A leads",
   },
 
   {
     id: "poweredByA",
+
     label: "B powered by A",
+
     description:
       "Brand B owns the experience",
   },
 
   {
     id: "presentsB",
+
     label: "A presents B",
+
     description:
       "A platform / B content",
   },
@@ -99,6 +113,15 @@ export default function Sidebar() {
   } = useGuidelineStore();
 
   /* ---------------------------------------------- */
+  /* EXPORT STATE                                   */
+  /* ---------------------------------------------- */
+
+  const [
+    isExporting,
+    setIsExporting,
+  ] = useState(false);
+
+  /* ---------------------------------------------- */
   /* PARTNERSHIP MODEL                              */
   /* ---------------------------------------------- */
 
@@ -118,6 +141,7 @@ export default function Sidebar() {
 
   const updateBrand = (
     side: BrandSide,
+
     patch:
       Partial<BrandData>
   ) => {
@@ -145,6 +169,99 @@ export default function Sidebar() {
   };
 
   /* ---------------------------------------------- */
+  /* RESET                                          */
+  /* ---------------------------------------------- */
+
+  const handleReset = () => {
+    useGuidelineStore.setState(
+      (state) => ({
+        partnershipModel:
+          "axb",
+
+        brandA: {
+          ...state.brandA,
+
+          name:
+            "Brand A",
+
+          logoUrl:
+            null,
+
+          primaryColor:
+            DEFAULT_A_PRIMARY,
+
+          secondaryColor:
+            DEFAULT_A_SECONDARY,
+
+          fontFamily:
+            DEFAULT_FONT,
+
+          characterTraits:
+            [],
+        } as typeof state.brandA,
+
+        brandB: {
+          ...state.brandB,
+
+          name:
+            "Brand B",
+
+          logoUrl:
+            null,
+
+          primaryColor:
+            DEFAULT_B_PRIMARY,
+
+          secondaryColor:
+            DEFAULT_B_SECONDARY,
+
+          fontFamily:
+            DEFAULT_FONT,
+
+          characterTraits:
+            [],
+        } as typeof state.brandB,
+      })
+    );
+  };
+
+  /* ---------------------------------------------- */
+  /* EXPORT PDF                                     */
+  /* ---------------------------------------------- */
+
+  const handleExport =
+    async () => {
+      if (
+        isExporting
+      ) {
+        return;
+      }
+
+      setIsExporting(
+        true
+      );
+
+      try {
+        await exportGuidelinePdf();
+      } catch (
+        error
+      ) {
+        console.error(
+          "PDF export failed:",
+          error
+        );
+
+        window.alert(
+          "The PDF could not be exported. Check the console for details."
+        );
+      } finally {
+        setIsExporting(
+          false
+        );
+      }
+    };
+
+  /* ---------------------------------------------- */
   /* RENDER                                         */
   /* ---------------------------------------------- */
 
@@ -154,6 +271,7 @@ export default function Sidebar() {
         flex
         h-full
         w-[340px]
+
         shrink-0
         flex-col
 
@@ -206,7 +324,7 @@ export default function Sidebar() {
       </header>
 
       {/* ======================================== */}
-      {/* SCROLL AREA                              */}
+      {/* SCROLLABLE CONTENT                       */}
       {/* ======================================== */}
 
       <div
@@ -229,7 +347,9 @@ export default function Sidebar() {
 
         <SidebarSection
           eyebrow="01"
+
           title="Partnership model"
+
           description="Defines ownership, hierarchy and how both brands relate."
         >
           <div
@@ -251,6 +371,7 @@ export default function Sidebar() {
                     key={
                       model.id
                     }
+
                     type="button"
 
                     onClick={() =>
@@ -386,8 +507,150 @@ export default function Sidebar() {
           }
         />
 
-        <div className="h-[40px]" />
+        <div
+          className="
+            h-[34px]
+          "
+        />
       </div>
+
+      {/* ======================================== */}
+      {/* FIXED ACTIONS                            */}
+      {/* ======================================== */}
+
+      <footer
+        className="
+          shrink-0
+
+          border-t
+          border-white/[0.07]
+
+          bg-[#0b0b0c]
+
+          px-[22px]
+          py-[14px]
+        "
+      >
+        <div
+          className="
+            grid
+            grid-cols-1
+
+            gap-[8px]
+          "
+        >
+          {/* RESET */}
+
+          <button
+            type="button"
+
+            onClick={
+              handleReset
+            }
+
+            disabled={
+              isExporting
+            }
+
+            className="
+              flex
+              h-[42px]
+              w-full
+
+              items-center
+              justify-center
+
+              rounded-[11px]
+
+              border
+              border-white/[0.08]
+
+              bg-white/[0.018]
+
+              text-[10px]
+
+              text-white/50
+
+              transition-all
+              duration-150
+
+              hover:border-white/16
+              hover:bg-white/[0.04]
+              hover:text-white/78
+
+              disabled:pointer-events-none
+              disabled:opacity-30
+            "
+          >
+            Reset
+          </button>
+
+          {/* EXPORT */}
+
+          <button
+            type="button"
+
+            onClick={
+              handleExport
+            }
+
+            disabled={
+              isExporting
+            }
+
+            className="
+              relative
+
+              flex
+              h-[48px]
+              w-full
+
+              items-center
+              justify-center
+
+              overflow-hidden
+
+              rounded-[11px]
+
+              border
+              border-white
+
+              bg-white
+
+              text-[11px]
+
+              text-black
+
+              transition-all
+              duration-150
+
+              oook-medium
+
+              hover:bg-white/90
+
+              disabled:cursor-wait
+              disabled:opacity-60
+            "
+          >
+            {isExporting ? (
+              <span
+                className="
+                  flex
+                  items-center
+
+                  gap-[8px]
+                "
+              >
+                <ExportSpinner />
+
+                Exporting PDF…
+              </span>
+            ) : (
+              "Export PDF"
+            )}
+          </button>
+        </div>
+      </footer>
     </aside>
   );
 }
@@ -412,6 +675,7 @@ function BrandEditor({
 
   onChange: (
     side: BrandSide,
+
     patch:
       Partial<BrandData>
   ) => void;
@@ -443,9 +707,11 @@ function BrandEditor({
       eyebrow={
         sectionNumber
       }
+
       title={
         brandLabel
       }
+
       description="Brand identity, visual assets and character."
     >
       {/* ======================================== */}
@@ -535,6 +801,7 @@ function BrandEditor({
 
       <EditorGroup
         label="Colours"
+
         description="Primary and secondary brand accents."
       >
         <div
@@ -601,6 +868,7 @@ function BrandEditor({
 
       <EditorGroup
         label="Typeface"
+
         description="Upload the brand font or enter an installed font family."
       >
         <TypefaceControl
@@ -663,6 +931,7 @@ function LogoControl({
 
   onChange: (
     side: BrandSide,
+
     patch:
       Partial<BrandData>
   ) => void;
@@ -888,7 +1157,8 @@ function LogoControl({
             onChange(
               side,
               {
-                logoUrl: null,
+                logoUrl:
+                  null,
               }
             )
           }
@@ -973,7 +1243,7 @@ function ColourControl({
           gap-[8px]
         "
       >
-        {/* COLOR PICKER */}
+        {/* PICKER */}
 
         <label
           className="
@@ -1028,7 +1298,7 @@ function ColourControl({
           />
         </label>
 
-        {/* HEX INPUT */}
+        {/* HEX */}
 
         <input
           type="text"
@@ -1269,7 +1539,7 @@ function TypefaceControl({
       </div>
 
       {/* ======================================== */}
-      {/* FONT INPUT + UPLOAD                      */}
+      {/* INPUT                                    */}
       {/* ======================================== */}
 
       <div
@@ -1386,14 +1656,10 @@ function SidebarSection({
   description?: string;
 
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <section>
-      {/* ======================================== */}
-      {/* SECTION HEADING                          */}
-      {/* ======================================== */}
-
       <div
         className="
           flex
@@ -1480,7 +1746,7 @@ function EditorGroup({
   description?: string;
 
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <div
@@ -1544,6 +1810,29 @@ function Divider() {
         w-full
 
         bg-white/[0.065]
+      "
+    />
+  );
+}
+
+/* ------------------------------------------------ */
+/* EXPORT SPINNER                                   */
+/* ------------------------------------------------ */
+
+function ExportSpinner() {
+  return (
+    <span
+      className="
+        h-[11px]
+        w-[11px]
+
+        animate-spin
+
+        rounded-full
+
+        border
+        border-black/20
+        border-t-black/80
       "
     />
   );
