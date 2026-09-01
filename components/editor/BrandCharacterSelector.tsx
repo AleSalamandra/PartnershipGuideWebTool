@@ -27,10 +27,6 @@ interface BrandCharacterSelectorProps {
 export default function BrandCharacterSelector({
   brand,
 }: BrandCharacterSelectorProps) {
-  /* ---------------------------------------------- */
-  /* STORE                                          */
-  /* ---------------------------------------------- */
-
   const brandA =
     useGuidelineStore(
       (state) =>
@@ -48,10 +44,6 @@ export default function BrandCharacterSelector({
       ? brandA
       : brandB;
 
-  /* ---------------------------------------------- */
-  /* CHARACTER DATA                                 */
-  /* ---------------------------------------------- */
-
   const brandWithCharacter =
     currentBrand as typeof currentBrand & {
       characterTraits?:
@@ -67,9 +59,9 @@ export default function BrandCharacterSelector({
     selected.length >=
     MAX_BRAND_CHARACTER_TRAITS;
 
-  /* ---------------------------------------------- */
-  /* TOGGLE                                         */
-  /* ---------------------------------------------- */
+  /* ------------------------------------------------ */
+  /* TOGGLE                                           */
+  /* ------------------------------------------------ */
 
   const toggleTrait = (
     trait:
@@ -83,36 +75,22 @@ export default function BrandCharacterSelector({
     let next:
       BrandCharacterTraitId[];
 
-    /* REMOVE */
-
     if (alreadySelected) {
       next =
         selected.filter(
           (item) =>
             item !== trait
         );
-    }
-
-    /* MAX REACHED */
-
-    else if (
+    } else if (
       reachedLimit
     ) {
       return;
-    }
-
-    /* ADD */
-
-    else {
+    } else {
       next = [
         ...selected,
         trait,
       ];
     }
-
-    /* -------------------------------------------- */
-    /* SAVE                                         */
-    /* -------------------------------------------- */
 
     useGuidelineStore.setState(
       (state) => {
@@ -141,16 +119,12 @@ export default function BrandCharacterSelector({
     );
   };
 
-  /* ---------------------------------------------- */
-  /* RENDER                                         */
-  /* ---------------------------------------------- */
+  /* ------------------------------------------------ */
+  /* RENDER                                           */
+  /* ------------------------------------------------ */
 
   return (
-    <div
-      className="
-        mt-[18px]
-      "
-    >
+    <div>
       {/* ======================================== */}
       {/* HEADER                                   */}
       {/* ======================================== */}
@@ -158,17 +132,19 @@ export default function BrandCharacterSelector({
       <div
         className="
           flex
-          items-center
+          items-start
           justify-between
-
-          gap-[12px]
+          gap-[10px]
         "
       >
         <div>
           <p
             className="
-              text-[12px]
-              text-white/72
+              text-[11px]
+              uppercase
+              tracking-[0.12em]
+
+              text-white/55
 
               oook-medium
             "
@@ -178,16 +154,15 @@ export default function BrandCharacterSelector({
 
           <p
             className="
-              mt-[2px]
+              mt-[3px]
 
-              text-[10px]
-              leading-[1.3]
+              text-[7px]
+              leading-none
 
-              text-white/28
+              text-white/20
             "
           >
-            Select up to 5
-            personality traits.
+            Select up to 5 traits
           </p>
         </div>
 
@@ -195,28 +170,36 @@ export default function BrandCharacterSelector({
 
         <div
           className={`
+            flex
+            h-[17px]
+            min-w-[28px]
+
+            items-center
+            justify-center
+
             rounded-full
 
             border
 
-            px-[8px]
-            py-[4px]
-
-            text-[9px]
+            px-[5px]
 
             ${
               reachedLimit
                 ? `
-                    border-white/18
-                    bg-white/[0.06]
-                    text-white/65
+                    border-white/14
+                    bg-white/[0.05]
+                    text-white/45
                   `
                 : `
-                    border-white/[0.07]
-                    text-white/26
+                    border-white/[0.06]
+                    text-white/18
                   `
             }
           `}
+          style={{
+            fontSize: "6px",
+            lineHeight: 1,
+          }}
         >
           {selected.length}
           {" / "}
@@ -227,17 +210,18 @@ export default function BrandCharacterSelector({
       </div>
 
       {/* ======================================== */}
-      {/* CHIPS                                    */}
+      {/* FILTERS                                  */}
       {/* ======================================== */}
 
       <div
         className="
-          mt-[11px]
+          mt-[9px]
 
           flex
           flex-wrap
 
-          gap-[6px]
+          gap-x-[3px]
+          gap-y-[3px]
         "
       >
         {brandCharacterTraits.map(
@@ -254,7 +238,6 @@ export default function BrandCharacterSelector({
             return (
               <button
                 key={trait.id}
-
                 type="button"
 
                 title={
@@ -272,15 +255,20 @@ export default function BrandCharacterSelector({
                 }
 
                 className={`
+                  inline-flex
+
+                  h-[19px]
+
+                  items-center
+                  justify-center
+
+                  whitespace-nowrap
+
                   rounded-full
 
                   border
 
-                  px-[9px]
-                  py-[5px]
-
-                  text-[9px]
-                  leading-none
+                  px-[6px]
 
                   transition-all
                   duration-150
@@ -288,18 +276,18 @@ export default function BrandCharacterSelector({
                   ${
                     isSelected
                       ? `
-                          border-white
+                          border-white/80
                           bg-white
                           text-black
                         `
                       : `
-                          border-white/[0.08]
-                          bg-white/[0.025]
-                          text-white/42
+                          border-white/[0.065]
+                          bg-transparent
+                          text-white/32
 
-                          hover:border-white/20
-                          hover:bg-white/[0.05]
-                          hover:text-white/78
+                          hover:border-white/16
+                          hover:bg-white/[0.035]
+                          hover:text-white/65
                         `
                   }
 
@@ -307,11 +295,20 @@ export default function BrandCharacterSelector({
                     disabled
                       ? `
                           cursor-not-allowed
-                          opacity-25
+                          opacity-20
                         `
                       : ""
                   }
                 `}
+                style={{
+                  fontSize:
+                    "8px",
+
+                  lineHeight: 1,
+
+                  letterSpacing:
+                    "0.01em",
+                }}
               >
                 {trait.label}
               </button>
@@ -319,75 +316,6 @@ export default function BrandCharacterSelector({
           }
         )}
       </div>
-
-      {/* ======================================== */}
-      {/* EMPTY / SELECTED SUMMARY                 */}
-      {/* ======================================== */}
-
-      {selected.length ===
-      0 ? (
-        <p
-          className="
-            mt-[9px]
-
-            text-[9px]
-            leading-[1.35]
-
-            text-white/18
-          "
-        >
-          Character will influence
-          shapes, motion, texture,
-          depth and graphic behaviour.
-        </p>
-      ) : (
-        <div
-          className="
-            mt-[9px]
-
-            flex
-            items-center
-
-            gap-[5px]
-          "
-        >
-          <span
-            className="
-              text-[8px]
-              uppercase
-              tracking-[0.12em]
-
-              text-white/18
-            "
-          >
-            Profile
-          </span>
-
-          <span
-            className="
-              text-[9px]
-
-              text-white/32
-            "
-          >
-            {selected
-              .map(
-                (
-                  id
-                ) =>
-                  brandCharacterTraits.find(
-                    (
-                      trait
-                    ) =>
-                      trait.id ===
-                      id
-                  )?.label
-              )
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        </div>
-      )}
     </div>
   );
 }

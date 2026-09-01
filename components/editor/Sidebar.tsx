@@ -14,13 +14,19 @@ import { PartnershipModelId } from "@/types/guideline";
 /* TYPES                                            */
 /* ------------------------------------------------ */
 
-type BrandSide = "A" | "B";
+type BrandSide =
+  | "A"
+  | "B";
 
 interface BrandData {
   name: string;
+
   logoUrl: string | null;
+
   primaryColor: string;
+
   secondaryColor?: string;
+
   fontFamily?: string;
 }
 
@@ -36,25 +42,29 @@ const PARTNERSHIP_MODELS: {
   {
     id: "axb",
     label: "A × B",
-    description: "Equal collaboration",
+    description:
+      "Equal collaboration",
   },
 
   {
     id: "aandb",
     label: "A with B",
-    description: "Brand A leads",
+    description:
+      "Brand A leads",
   },
 
   {
     id: "poweredByA",
     label: "B powered by A",
-    description: "Brand B owns experience",
+    description:
+      "Brand B owns the experience",
   },
 
   {
     id: "presentsB",
     label: "A presents B",
-    description: "A platform / B content",
+    description:
+      "A platform / B content",
   },
 ];
 
@@ -93,10 +103,12 @@ export default function Sidebar() {
   /* ---------------------------------------------- */
 
   const setPartnershipModel = (
-    model: PartnershipModelId
+    model:
+      PartnershipModelId
   ) => {
     useGuidelineStore.setState({
-      partnershipModel: model,
+      partnershipModel:
+        model,
     });
   };
 
@@ -106,11 +118,14 @@ export default function Sidebar() {
 
   const updateBrand = (
     side: BrandSide,
-    patch: Partial<BrandData>
+    patch:
+      Partial<BrandData>
   ) => {
     useGuidelineStore.setState(
       (state) => {
-        if (side === "A") {
+        if (
+          side === "A"
+        ) {
           return {
             brandA: {
               ...state.brandA,
@@ -152,45 +167,46 @@ export default function Sidebar() {
       {/* HEADER                                   */}
       {/* ======================================== */}
 
-      <div
+      <header
         className="
           shrink-0
 
           border-b
           border-white/[0.07]
 
-          px-[22px]
-          py-[20px]
+          px-[24px]
+          py-[22px]
         "
       >
         <p
           className="
-            text-[15px]
-            text-white
+            text-[17px]
+            leading-none
+
+            text-white/92
 
             oook-medium
           "
         >
-          Partnership Guide
+          Configure
         </p>
 
         <p
           className="
-            mt-[3px]
+            mt-[7px]
 
-            text-[11px]
+            text-[10px]
             leading-[1.4]
 
-            text-white/30
+            text-white/28
           "
         >
-          Define the relationship and visual
-          identity of both brands.
+          Partnership visual system
         </p>
-      </div>
+      </header>
 
       {/* ======================================== */}
-      {/* SCROLLABLE CONTENT                       */}
+      {/* SCROLL AREA                              */}
       {/* ======================================== */}
 
       <div
@@ -200,8 +216,8 @@ export default function Sidebar() {
 
           overflow-y-auto
 
-          px-[22px]
-          py-[22px]
+          px-[24px]
+          py-[24px]
 
           [scrollbar-width:thin]
           [scrollbar-color:rgba(255,255,255,0.12)_transparent]
@@ -214,12 +230,10 @@ export default function Sidebar() {
         <SidebarSection
           eyebrow="01"
           title="Partnership model"
-          description="Defines ownership, hierarchy and the relationship between both brands."
+          description="Defines ownership, hierarchy and how both brands relate."
         >
           <div
             className="
-              mt-[14px]
-
               grid
               grid-cols-2
 
@@ -234,15 +248,19 @@ export default function Sidebar() {
 
                 return (
                   <button
-                    key={model.id}
+                    key={
+                      model.id
+                    }
                     type="button"
+
                     onClick={() =>
                       setPartnershipModel(
                         model.id
                       )
                     }
+
                     className={`
-                      min-h-[64px]
+                      min-h-[62px]
 
                       rounded-[12px]
 
@@ -259,15 +277,15 @@ export default function Sidebar() {
                       ${
                         active
                           ? `
-                              border-white/32
+                              border-white
                               bg-white
                             `
                           : `
-                              border-white/[0.07]
-                              bg-white/[0.025]
+                              border-white/[0.075]
+                              bg-white/[0.018]
 
-                              hover:border-white/15
-                              hover:bg-white/[0.045]
+                              hover:border-white/16
+                              hover:bg-white/[0.04]
                             `
                       }
                     `}
@@ -275,6 +293,7 @@ export default function Sidebar() {
                     <p
                       className={`
                         text-[11px]
+                        leading-none
 
                         oook-medium
 
@@ -285,20 +304,22 @@ export default function Sidebar() {
                         }
                       `}
                     >
-                      {model.label}
+                      {
+                        model.label
+                      }
                     </p>
 
                     <p
                       className={`
-                        mt-[3px]
+                        mt-[5px]
 
-                        text-[8px]
-                        leading-[1.25]
+                        text-[7px]
+                        leading-[1.3]
 
                         ${
                           active
-                            ? "text-black/45"
-                            : "text-white/25"
+                            ? "text-black/42"
+                            : "text-white/24"
                         }
                       `}
                     >
@@ -321,16 +342,22 @@ export default function Sidebar() {
 
         <BrandEditor
           side="A"
+
           brand={
             brandA as BrandData
           }
+
           defaultPrimary={
             DEFAULT_A_PRIMARY
           }
+
           defaultSecondary={
             DEFAULT_A_SECONDARY
           }
-          onChange={updateBrand}
+
+          onChange={
+            updateBrand
+          }
         />
 
         <Divider />
@@ -341,21 +368,25 @@ export default function Sidebar() {
 
         <BrandEditor
           side="B"
+
           brand={
             brandB as BrandData
           }
+
           defaultPrimary={
             DEFAULT_B_PRIMARY
           }
+
           defaultSecondary={
             DEFAULT_B_SECONDARY
           }
-          onChange={updateBrand}
+
+          onChange={
+            updateBrand
+          }
         />
 
-        {/* BOTTOM SPACE */}
-
-        <div className="h-[30px]" />
+        <div className="h-[40px]" />
       </div>
     </aside>
   );
@@ -381,13 +412,19 @@ function BrandEditor({
 
   onChange: (
     side: BrandSide,
-    patch: Partial<BrandData>
+    patch:
+      Partial<BrandData>
   ) => void;
 }) {
   const brandLabel =
     side === "A"
       ? "Brand A"
       : "Brand B";
+
+  const sectionNumber =
+    side === "A"
+      ? "02"
+      : "03";
 
   const primaryColor =
     brand.primaryColor ||
@@ -404,19 +441,15 @@ function BrandEditor({
   return (
     <SidebarSection
       eyebrow={
-        side === "A"
-          ? "02"
-          : "03"
+        sectionNumber
       }
-      title={brandLabel}
-      description={
-        side === "A"
-          ? "Define Brand A's identity and personality."
-          : "Define Brand B's identity and personality."
+      title={
+        brandLabel
       }
+      description="Brand identity, visual assets and character."
     >
       {/* ======================================== */}
-      {/* NAME                                     */}
+      {/* BRAND NAME                               */}
       {/* ======================================== */}
 
       <EditorGroup
@@ -424,47 +457,56 @@ function BrandEditor({
       >
         <input
           type="text"
+
           value={
             brand.name ?? ""
           }
+
           placeholder={
             brandLabel
           }
+
           onChange={(
             event
           ) =>
-            onChange(side, {
-              name:
-                event.target
-                  .value,
-            })
+            onChange(
+              side,
+              {
+                name:
+                  event.target
+                    .value,
+              }
+            )
           }
+
           className="
-            h-[38px]
+            h-[42px]
             w-full
 
-            rounded-[10px]
+            rounded-[11px]
 
             border
             border-white/[0.08]
 
-            bg-white/[0.025]
+            bg-white/[0.022]
 
-            px-[11px]
+            px-[12px]
 
             text-[11px]
+
             text-white/78
 
             outline-none
 
             transition-all
+            duration-150
 
             placeholder:text-white/18
 
-            hover:border-white/12
+            hover:border-white/13
 
             focus:border-white/22
-            focus:bg-white/[0.035]
+            focus:bg-white/[0.032]
           "
         />
       </EditorGroup>
@@ -478,8 +520,12 @@ function BrandEditor({
       >
         <LogoControl
           side={side}
+
           brand={brand}
-          onChange={onChange}
+
+          onChange={
+            onChange
+          }
         />
       </EditorGroup>
 
@@ -501,37 +547,49 @@ function BrandEditor({
         >
           <ColourControl
             label="Primary"
+
             value={
               primaryColor
             }
+
             fallback={
               defaultPrimary
             }
+
             onChange={(
               colour
             ) =>
-              onChange(side, {
-                primaryColor:
-                  colour,
-              })
+              onChange(
+                side,
+                {
+                  primaryColor:
+                    colour,
+                }
+              )
             }
           />
 
           <ColourControl
             label="Secondary"
+
             value={
               secondaryColor
             }
+
             fallback={
               defaultSecondary
             }
+
             onChange={(
               colour
             ) =>
-              onChange(side, {
-                secondaryColor:
-                  colour,
-              })
+              onChange(
+                side,
+                {
+                  secondaryColor:
+                    colour,
+                }
+              )
             }
           />
         </div>
@@ -547,14 +605,21 @@ function BrandEditor({
       >
         <TypefaceControl
           side={side}
-          value={fontFamily}
+
+          value={
+            fontFamily
+          }
+
           onChange={(
             value
           ) =>
-            onChange(side, {
-              fontFamily:
-                value,
-            })
+            onChange(
+              side,
+              {
+                fontFamily:
+                  value,
+              }
+            )
           }
         />
       </EditorGroup>
@@ -565,16 +630,18 @@ function BrandEditor({
 
       <div
         className="
-          mt-[22px]
+          mt-[24px]
 
           border-t
-          border-white/[0.06]
+          border-white/[0.065]
 
-          pt-[18px]
+          pt-[20px]
         "
       >
         <BrandCharacterSelector
-          brand={side}
+          brand={
+            side
+          }
         />
       </div>
     </SidebarSection>
@@ -582,7 +649,7 @@ function BrandEditor({
 }
 
 /* ------------------------------------------------ */
-/* LOGO                                             */
+/* LOGO CONTROL                                     */
 /* ------------------------------------------------ */
 
 function LogoControl({
@@ -596,7 +663,8 @@ function LogoControl({
 
   onChange: (
     side: BrandSide,
-    patch: Partial<BrandData>
+    patch:
+      Partial<BrandData>
   ) => void;
 }) {
   const inputRef =
@@ -622,10 +690,13 @@ function LogoControl({
         typeof reader.result ===
         "string"
       ) {
-        onChange(side, {
-          logoUrl:
-            reader.result,
-        });
+        onChange(
+          side,
+          {
+            logoUrl:
+              reader.result,
+          }
+        );
       }
     };
 
@@ -646,31 +717,37 @@ function LogoControl({
     <div>
       <input
         ref={inputRef}
+
         type="file"
+
         accept="
           image/png,
           image/jpeg,
           image/webp,
           image/svg+xml
         "
+
         onChange={
           handleUpload
         }
+
         className="hidden"
       />
 
       <button
         type="button"
+
         onClick={() =>
           inputRef.current?.click()
         }
+
         className="
           group
 
           relative
 
           flex
-          h-[86px]
+          h-[92px]
           w-full
 
           items-center
@@ -678,18 +755,19 @@ function LogoControl({
 
           overflow-hidden
 
-          rounded-[11px]
+          rounded-[12px]
 
           border
           border-dashed
           border-white/[0.09]
 
-          bg-white/[0.018]
+          bg-white/[0.015]
 
           transition-all
+          duration-150
 
           hover:border-white/18
-          hover:bg-white/[0.03]
+          hover:bg-white/[0.025]
         "
       >
         {hasLogo ? (
@@ -699,10 +777,13 @@ function LogoControl({
                 brand.logoUrl ??
                 ""
               }
+
               alt=""
+
               draggable={false}
+
               className="
-                max-h-[42px]
+                max-h-[46px]
                 max-w-[68%]
 
                 object-contain
@@ -718,7 +799,7 @@ function LogoControl({
                 items-center
                 justify-center
 
-                bg-black/65
+                bg-black/68
 
                 opacity-0
 
@@ -731,9 +812,9 @@ function LogoControl({
             >
               <span
                 className="
-                  text-[9px]
+                  text-[8px]
 
-                  text-white/70
+                  text-white/68
                 "
               >
                 Replace logo
@@ -751,8 +832,8 @@ function LogoControl({
                 mx-auto
 
                 flex
-                h-[24px]
-                w-[24px]
+                h-[23px]
+                w-[23px]
 
                 items-center
                 justify-center
@@ -762,9 +843,9 @@ function LogoControl({
                 border
                 border-white/[0.08]
 
-                text-[13px]
+                text-[12px]
 
-                text-white/30
+                text-white/28
               "
             >
               +
@@ -774,9 +855,9 @@ function LogoControl({
               className="
                 mt-[7px]
 
-                text-[9px]
+                text-[8px]
 
-                text-white/28
+                text-white/30
               "
             >
               Upload logo
@@ -784,11 +865,13 @@ function LogoControl({
 
             <p
               className="
-                mt-[2px]
+                mt-[3px]
 
-                text-[7px]
+                text-[6px]
+                uppercase
+                tracking-[0.08em]
 
-                text-white/16
+                text-white/14
               "
             >
               SVG · PNG · WEBP
@@ -800,24 +883,29 @@ function LogoControl({
       {hasLogo && (
         <button
           type="button"
+
           onClick={() =>
-            onChange(side, {
-              logoUrl: null,
-            })
+            onChange(
+              side,
+              {
+                logoUrl: null,
+              }
+            )
           }
+
           className="
-            mt-[6px]
+            mt-[7px]
 
-            text-[8px]
+            text-[7px]
 
-            text-white/22
+            text-white/20
 
             transition-colors
 
             hover:text-white/55
           "
         >
-          Remove
+          Remove logo
         </button>
       )}
     </div>
@@ -825,7 +913,7 @@ function LogoControl({
 }
 
 /* ------------------------------------------------ */
-/* COLOUR                                           */
+/* COLOUR CONTROL                                   */
 /* ------------------------------------------------ */
 
 function ColourControl({
@@ -835,6 +923,7 @@ function ColourControl({
   onChange,
 }: {
   label: string;
+
   value: string;
   fallback: string;
 
@@ -851,23 +940,24 @@ function ColourControl({
   return (
     <div
       className="
-        rounded-[10px]
+        rounded-[11px]
 
         border
-        border-white/[0.07]
+        border-white/[0.075]
 
         bg-white/[0.018]
 
-        p-[9px]
+        px-[10px]
+        py-[11px]
       "
     >
       <p
         className="
           text-[7px]
           uppercase
-          tracking-[0.13em]
+          tracking-[0.14em]
 
-          text-white/20
+          text-white/23
         "
       >
         {label}
@@ -875,22 +965,22 @@ function ColourControl({
 
       <div
         className="
-          mt-[7px]
+          mt-[8px]
 
           flex
           items-center
 
-          gap-[7px]
+          gap-[8px]
         "
       >
-        {/* COLOUR PICKER */}
+        {/* COLOR PICKER */}
 
         <label
           className="
             relative
 
-            h-[22px]
-            w-[22px]
+            h-[24px]
+            w-[24px]
 
             shrink-0
 
@@ -910,9 +1000,11 @@ function ColourControl({
         >
           <input
             type="color"
+
             value={
               safeValue
             }
+
             onChange={(
               event
             ) =>
@@ -921,6 +1013,7 @@ function ColourControl({
                   .value
               )
             }
+
             className="
               absolute
               inset-0
@@ -935,11 +1028,15 @@ function ColourControl({
           />
         </label>
 
-        {/* HEX */}
+        {/* HEX INPUT */}
 
         <input
           type="text"
-          value={value}
+
+          value={
+            value
+          }
+
           onChange={(
             event
           ) =>
@@ -948,6 +1045,7 @@ function ColourControl({
                 .value
             )
           }
+
           onBlur={() => {
             if (
               !isHexColour(
@@ -959,17 +1057,19 @@ function ColourControl({
               );
             }
           }}
+
           spellCheck={false}
+
           className="
             min-w-0
             flex-1
 
             bg-transparent
 
-            text-[9px]
+            text-[10px]
             uppercase
 
-            text-white/46
+            text-white/48
 
             outline-none
           "
@@ -980,7 +1080,7 @@ function ColourControl({
 }
 
 /* ------------------------------------------------ */
-/* TYPEFACE                                         */
+/* TYPEFACE CONTROL                                 */
 /* ------------------------------------------------ */
 
 function TypefaceControl({
@@ -989,6 +1089,7 @@ function TypefaceControl({
   onChange,
 }: {
   side: BrandSide;
+
   value: string;
 
   onChange: (
@@ -1053,7 +1154,9 @@ function TypefaceControl({
     <div>
       <input
         ref={inputRef}
+
         type="file"
+
         accept="
           .ttf,
           .otf,
@@ -1064,25 +1167,29 @@ function TypefaceControl({
           font/woff,
           font/woff2
         "
+
         onChange={
           handleFontUpload
         }
+
         className="hidden"
       />
 
-      {/* PREVIEW */}
+      {/* ======================================== */}
+      {/* PREVIEW                                  */}
+      {/* ======================================== */}
 
       <div
         className="
-          rounded-[11px]
+          rounded-[12px]
 
           border
-          border-white/[0.07]
+          border-white/[0.075]
 
-          bg-white/[0.018]
+          bg-white/[0.016]
 
-          px-[12px]
-          py-[12px]
+          px-[13px]
+          py-[13px]
         "
       >
         <div
@@ -1098,9 +1205,9 @@ function TypefaceControl({
             className="
               text-[7px]
               uppercase
-              tracking-[0.13em]
+              tracking-[0.14em]
 
-              text-white/20
+              text-white/22
             "
           >
             Preview
@@ -1125,14 +1232,14 @@ function TypefaceControl({
 
         <p
           className="
-            mt-[9px]
+            mt-[10px]
 
             truncate
 
-            text-[22px]
+            text-[24px]
             leading-none
 
-            text-white/78
+            text-white/82
           "
           style={{
             fontFamily:
@@ -1144,13 +1251,13 @@ function TypefaceControl({
 
         <p
           className="
-            mt-[6px]
+            mt-[7px]
 
             truncate
 
-            text-[9px]
+            text-[8px]
 
-            text-white/34
+            text-white/30
           "
           style={{
             fontFamily:
@@ -1161,21 +1268,28 @@ function TypefaceControl({
         </p>
       </div>
 
-      {/* CONTROLS */}
+      {/* ======================================== */}
+      {/* FONT INPUT + UPLOAD                      */}
+      {/* ======================================== */}
 
       <div
         className="
-          mt-[7px]
+          mt-[8px]
 
           flex
 
-          gap-[6px]
+          gap-[7px]
         "
       >
         <input
           type="text"
-          value={value}
+
+          value={
+            value
+          }
+
           placeholder="Font family"
+
           onChange={(
             event
           ) =>
@@ -1184,58 +1298,66 @@ function TypefaceControl({
                 .value
             )
           }
+
           className="
-            h-[34px]
+            h-[38px]
             min-w-0
             flex-1
 
-            rounded-[9px]
+            rounded-[10px]
 
             border
-            border-white/[0.07]
+            border-white/[0.075]
 
-            bg-white/[0.02]
+            bg-white/[0.018]
 
-            px-[9px]
+            px-[10px]
 
-            text-[8px]
+            text-[9px]
 
-            text-white/42
+            text-white/44
 
             outline-none
 
-            placeholder:text-white/16
+            transition-all
 
-            focus:border-white/16
+            placeholder:text-white/15
+
+            hover:border-white/12
+
+            focus:border-white/17
+            focus:bg-white/[0.028]
           "
         />
 
         <button
           type="button"
+
           onClick={() =>
             inputRef.current?.click()
           }
+
           className="
-            h-[34px]
+            h-[38px]
 
             shrink-0
 
-            rounded-[9px]
+            rounded-[10px]
 
             border
             border-white/[0.08]
 
-            bg-white/[0.025]
+            bg-white/[0.022]
 
-            px-[10px]
+            px-[12px]
 
             text-[8px]
 
-            text-white/42
+            text-white/40
 
             transition-all
 
-            hover:border-white/16
+            hover:border-white/17
             hover:bg-white/[0.05]
             hover:text-white/70
           "
@@ -1258,13 +1380,20 @@ function SidebarSection({
   children,
 }: {
   eyebrow: string;
+
   title: string;
+
   description?: string;
+
   children:
     React.ReactNode;
 }) {
   return (
     <section>
+      {/* ======================================== */}
+      {/* SECTION HEADING                          */}
+      {/* ======================================== */}
+
       <div
         className="
           flex
@@ -1275,25 +1404,31 @@ function SidebarSection({
       >
         <p
           className="
-            mt-[3px]
+            mt-[5px]
 
             shrink-0
 
-            text-[8px]
-            tracking-[0.12em]
+            text-[7px]
+            tracking-[0.14em]
 
-            text-white/15
+            text-white/13
           "
         >
           {eyebrow}
         </p>
 
-        <div>
+        <div
+          className="
+            min-w-0
+          "
+        >
           <h2
             className="
-              text-[13px]
+              text-[17px]
+              leading-[1.05]
+              tracking-[-0.025em]
 
-              text-white/78
+              text-white/90
 
               oook-medium
             "
@@ -1304,14 +1439,14 @@ function SidebarSection({
           {description && (
             <p
               className="
-                mt-[3px]
+                mt-[5px]
 
-                max-w-[245px]
+                max-w-[255px]
 
                 text-[9px]
                 leading-[1.4]
 
-                text-white/26
+                text-white/27
               "
             >
               {description}
@@ -1322,7 +1457,7 @@ function SidebarSection({
 
       <div
         className="
-          mt-[14px]
+          mt-[18px]
         "
       >
         {children}
@@ -1341,30 +1476,34 @@ function EditorGroup({
   children,
 }: {
   label: string;
+
   description?: string;
+
   children:
     React.ReactNode;
 }) {
   return (
     <div
       className="
-        mt-[18px]
+        mt-[24px]
 
         first:mt-0
       "
     >
       <div
         className="
-          mb-[8px]
+          mb-[10px]
         "
       >
         <p
           className="
-            text-[9px]
+            text-[11px]
             uppercase
-            tracking-[0.14em]
+            tracking-[0.12em]
 
-            text-white/28
+            text-white/53
+
+            oook-medium
           "
         >
           {label}
@@ -1373,12 +1512,12 @@ function EditorGroup({
         {description && (
           <p
             className="
-              mt-[2px]
+              mt-[4px]
 
               text-[8px]
-              leading-[1.35]
+              leading-[1.4]
 
-              text-white/18
+              text-white/21
             "
           >
             {description}
@@ -1399,12 +1538,12 @@ function Divider() {
   return (
     <div
       className="
-        my-[24px]
+        my-[30px]
 
         h-px
         w-full
 
-        bg-white/[0.06]
+        bg-white/[0.065]
       "
     />
   );
@@ -1427,7 +1566,9 @@ function normalizeColour(
   fallback: string
 ) {
   if (
-    isHexColour(value)
+    isHexColour(
+      value
+    )
   ) {
     return value;
   }
@@ -1439,7 +1580,10 @@ function cleanFontName(
   value: string
 ) {
   return value
-    .replace(/["']/g, "")
+    .replace(
+      /["']/g,
+      ""
+    )
     .split(",")[0]
     .trim();
 }
@@ -1455,22 +1599,23 @@ function readFileAsDataUrl(
       const reader =
         new FileReader();
 
-      reader.onload = () => {
-        if (
-          typeof reader.result ===
-          "string"
-        ) {
-          resolve(
-            reader.result
-          );
-        } else {
-          reject(
-            new Error(
-              "Invalid file result"
-            )
-          );
-        }
-      };
+      reader.onload =
+        () => {
+          if (
+            typeof reader.result ===
+            "string"
+          ) {
+            resolve(
+              reader.result
+            );
+          } else {
+            reject(
+              new Error(
+                "Invalid file result"
+              )
+            );
+          }
+        };
 
       reader.onerror =
         () => {

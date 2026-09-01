@@ -1,7 +1,6 @@
 "use client";
 
 import type {
-  CSSProperties,
   ReactNode,
 } from "react";
 
@@ -9,6 +8,11 @@ import GuidelinePage from "./GuidelinePage";
 
 import { useGuidelineStore } from "@/store/guidelineStore";
 import { PartnershipModelId } from "@/types/guideline";
+
+import {
+  brandCharacterTraits,
+  BrandCharacterTraitId,
+} from "@/data/brandCharacterTraits";
 
 /* ------------------------------------------------ */
 /* TYPES                                            */
@@ -42,8 +46,29 @@ interface PrimitiveDefinition {
   label: string;
 }
 
+interface VisualProfile {
+  roundness: number;
+  organic: number;
+  precision: number;
+  minimalism: number;
+
+  grid: number;
+  particles: number;
+  glow: number;
+  texture: number;
+  depth: number;
+
+  diagonal: number;
+  asymmetry: number;
+  energy: number;
+  distortion: number;
+
+  lineWeight: number;
+}
+
 interface GraphicConfig {
   eyebrow: string;
+
   intro: string;
 
   systemOwner: string;
@@ -115,7 +140,7 @@ const PRIMITIVES: PrimitiveDefinition[] = [
   },
   {
     id: "visualizers",
-    label: "Visualizers",
+    label: "Visualizer",
   },
   {
     id: "data",
@@ -124,8 +149,22 @@ const PRIMITIVES: PrimitiveDefinition[] = [
 ];
 
 /* ------------------------------------------------ */
-/* COLOUR HELPERS                                   */
+/* BASIC HELPERS                                    */
 /* ------------------------------------------------ */
+
+function clamp(
+  value: number,
+  min = 0,
+  max = 1
+) {
+  return Math.min(
+    Math.max(
+      value,
+      min
+    ),
+    max
+  );
+}
 
 function normalizeHex(
   value: unknown,
@@ -166,11 +205,9 @@ function getBrandColour(
   const value =
     brand as {
       primaryColor?: unknown;
-      color?: unknown;
-
-      colors?: unknown[];
-
       primaryColour?: unknown;
+      color?: unknown;
+      colors?: unknown[];
     };
 
   return normalizeHex(
@@ -182,21 +219,52 @@ function getBrandColour(
   );
 }
 
+function getCharacterTraits(
+  brand: unknown
+): BrandCharacterTraitId[] {
+  const value =
+    brand as {
+      characterTraits?:
+        BrandCharacterTraitId[];
+    };
+
+  if (
+    !Array.isArray(
+      value.characterTraits
+    )
+  ) {
+    return [];
+  }
+
+  return value.characterTraits;
+}
+
 function hexToRgb(
-  hex: string
+  colour: string
 ) {
+  const normalized =
+    normalizeHex(
+      colour,
+      "#FFFFFF"
+    );
+
   const value =
     parseInt(
-      hex.replace("#", ""),
+      normalized.replace(
+        "#",
+        ""
+      ),
       16
     );
 
   return {
     r:
-      (value >> 16) & 255,
+      (value >> 16) &
+      255,
 
     g:
-      (value >> 8) & 255,
+      (value >> 8) &
+      255,
 
     b:
       value & 255,
@@ -212,13 +280,417 @@ function alpha(
     g,
     b,
   } = hexToRgb(
-    normalizeHex(
-      colour,
-      "#FFFFFF"
-    )
+    colour
   );
 
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
+/* ------------------------------------------------ */
+/* CHARACTER → VISUAL PROFILE                       */
+/* ------------------------------------------------ */
+
+function getBaseProfile(): VisualProfile {
+  return {
+    roundness: 0.45,
+    organic: 0.2,
+    precision: 0.55,
+    minimalism: 0.55,
+
+    grid: 0.4,
+    particles: 0.25,
+    glow: 0.3,
+    texture: 0.2,
+    depth: 0.35,
+
+    diagonal: 0.15,
+    asymmetry: 0.25,
+    energy: 0.3,
+    distortion: 0.05,
+
+    lineWeight: 0.45,
+  };
+}
+
+function buildVisualProfile(
+  traits: BrandCharacterTraitId[]
+): VisualProfile {
+  const profile =
+    getBaseProfile();
+
+  traits.forEach(
+    (trait) => {
+      switch (trait) {
+        case "classic":
+          profile.precision += 0.18;
+          profile.grid += 0.12;
+          profile.asymmetry -= 0.16;
+          profile.distortion -= 0.12;
+          profile.energy -= 0.1;
+          break;
+
+        case "elegant":
+          profile.minimalism += 0.18;
+          profile.lineWeight -= 0.16;
+          profile.energy -= 0.12;
+          profile.glow += 0.05;
+          profile.texture -= 0.06;
+          break;
+
+        case "premium":
+          profile.minimalism += 0.2;
+          profile.depth += 0.12;
+          profile.glow += 0.08;
+          profile.particles -= 0.1;
+          profile.lineWeight -= 0.12;
+          break;
+
+        case "minimal":
+          profile.minimalism += 0.32;
+          profile.particles -= 0.22;
+          profile.texture -= 0.18;
+          profile.distortion -= 0.12;
+          profile.grid -= 0.05;
+          break;
+
+        case "editorial":
+          profile.grid += 0.28;
+          profile.precision += 0.18;
+          profile.asymmetry += 0.05;
+          profile.particles -= 0.12;
+          break;
+
+        case "technical":
+          profile.grid += 0.34;
+          profile.precision += 0.28;
+          profile.lineWeight -= 0.08;
+          profile.particles += 0.08;
+          profile.depth += 0.08;
+          break;
+
+        case "precise":
+          profile.precision += 0.34;
+          profile.grid += 0.16;
+          profile.asymmetry -= 0.2;
+          profile.organic -= 0.22;
+          profile.distortion -= 0.2;
+          break;
+
+        case "futuristic":
+          profile.glow += 0.3;
+          profile.depth += 0.25;
+          profile.grid += 0.14;
+          profile.particles += 0.12;
+          profile.texture += 0.06;
+          break;
+
+        case "experimental":
+          profile.distortion += 0.4;
+          profile.asymmetry += 0.25;
+          profile.organic += 0.12;
+          profile.grid -= 0.1;
+          profile.depth += 0.08;
+          break;
+
+        case "disruptive":
+          profile.diagonal += 0.4;
+          profile.asymmetry += 0.32;
+          profile.energy += 0.24;
+          profile.distortion += 0.24;
+          profile.lineWeight += 0.12;
+          break;
+
+        case "bold":
+          profile.lineWeight += 0.3;
+          profile.minimalism -= 0.08;
+          profile.energy += 0.12;
+          profile.depth += 0.08;
+          break;
+
+        case "dynamic":
+          profile.diagonal += 0.34;
+          profile.energy += 0.32;
+          profile.asymmetry += 0.16;
+          profile.particles += 0.08;
+          break;
+
+        case "energetic":
+          profile.energy += 0.42;
+          profile.particles += 0.32;
+          profile.glow += 0.14;
+          profile.lineWeight += 0.08;
+          break;
+
+        case "playful":
+          profile.roundness += 0.34;
+          profile.organic += 0.18;
+          profile.asymmetry += 0.16;
+          profile.energy += 0.16;
+          profile.particles += 0.15;
+          break;
+
+        case "youthful":
+          profile.energy += 0.24;
+          profile.asymmetry += 0.12;
+          profile.roundness += 0.12;
+          profile.particles += 0.12;
+          break;
+
+        case "friendly":
+          profile.roundness += 0.32;
+          profile.organic += 0.12;
+          profile.lineWeight -= 0.05;
+          profile.diagonal -= 0.08;
+          break;
+
+        case "organic":
+          profile.organic += 0.5;
+          profile.roundness += 0.2;
+          profile.asymmetry += 0.2;
+          profile.grid -= 0.18;
+          profile.distortion += 0.12;
+          break;
+
+        case "immersive":
+          profile.depth += 0.42;
+          profile.glow += 0.18;
+          profile.particles += 0.12;
+          profile.texture += 0.08;
+          break;
+
+        case "cinematic":
+          profile.depth += 0.3;
+          profile.glow += 0.14;
+          profile.texture += 0.15;
+          profile.minimalism += 0.05;
+          break;
+
+        case "sporty":
+          profile.diagonal += 0.4;
+          profile.energy += 0.38;
+          profile.grid += 0.12;
+          profile.particles += 0.15;
+          profile.lineWeight += 0.1;
+          break;
+      }
+    }
+  );
+
+  return normalizeProfile(
+    profile
+  );
+}
+
+function normalizeProfile(
+  profile: VisualProfile
+): VisualProfile {
+  return {
+    roundness:
+      clamp(
+        profile.roundness
+      ),
+
+    organic:
+      clamp(
+        profile.organic
+      ),
+
+    precision:
+      clamp(
+        profile.precision
+      ),
+
+    minimalism:
+      clamp(
+        profile.minimalism
+      ),
+
+    grid:
+      clamp(
+        profile.grid
+      ),
+
+    particles:
+      clamp(
+        profile.particles
+      ),
+
+    glow:
+      clamp(
+        profile.glow
+      ),
+
+    texture:
+      clamp(
+        profile.texture
+      ),
+
+    depth:
+      clamp(
+        profile.depth
+      ),
+
+    diagonal:
+      clamp(
+        profile.diagonal
+      ),
+
+    asymmetry:
+      clamp(
+        profile.asymmetry
+      ),
+
+    energy:
+      clamp(
+        profile.energy
+      ),
+
+    distortion:
+      clamp(
+        profile.distortion
+      ),
+
+    lineWeight:
+      clamp(
+        profile.lineWeight
+      ),
+  };
+}
+
+/* ------------------------------------------------ */
+/* PROFILE BLENDING                                 */
+/* ------------------------------------------------ */
+
+function blendProfiles(
+  a: VisualProfile,
+  b: VisualProfile,
+  aWeight: number
+): VisualProfile {
+  const bWeight =
+    1 - aWeight;
+
+  return {
+    roundness:
+      a.roundness *
+        aWeight +
+      b.roundness *
+        bWeight,
+
+    organic:
+      a.organic *
+        aWeight +
+      b.organic *
+        bWeight,
+
+    precision:
+      a.precision *
+        aWeight +
+      b.precision *
+        bWeight,
+
+    minimalism:
+      a.minimalism *
+        aWeight +
+      b.minimalism *
+        bWeight,
+
+    grid:
+      a.grid *
+        aWeight +
+      b.grid *
+        bWeight,
+
+    particles:
+      a.particles *
+        aWeight +
+      b.particles *
+        bWeight,
+
+    glow:
+      a.glow *
+        aWeight +
+      b.glow *
+        bWeight,
+
+    texture:
+      a.texture *
+        aWeight +
+      b.texture *
+        bWeight,
+
+    depth:
+      a.depth *
+        aWeight +
+      b.depth *
+        bWeight,
+
+    diagonal:
+      a.diagonal *
+        aWeight +
+      b.diagonal *
+        bWeight,
+
+    asymmetry:
+      a.asymmetry *
+        aWeight +
+      b.asymmetry *
+        bWeight,
+
+    energy:
+      a.energy *
+        aWeight +
+      b.energy *
+        bWeight,
+
+    distortion:
+      a.distortion *
+        aWeight +
+      b.distortion *
+        bWeight,
+
+    lineWeight:
+      a.lineWeight *
+        aWeight +
+      b.lineWeight *
+        bWeight,
+  };
+}
+
+/* ------------------------------------------------ */
+/* PARTNERSHIP PROFILE                              */
+/* ------------------------------------------------ */
+
+function getPartnershipProfile(
+  model: PartnershipModelId,
+  brandAProfile: VisualProfile,
+  brandBProfile: VisualProfile
+) {
+  switch (model) {
+    case "axb":
+      return blendProfiles(
+        brandAProfile,
+        brandBProfile,
+        0.5
+      );
+
+    case "aandb":
+      return blendProfiles(
+        brandAProfile,
+        brandBProfile,
+        0.72
+      );
+
+    case "poweredByA":
+      return blendProfiles(
+        brandBProfile,
+        brandAProfile,
+        0.88
+      );
+
+    case "presentsB":
+    default:
+      return brandAProfile;
+  }
 }
 
 /* ------------------------------------------------ */
@@ -231,34 +703,30 @@ function getGraphicConfig(
   brandBName: string
 ): GraphicConfig {
   switch (model) {
-    /* ================================================= */
-    /* A × B                                             */
-    /* ================================================= */
-
     case "axb":
       return {
         eyebrow:
           "Shared graphic system",
 
         intro:
-          "Build one neutral visual world. Both brands may contribute accents, but the composition must still read as a single system.",
+          "The collaboration combines both personalities into one visual grammar. Neither brand should generate a separate competing universe.",
 
         systemOwner:
-          "Shared / neutral",
+          "Shared",
 
         expressiveOwner:
           `${brandAName} + ${brandBName}`,
 
         doLabel:
-          "One shared system. Two controlled accents.",
+          "Blend both personalities into one coherent system.",
 
         dontLabel:
-          "Two complete visual worlds fighting for attention.",
+          "Do not build two independent brand worlds inside one composition.",
 
         rules: [
-          "Neutral geometry first",
-          "One dominant accent per moment",
-          "Equivalent brand opportunity",
+          "Character is blended 50 / 50",
+          "One shared visual grammar",
+          "Brand accents remain controlled",
         ],
 
         roles: {
@@ -266,31 +734,17 @@ function getGraphicConfig(
           lines: "shared",
           masks: "shared",
           frames: "shared",
-
-          particles:
-            "restrained",
-
+          particles: "shared",
           grids: "common",
           ui: "common",
-
           gradients: "shared",
           glow: "shared",
-
-          textures:
-            "restrained",
-
+          textures: "shared",
           "3d": "shared",
-
-          visualizers:
-            "shared",
-
+          visualizers: "shared",
           data: "common",
         },
       };
-
-    /* ================================================= */
-    /* A WITH B                                          */
-    /* ================================================= */
 
     case "aandb":
       return {
@@ -298,7 +752,7 @@ function getGraphicConfig(
           `${brandAName}-led graphic system`,
 
         intro:
-          `${brandAName} defines the visual grammar. ${brandBName} appears as a recognisable but secondary graphic accent.`,
+          `${brandAName}'s personality defines the core visual grammar. ${brandBName} can influence secondary details without changing the overall character.`,
 
         systemOwner:
           brandAName,
@@ -307,50 +761,36 @@ function getGraphicConfig(
           brandAName,
 
         doLabel:
-          `${brandAName} leads. ${brandBName} punctuates.`,
+          `${brandAName}'s character defines the system; ${brandBName} modifies details.`,
 
         dontLabel:
-          `${brandBName} becoming the dominant visual environment.`,
+          `${brandBName}'s personality should not become visually dominant.`,
 
         rules: [
-          `${brandAName} owns structure`,
-          `${brandBName} stays local`,
-          "Common UI remains neutral",
+          "≈ 70% Brand A character",
+          "≈ 30% Brand B influence",
+          "One coherent system",
         ],
 
         roles: {
           shapes: "brandA",
           lines: "brandA",
-
           masks: "brandA",
           frames: "brandA",
-
           particles:
             "restrained",
-
           grids: "common",
           ui: "common",
-
-          gradients:
-            "brandA",
-
+          gradients: "brandA",
           glow: "brandA",
-
           textures:
             "restrained",
-
           "3d": "brandA",
-
           visualizers:
             "brandA",
-
           data: "common",
         },
       };
-
-    /* ================================================= */
-    /* B POWERED BY A                                    */
-    /* ================================================= */
 
     case "poweredByA":
       return {
@@ -358,7 +798,7 @@ function getGraphicConfig(
           `${brandBName}-owned graphic system`,
 
         intro:
-          `${brandBName} owns all consumer-facing visual language. ${brandAName} is limited to technology, production or endorsement moments.`,
+          `${brandBName}'s character determines almost the entire consumer-facing graphic language. ${brandAName} should not introduce a recognisable second visual style.`,
 
         systemOwner:
           brandBName,
@@ -367,15 +807,15 @@ function getGraphicConfig(
           brandBName,
 
         doLabel:
-          `${brandBName} owns the experience. ${brandAName} endorses.`,
+          `${brandBName}'s personality owns the experience.`,
 
         dontLabel:
-          `${brandAName} creating a second branded visual system.`,
+          `${brandAName}'s character should not leak into the consumer-facing system.`,
 
         rules: [
-          `${brandBName} owns all expressive graphics`,
-          `${brandAName} appears as endorsement`,
-          "No competing visual language",
+          "≈ 85–90% Brand B character",
+          "Brand A only endorses",
+          "No second visual grammar",
         ],
 
         roles: {
@@ -384,26 +824,17 @@ function getGraphicConfig(
           masks: "brandB",
           frames: "brandB",
           particles: "brandB",
-
           grids: "common",
-
           ui: "brandB",
-
           gradients: "brandB",
           glow: "brandB",
           textures: "brandB",
           "3d": "brandB",
-
           visualizers:
             "brandB",
-
           data: "common",
         },
       };
-
-    /* ================================================= */
-    /* A PRESENTS B                                      */
-    /* ================================================= */
 
     case "presentsB":
     default:
@@ -412,7 +843,7 @@ function getGraphicConfig(
           `${brandAName} container / ${brandBName} content`,
 
         intro:
-          `${brandAName} owns the frame, grid and interface. ${brandBName} may introduce a richer graphic language inside the content area.`,
+          `The two personalities remain intentionally separated: ${brandAName} defines the container, grid and UI; ${brandBName} expresses itself inside the featured content area.`,
 
         systemOwner:
           brandAName,
@@ -421,48 +852,104 @@ function getGraphicConfig(
           brandBName,
 
         doLabel:
-          `${brandAName} frames. ${brandBName} lives inside.`,
+          "Different personalities, separated by a clear container / content boundary.",
 
         dontLabel:
-          `${brandBName} escaping the content layer and taking over the platform.`,
+          `${brandBName}'s visual character should not take over the platform itself.`,
 
         rules: [
-          `${brandAName} owns chrome + UI`,
-          `${brandBName} owns content expression`,
+          "Brand A = platform character",
+          "Brand B = content character",
           "Keep the boundary visible",
         ],
 
         roles: {
           shapes: "brandA",
           lines: "brandA",
-
           masks: "content",
-
           frames: "brandA",
-
-          particles:
-            "content",
-
+          particles: "content",
           grids: "common",
           ui: "brandA",
-
-          gradients:
-            "content",
-
+          gradients: "content",
           glow: "content",
-
-          textures:
-            "content",
-
+          textures: "content",
           "3d": "content",
-
-          visualizers:
-            "content",
-
+          visualizers: "content",
           data: "common",
         },
       };
   }
+}
+
+/* ------------------------------------------------ */
+/* PROFILE STYLE HELPERS                            */
+/* ------------------------------------------------ */
+
+function getRadius(
+  profile: VisualProfile,
+  min = 4,
+  max = 70
+) {
+  return (
+    min +
+    profile.roundness *
+      (max - min)
+  );
+}
+
+function getRotation(
+  profile: VisualProfile,
+  multiplier = 1
+) {
+  return (
+    profile.diagonal *
+      13 *
+      multiplier +
+    profile.asymmetry *
+      5 *
+      multiplier
+  );
+}
+
+function getShapeClip(
+  profile: VisualProfile
+) {
+  if (
+    profile.organic >
+    0.68
+  ) {
+    return "polygon(12% 4%, 71% 0%, 100% 27%, 89% 75%, 61% 100%, 18% 89%, 0% 48%)";
+  }
+
+  if (
+    profile.distortion >
+    0.62
+  ) {
+    return "polygon(7% 17%, 86% 0%, 100% 68%, 72% 100%, 13% 85%, 0% 41%)";
+  }
+
+  return undefined;
+}
+
+function getGridSize(
+  profile: VisualProfile
+) {
+  return Math.round(
+    72 -
+      profile.grid *
+        42
+  );
+}
+
+function getParticleCount(
+  profile: VisualProfile
+) {
+  return Math.round(
+    3 +
+      profile.particles *
+        15
+  );
 }
 
 /* ------------------------------------------------ */
@@ -480,12 +967,9 @@ function Card({
     <div
       className={`
         rounded-[20px]
-
         border
         border-white/[0.07]
-
         bg-white/[0.018]
-
         ${className}
       `}
     >
@@ -528,6 +1012,37 @@ export default function Page10() {
       "#3478F6"
     );
 
+  /* ---------------------------------------------- */
+  /* CHARACTER                                      */
+  /* ---------------------------------------------- */
+
+  const brandATraits =
+    getCharacterTraits(
+      brandA
+    );
+
+  const brandBTraits =
+    getCharacterTraits(
+      brandB
+    );
+
+  const brandAProfile =
+    buildVisualProfile(
+      brandATraits
+    );
+
+  const brandBProfile =
+    buildVisualProfile(
+      brandBTraits
+    );
+
+  const sharedProfile =
+    getPartnershipProfile(
+      model,
+      brandAProfile,
+      brandBProfile
+    );
+
   const config =
     getGraphicConfig(
       model,
@@ -544,10 +1059,9 @@ export default function Page10() {
       <header
         className="
           absolute
-
           left-[70px]
           right-[70px]
-          top-[52px]
+          top-[46px]
 
           flex
           items-start
@@ -556,16 +1070,16 @@ export default function Page10() {
       >
         <div
           className="
-            max-w-[1010px]
+            max-w-[1040px]
           "
         >
           <p
             className="
-              text-[11px]
+              text-[13px]
               uppercase
-              tracking-[0.18em]
+              tracking-[0.17em]
 
-              text-white/25
+              text-white/30
             "
           >
             10 / Shared visual territory
@@ -573,11 +1087,11 @@ export default function Page10() {
 
           <h1
             className="
-              mt-[13px]
+              mt-[12px]
 
               whitespace-nowrap
 
-              text-[50px]
+              text-[52px]
               leading-none
               tracking-[-0.045em]
 
@@ -591,14 +1105,14 @@ export default function Page10() {
 
           <p
             className="
-              mt-[12px]
+              mt-[13px]
 
-              max-w-[800px]
+              max-w-[880px]
 
-              text-[14px]
-              leading-[1.4]
+              text-[16px]
+              leading-[1.38]
 
-              text-white/38
+              text-white/45
             "
           >
             {config.intro}
@@ -607,18 +1121,18 @@ export default function Page10() {
 
         <div
           className="
-            max-w-[260px]
+            max-w-[270px]
 
             text-right
           "
         >
           <p
             className="
-              text-[8px]
+              text-[9px]
               uppercase
               tracking-[0.16em]
 
-              text-white/20
+              text-white/24
             "
           >
             Graphic model
@@ -626,11 +1140,12 @@ export default function Page10() {
 
           <p
             className="
-              mt-[5px]
+              mt-[6px]
 
-              text-[15px]
+              text-[17px]
+              leading-[1.15]
 
-              text-white/48
+              text-white/58
 
               oook-medium
             "
@@ -641,61 +1156,47 @@ export default function Page10() {
       </header>
 
       {/* ================================================= */}
-      {/* MODEL SUMMARY                                     */}
+      {/* LEFT COLUMN                                       */}
       {/* ================================================= */}
 
-      <section
+      <aside
         className="
           absolute
 
           left-[70px]
-          top-[185px]
+          top-[188px]
 
-          w-[280px]
+          w-[292px]
         "
       >
+        {/* ---------------------------------------------- */}
+        {/* CHARACTER INPUT                                */}
+        {/* ---------------------------------------------- */}
+
         <Card
           className="
-            p-[17px]
+            p-[15px]
           "
         >
-          <p
-            className="
-              text-[8px]
-              uppercase
-              tracking-[0.17em]
+          <SectionLabel>
+            Character input
+          </SectionLabel>
 
-              text-white/22
-            "
-          >
-            Ownership
-          </p>
-
-          <div
-            className="
-              mt-[14px]
-
-              space-y-[12px]
-            "
-          >
-            <OwnershipRow
-              label="System"
-              value={
-                config.systemOwner
-              }
-            />
-
-            <OwnershipRow
-              label="Expression"
-              value={
-                config.expressiveOwner
-              }
-            />
-          </div>
+          <CharacterBlock
+            label={
+              brandAName
+            }
+            traits={
+              brandATraits
+            }
+            colour={
+              brandAColor
+            }
+          />
 
           <div
             className="
-              my-[14px]
+              my-[12px]
 
               h-px
 
@@ -703,8 +1204,121 @@ export default function Page10() {
             "
           />
 
+          <CharacterBlock
+            label={
+              brandBName
+            }
+            traits={
+              brandBTraits
+            }
+            colour={
+              brandBColor
+            }
+          />
+        </Card>
+
+        {/* ---------------------------------------------- */}
+        {/* RESULTING BEHAVIOUR                            */}
+        {/* ---------------------------------------------- */}
+
+        <Card
+          className="
+            mt-[11px]
+
+            p-[15px]
+          "
+        >
+          <SectionLabel>
+            Resulting behaviour
+          </SectionLabel>
+
           <div
             className="
+              mt-[13px]
+
+              grid
+              grid-cols-2
+
+              gap-x-[13px]
+              gap-y-[11px]
+            "
+          >
+            <ProfileMetric
+              label="Geometry"
+              value={
+                sharedProfile.organic
+              }
+              left="Rigid"
+              right="Organic"
+            />
+
+            <ProfileMetric
+              label="Density"
+              value={
+                1 -
+                sharedProfile.minimalism
+              }
+              left="Quiet"
+              right="Dense"
+            />
+
+            <ProfileMetric
+              label="Grid"
+              value={
+                sharedProfile.grid
+              }
+              left="Free"
+              right="Strict"
+            />
+
+            <ProfileMetric
+              label="Energy"
+              value={
+                sharedProfile.energy
+              }
+              left="Calm"
+              right="Fast"
+            />
+
+            <ProfileMetric
+              label="Depth"
+              value={
+                sharedProfile.depth
+              }
+              left="Flat"
+              right="Spatial"
+            />
+
+            <ProfileMetric
+              label="Texture"
+              value={
+                sharedProfile.texture
+              }
+              left="Clean"
+              right="Rich"
+            />
+          </div>
+        </Card>
+
+        {/* ---------------------------------------------- */}
+        {/* PARTNERSHIP LOGIC                              */}
+        {/* ---------------------------------------------- */}
+
+        <Card
+          className="
+            mt-[11px]
+
+            p-[15px]
+          "
+        >
+          <SectionLabel>
+            Partnership logic
+          </SectionLabel>
+
+          <div
+            className="
+              mt-[12px]
+
               space-y-[9px]
             "
           >
@@ -716,19 +1330,18 @@ export default function Page10() {
                 <div
                   key={rule}
                   className="
-                    flex
-                    items-start
+                    grid
+                    grid-cols-[20px_minmax(0,1fr)]
 
-                    gap-[8px]
+                    items-start
+                    gap-[6px]
                   "
                 >
                   <span
                     className="
-                      mt-[1px]
+                      text-[9px]
 
-                      text-[8px]
-
-                      text-white/20
+                      text-white/22
                     "
                   >
                     0{index + 1}
@@ -736,10 +1349,10 @@ export default function Page10() {
 
                   <p
                     className="
-                      text-[10px]
+                      text-[11px]
                       leading-[1.3]
 
-                      text-white/48
+                      text-white/52
                     "
                   >
                     {rule}
@@ -749,52 +1362,7 @@ export default function Page10() {
             )}
           </div>
         </Card>
-
-        {/* GRAPHIC KEY */}
-
-        <Card
-          className="
-            mt-[12px]
-
-            p-[17px]
-          "
-        >
-          <p
-            className="
-              text-[8px]
-              uppercase
-              tracking-[0.17em]
-
-              text-white/22
-            "
-          >
-            Graphic key
-          </p>
-
-          <div
-            className="
-              mt-[13px]
-
-              space-y-[9px]
-            "
-          >
-            <KeyRow
-              colour="rgba(255,255,255,0.28)"
-              label="Common / neutral"
-            />
-
-            <KeyRow
-              colour={brandAColor}
-              label={brandAName}
-            />
-
-            <KeyRow
-              colour={brandBColor}
-              label={brandBName}
-            />
-          </div>
-        </Card>
-      </section>
+      </aside>
 
       {/* ================================================= */}
       {/* DO / DON'T                                        */}
@@ -804,18 +1372,16 @@ export default function Page10() {
         className="
           absolute
 
-          left-[374px]
+          left-[385px]
           right-[70px]
-          top-[185px]
+          top-[188px]
 
           grid
           grid-cols-2
 
-          gap-[14px]
+          gap-[13px]
         "
       >
-        {/* DO */}
-
         <ComparisonCard
           type="do"
           title="DO"
@@ -825,22 +1391,36 @@ export default function Page10() {
         >
           <DoComposition
             model={model}
+
             brandAName={
               brandAName
             }
+
             brandBName={
               brandBName
             }
+
             brandAColor={
               brandAColor
             }
+
             brandBColor={
               brandBColor
             }
+
+            brandAProfile={
+              brandAProfile
+            }
+
+            brandBProfile={
+              brandBProfile
+            }
+
+            sharedProfile={
+              sharedProfile
+            }
           />
         </ComparisonCard>
-
-        {/* DON'T */}
 
         <ComparisonCard
           type="dont"
@@ -851,20 +1431,77 @@ export default function Page10() {
         >
           <DontComposition
             model={model}
+
             brandAName={
               brandAName
             }
+
             brandBName={
               brandBName
             }
+
             brandAColor={
               brandAColor
             }
+
             brandBColor={
               brandBColor
             }
+
+            brandAProfile={
+              brandAProfile
+            }
+
+            brandBProfile={
+              brandBProfile
+            }
           />
         </ComparisonCard>
+      </section>
+
+      {/* ================================================= */}
+      {/* CHARACTER → VISUAL LANGUAGE                       */}
+      {/* ================================================= */}
+
+      <section
+        className="
+          absolute
+
+          left-[385px]
+          right-[70px]
+          top-[636px]
+
+          grid
+          grid-cols-2
+
+          gap-[13px]
+        "
+      >
+        <CharacterImplicationCard
+          brandLabel="Brand A character"
+          brandName={
+            brandAName
+          }
+          colour={
+            brandAColor
+          }
+          traits={
+            brandATraits
+          }
+        />
+
+        <CharacterImplicationCard
+          brandLabel="Brand B character"
+          brandName={
+            brandBName
+          }
+          colour={
+            brandBColor
+          }
+          traits={
+            brandBTraits
+          }
+        />
       </section>
 
       {/* ================================================= */}
@@ -875,7 +1512,7 @@ export default function Page10() {
         className="
           absolute
 
-          bottom-[43px]
+          bottom-[25px]
           left-[70px]
           right-[70px]
         "
@@ -890,75 +1527,95 @@ export default function Page10() {
           <div>
             <p
               className="
-                text-[8px]
+                text-[9px]
                 uppercase
-                tracking-[0.17em]
+                tracking-[0.16em]
 
-                text-white/22
+                text-white/27
               "
             >
-              Graphic toolkit
+              Generated graphic toolkit
             </p>
 
             <p
               className="
-                mt-[4px]
+                mt-[3px]
 
                 text-[10px]
 
-                text-white/30
+                text-white/32
               "
             >
-              Role of each visual primitive
-              within this partnership model.
+              Character controls the behaviour of each visual primitive.
             </p>
           </div>
 
           <p
             className="
-              text-[8px]
+              text-[9px]
               uppercase
               tracking-[0.14em]
 
-              text-white/17
+              text-white/20
             "
           >
-            Structure → expression → information
+            Character × hierarchy
           </p>
         </div>
 
         <div
           className="
-            mt-[10px]
+            mt-[8px]
 
             grid
-            grid-cols-13
+            grid-cols-[repeat(13,minmax(0,1fr))]
 
-            gap-[6px]
+            gap-[5px]
           "
         >
           {PRIMITIVES.map(
-            (primitive) => (
-              <PrimitiveCard
-                key={
+            (
+              primitive
+            ) => {
+              const role =
+                config.roles[
                   primitive.id
-                }
-                primitive={
-                  primitive
-                }
-                role={
-                  config.roles[
+                ];
+
+              const profile =
+                getProfileForRole(
+                  role,
+                  brandAProfile,
+                  brandBProfile,
+                  sharedProfile
+                );
+
+              return (
+                <PrimitiveCard
+                  key={
                     primitive.id
-                  ]
-                }
-                brandAColor={
-                  brandAColor
-                }
-                brandBColor={
-                  brandBColor
-                }
-              />
-            )
+                  }
+
+                  primitive={
+                    primitive
+                  }
+
+                  role={role}
+
+                  profile={
+                    profile
+                  }
+
+                  brandAColor={
+                    brandAColor
+                  }
+
+                  brandBColor={
+                    brandBColor
+                  }
+                />
+              );
+            }
           )}
         </div>
       </section>
@@ -967,99 +1624,453 @@ export default function Page10() {
 }
 
 /* ------------------------------------------------ */
-/* OWNERSHIP                                        */
+/* SECTION LABEL                                    */
 /* ------------------------------------------------ */
 
-function OwnershipRow({
+function SectionLabel({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  return (
+    <p
+      className="
+        text-[10px]
+        uppercase
+        tracking-[0.15em]
+
+        text-white/31
+
+        oook-medium
+      "
+    >
+      {children}
+    </p>
+  );
+}
+
+/* ------------------------------------------------ */
+/* CHARACTER BLOCK                                  */
+/* ------------------------------------------------ */
+
+function CharacterBlock({
   label,
-  value,
+  traits,
+  colour,
 }: {
   label: string;
-  value: string;
+
+  traits:
+    BrandCharacterTraitId[];
+
+  colour: string;
 }) {
+  const labels =
+    traits
+      .map(
+        (traitId) =>
+          brandCharacterTraits.find(
+            (trait) =>
+              trait.id ===
+              traitId
+          )?.label
+      )
+      .filter(Boolean);
+
   return (
     <div
       className="
-        flex
-        items-center
-        justify-between
-
-        gap-[8px]
+        mt-[12px]
       "
     >
-      <p
+      <div
         className="
-          text-[8px]
-          uppercase
-          tracking-[0.13em]
+          flex
+          items-center
 
-          text-white/22
+          gap-[8px]
         "
       >
-        {label}
-      </p>
+        <div
+          className="
+            h-[5px]
+            w-[20px]
 
-      <p
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              colour,
+          }}
+        />
+
+        <p
+          className="
+            truncate
+
+            text-[11px]
+
+            text-white/66
+
+            oook-medium
+          "
+        >
+          {label}
+        </p>
+      </div>
+
+      <div
         className="
-          max-w-[165px]
+          mt-[8px]
 
-          truncate
+          flex
+          flex-wrap
 
-          text-right
-          text-[10px]
-
-          text-white/58
+          gap-[4px]
         "
       >
-        {value}
-      </p>
+        {labels.length >
+        0 ? (
+          labels.map(
+            (trait) => (
+              <span
+                key={trait}
+                className="
+                  rounded-full
+
+                  border
+                  border-white/[0.075]
+
+                  bg-white/[0.025]
+
+                  px-[7px]
+                  py-[3px]
+
+                  text-[8px]
+
+                  text-white/45
+                "
+              >
+                {trait}
+              </span>
+            )
+          )
+        ) : (
+          <span
+            className="
+              text-[9px]
+
+              text-white/24
+            "
+          >
+            Neutral character
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
 /* ------------------------------------------------ */
-/* KEY                                              */
+/* PROFILE METRIC                                   */
 /* ------------------------------------------------ */
 
-function KeyRow({
-  colour,
+function ProfileMetric({
   label,
+  value,
+  left,
+  right,
 }: {
-  colour: string;
   label: string;
+  value: number;
+
+  left: string;
+  right: string;
 }) {
   return (
-    <div
-      className="
-        flex
-        items-center
+    <div>
+      <p
+        className="
+          text-[8px]
+          uppercase
+          tracking-[0.11em]
 
-        gap-[9px]
+          text-white/27
+        "
+      >
+        {label}
+      </p>
+
+      <div
+        className="
+          mt-[5px]
+
+          h-[4px]
+
+          overflow-hidden
+
+          rounded-full
+
+          bg-white/[0.07]
+        "
+      >
+        <div
+          className="
+            h-full
+
+            rounded-full
+
+            bg-white/48
+          "
+          style={{
+            width:
+              `${Math.round(
+                clamp(value) *
+                  100
+              )}%`,
+          }}
+        />
+      </div>
+
+      <div
+        className="
+          mt-[4px]
+
+          flex
+          justify-between
+
+          text-[7px]
+
+          text-white/20
+        "
+      >
+        <span>{left}</span>
+        <span>{right}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* CHARACTER IMPLICATIONS                           */
+/* ------------------------------------------------ */
+
+function CharacterImplicationCard({
+  brandLabel,
+  brandName,
+  colour,
+  traits,
+}: {
+  brandLabel: string;
+  brandName: string;
+
+  colour: string;
+
+  traits:
+    BrandCharacterTraitId[];
+}) {
+  const selectedTraits =
+    traits.flatMap(
+      (traitId) => {
+        const trait =
+          brandCharacterTraits.find(
+            (item) =>
+              item.id ===
+              traitId
+          );
+
+        return trait
+          ? [trait]
+          : [];
+      }
+    );
+
+  return (
+    <Card
+      className="
+        min-h-[124px]
+
+        px-[15px]
+        py-[12px]
       "
     >
       <div
         className="
-          h-[7px]
-          w-[22px]
+          flex
+          items-center
+          justify-between
 
-          rounded-full
+          gap-[12px]
         "
-        style={{
-          backgroundColor:
-            colour,
-        }}
-      />
+      >
+        <div
+          className="
+            flex
+            min-w-0
+            items-center
 
+            gap-[8px]
+          "
+        >
+          <div
+            className="
+              h-[5px]
+              w-[22px]
+
+              shrink-0
+
+              rounded-full
+            "
+            style={{
+              backgroundColor:
+                colour,
+            }}
+          />
+
+          <p
+            className="
+              truncate
+
+              text-[9px]
+              uppercase
+              tracking-[0.13em]
+
+              text-white/36
+
+              oook-medium
+            "
+          >
+            {brandLabel}
+          </p>
+        </div>
+
+        <p
+          className="
+            max-w-[190px]
+
+            truncate
+
+            text-[9px]
+
+            text-white/30
+          "
+        >
+          {brandName}
+        </p>
+      </div>
+
+      {selectedTraits.length >
+      0 ? (
+        <div
+          className="
+            mt-[10px]
+
+            grid
+            grid-cols-1
+
+            gap-[5px]
+          "
+        >
+          {selectedTraits.map(
+            (trait) => (
+              <TraitImplicationRow
+                key={
+                  trait.id
+                }
+                label={
+                  trait.label
+                }
+                implication={
+                  trait.graphicImplication
+                }
+              />
+            )
+          )}
+        </div>
+      ) : (
+        <div
+          className="
+            mt-[10px]
+
+            rounded-[9px]
+
+            border
+            border-white/[0.05]
+
+            bg-white/[0.012]
+
+            px-[10px]
+            py-[9px]
+          "
+        >
+          <p
+            className="
+              text-[9px]
+              leading-[1.35]
+
+              text-white/27
+            "
+          >
+            No character traits selected. The system uses a neutral geometric profile.
+          </p>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/* ------------------------------------------------ */
+/* TRAIT IMPLICATION ROW                            */
+/* ------------------------------------------------ */
+
+function TraitImplicationRow({
+  label,
+  implication,
+}: {
+  label: string;
+  implication: string;
+}) {
+  return (
+    <div
+      className="
+        grid
+
+        grid-cols-[82px_minmax(0,1fr)]
+
+        items-baseline
+
+        gap-[9px]
+      "
+    >
       <p
         className="
           truncate
 
           text-[9px]
 
-          text-white/40
+          text-white/68
+
+          oook-medium
         "
       >
         {label}
+      </p>
+
+      <p
+        className="
+          truncate
+
+          text-[8px]
+          leading-[1.3]
+
+          text-white/35
+        "
+        title={
+          implication
+        }
+      >
+        {implication}
       </p>
     </div>
   );
@@ -1096,10 +2107,12 @@ function ComparisonCard({
       <div
         className="
           flex
+          min-h-[36px]
+
           items-start
           justify-between
 
-          gap-[18px]
+          gap-[14px]
         "
       >
         <div
@@ -1114,8 +2127,10 @@ function ComparisonCard({
             className={`
               flex
 
-              h-[23px]
-              w-[23px]
+              h-[24px]
+              w-[24px]
+
+              shrink-0
 
               items-center
               justify-center
@@ -1124,22 +2139,22 @@ function ComparisonCard({
 
               border
 
+              text-[11px]
+
               ${
-                type === "do"
+                type ===
+                "do"
                   ? `
-                      border-white/18
+                      border-white
                       bg-white
                       text-black
                     `
                   : `
-                      border-white/12
-                      bg-white/[0.03]
-                      text-white/42
+                      border-white/14
+                      bg-white/[0.025]
+                      text-white/48
                     `
               }
-
-              text-[10px]
-              oook-medium
             `}
           >
             {type === "do"
@@ -1149,9 +2164,9 @@ function ComparisonCard({
 
           <p
             className="
-              text-[14px]
+              text-[15px]
 
-              text-white/78
+              text-white/84
 
               oook-medium
             "
@@ -1165,10 +2180,10 @@ function ComparisonCard({
             max-w-[280px]
 
             text-right
-            text-[9px]
-            leading-[1.3]
+            text-[10px]
+            leading-[1.35]
 
-            text-white/30
+            text-white/38
           "
         >
           {description}
@@ -1179,13 +2194,13 @@ function ComparisonCard({
         className="
           relative
 
-          mt-[11px]
+          mt-[10px]
 
-          h-[370px]
+          h-[360px]
 
           overflow-hidden
 
-          rounded-[15px]
+          rounded-[14px]
 
           border
           border-white/[0.07]
@@ -1200,10 +2215,32 @@ function ComparisonCard({
 }
 
 /* ------------------------------------------------ */
-/* COMMON CANVAS EFFECTS                            */
+/* GENERATED GRID                                   */
 /* ------------------------------------------------ */
 
-function CanvasGrid() {
+function GeneratedGrid({
+  profile,
+}: {
+  profile:
+    VisualProfile;
+}) {
+  if (
+    profile.grid <
+    0.18
+  ) {
+    return null;
+  }
+
+  const size =
+    getGridSize(
+      profile
+    );
+
+  const opacity =
+    0.08 +
+    profile.grid *
+      0.18;
+
   return (
     <div
       className="
@@ -1211,18 +2248,43 @@ function CanvasGrid() {
 
         absolute
         inset-0
-
-        opacity-[0.30]
-
-        [background-image:linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)]
-
-        [background-size:42px_42px]
       "
+      style={{
+        opacity,
+
+        backgroundImage:
+          "linear-gradient(rgba(255,255,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.10) 1px, transparent 1px)",
+
+        backgroundSize:
+          `${size}px ${size}px`,
+
+        transform:
+          `rotate(${
+            profile.diagonal *
+            4
+          }deg) scale(1.08)`,
+      }}
     />
   );
 }
 
-function Noise() {
+/* ------------------------------------------------ */
+/* GENERATED TEXTURE                                */
+/* ------------------------------------------------ */
+
+function GeneratedTexture({
+  profile,
+}: {
+  profile:
+    VisualProfile;
+}) {
+  if (
+    profile.texture <
+    0.18
+  ) {
+    return null;
+  }
+
   return (
     <div
       className="
@@ -1230,19 +2292,431 @@ function Noise() {
 
         absolute
         inset-0
-
-        opacity-[0.08]
 
         mix-blend-screen
-
-        [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.02)_0px,rgba(255,255,255,0.02)_1px,transparent_1px,transparent_3px)]
       "
+      style={{
+        opacity:
+          profile.texture *
+          0.14,
+
+        backgroundImage:
+          "repeating-linear-gradient(135deg, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 1px, transparent 1px, transparent 5px)",
+      }}
     />
   );
 }
 
 /* ------------------------------------------------ */
-/* DO COMPOSITION                                   */
+/* GENERATED SHAPE                                  */
+/* ------------------------------------------------ */
+
+function GeneratedShape({
+  profile,
+  colour,
+  className = "",
+  scale = 1,
+}: {
+  profile:
+    VisualProfile;
+
+  colour: string;
+
+  className?: string;
+
+  scale?: number;
+}) {
+  const radius =
+    getRadius(
+      profile,
+      5,
+      95
+    );
+
+  const rotation =
+    getRotation(
+      profile
+    );
+
+  const clipPath =
+    getShapeClip(
+      profile
+    );
+
+  return (
+    <div
+      className={`
+        absolute
+        border
+        ${className}
+      `}
+      style={{
+        borderRadius:
+          `${radius}px`,
+
+        borderWidth:
+          `${Math.max(
+            1,
+            Math.round(
+              1 +
+                profile.lineWeight *
+                  2
+            )
+          )}px`,
+
+        borderColor:
+          alpha(
+            colour,
+            0.22 +
+              profile.precision *
+                0.28
+          ),
+
+        background:
+          `radial-gradient(
+            circle at 28% 24%,
+            ${alpha(
+              colour,
+              0.12 +
+                profile.glow *
+                  0.2
+            )},
+            ${alpha(
+              colour,
+              0.025
+            )} 45%,
+            rgba(0,0,0,0.18) 100%
+          )`,
+
+        boxShadow:
+          profile.glow >
+          0.3
+            ? `0 0 ${
+                35 +
+                profile.glow *
+                  65
+              }px ${alpha(
+                colour,
+                profile.glow *
+                  0.22
+              )}`
+            : undefined,
+
+        transform:
+          `rotate(${rotation}deg) scale(${scale})`,
+
+        clipPath,
+      }}
+    />
+  );
+}
+
+/* ------------------------------------------------ */
+/* GENERATED PARTICLES                              */
+/* ------------------------------------------------ */
+
+function GeneratedParticles({
+  profile,
+  colour,
+  side = "right",
+}: {
+  profile:
+    VisualProfile;
+
+  colour: string;
+
+  side?:
+    | "left"
+    | "right";
+}) {
+  const count =
+    getParticleCount(
+      profile
+    );
+
+  return (
+    <div
+      className={`
+        absolute
+
+        top-[8%]
+
+        h-[70%]
+        w-[44%]
+
+        ${
+          side === "left"
+            ? "left-[3%]"
+            : "right-[3%]"
+        }
+      `}
+    >
+      {Array.from({
+        length:
+          count,
+      }).map(
+        (
+          _,
+          index
+        ) => {
+          const left =
+            (index * 31 +
+              7) %
+            92;
+
+          const top =
+            (index * 47 +
+              13) %
+            88;
+
+          const size =
+            2 +
+            ((index *
+              3) %
+              5) *
+              (0.5 +
+                profile.energy *
+                  0.5);
+
+          return (
+            <div
+              key={index}
+              className="
+                absolute
+                rounded-full
+              "
+              style={{
+                left:
+                  `${left}%`,
+
+                top:
+                  `${top}%`,
+
+                width: size,
+                height: size,
+
+                backgroundColor:
+                  alpha(
+                    colour,
+                    0.3 +
+                      profile.energy *
+                        0.45
+                  ),
+
+                boxShadow:
+                  profile.glow >
+                  0.3
+                    ? `0 0 ${
+                        6 +
+                        profile.glow *
+                          14
+                      }px ${alpha(
+                        colour,
+                        0.4
+                      )}`
+                    : undefined,
+              }}
+            />
+          );
+        }
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* GENERATED LINES                                  */
+/* ------------------------------------------------ */
+
+function GeneratedLines({
+  profile,
+  colour,
+  align = "right",
+}: {
+  profile:
+    VisualProfile;
+
+  colour: string;
+
+  align?:
+    | "left"
+    | "right";
+}) {
+  const count =
+    Math.round(
+      2 +
+        profile.grid *
+          5
+    );
+
+  return (
+    <div
+      className={`
+        absolute
+
+        top-[15%]
+
+        flex
+        w-[42%]
+
+        flex-col
+
+        gap-[10px]
+
+        ${
+          align === "left"
+            ? "left-[7%]"
+            : "right-[7%]"
+        }
+      `}
+      style={{
+        transform:
+          `rotate(${
+            profile.diagonal *
+            10
+          }deg)`,
+      }}
+    >
+      {Array.from({
+        length:
+          count,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <div
+            key={index}
+            className="
+              rounded-full
+            "
+            style={{
+              height:
+                Math.max(
+                  1,
+                  profile.lineWeight *
+                    3
+                ),
+
+              width:
+                `${
+                  45 +
+                  ((index *
+                    17) %
+                    50)
+                }%`,
+
+              marginLeft:
+                align ===
+                "right"
+                  ? "auto"
+                  : undefined,
+
+              backgroundColor:
+                alpha(
+                  colour,
+                  0.18 +
+                    profile.precision *
+                      0.32
+                ),
+            }}
+          />
+        )
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* GENERATED VISUALIZER                             */
+/* ------------------------------------------------ */
+
+function GeneratedVisualizer({
+  profile,
+  colour,
+}: {
+  profile:
+    VisualProfile;
+
+  colour: string;
+}) {
+  const count =
+    Math.round(
+      6 +
+        profile.energy *
+          8
+    );
+
+  return (
+    <div
+      className="
+        absolute
+
+        bottom-[78px]
+        left-[13%]
+        right-[13%]
+
+        flex
+        h-[82px]
+
+        items-end
+        justify-center
+
+        gap-[4px]
+      "
+    >
+      {Array.from({
+        length:
+          count,
+      }).map(
+        (
+          _,
+          index
+        ) => {
+          const height =
+            16 +
+            ((index *
+              29) %
+              60) *
+              (0.45 +
+                profile.energy *
+                  0.7);
+
+          return (
+            <div
+              key={index}
+              className="
+                rounded-full
+              "
+              style={{
+                width:
+                  2 +
+                  profile.lineWeight *
+                    4,
+
+                height,
+
+                backgroundColor:
+                  index % 4 ===
+                  0
+                    ? colour
+                    : alpha(
+                        colour,
+                        0.24 +
+                          profile.energy *
+                            0.22
+                      ),
+              }}
+            />
+          );
+        }
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------ */
+/* DO                                               */
 /* ------------------------------------------------ */
 
 function DoComposition({
@@ -1253,6 +2727,10 @@ function DoComposition({
 
   brandAColor,
   brandBColor,
+
+  brandAProfile,
+  brandBProfile,
+  sharedProfile,
 }: {
   model:
     PartnershipModelId;
@@ -1262,115 +2740,116 @@ function DoComposition({
 
   brandAColor: string;
   brandBColor: string;
+
+  brandAProfile:
+    VisualProfile;
+
+  brandBProfile:
+    VisualProfile;
+
+  sharedProfile:
+    VisualProfile;
 }) {
   if (
     model === "axb"
   ) {
     return (
       <>
-        <CanvasGrid />
+        <GeneratedGrid
+          profile={
+            sharedProfile
+          }
+        />
 
-        {/* NEUTRAL 3D OBJECT */}
+        <GeneratedTexture
+          profile={
+            sharedProfile
+          }
+        />
 
-        <div
+        <GeneratedShape
+          profile={
+            sharedProfile
+          }
+          colour={
+            brandAColor
+          }
           className="
-            absolute
-
-            left-[31%]
-            top-[15%]
+            left-[23%]
+            top-[14%]
 
             h-[190px]
             w-[190px]
-
-            rounded-[42%]
-
-            border
-            border-white/[0.13]
-
-            bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.25),rgba(255,255,255,0.04)_30%,rgba(0,0,0,0.4)_70%)]
-
-            shadow-[0_35px_80px_rgba(0,0,0,0.5)]
-
-            rotate-[11deg]
           "
         />
 
-        {/* MASK */}
-
-        <div
+        <GeneratedShape
+          profile={
+            sharedProfile
+          }
+          colour={
+            brandBColor
+          }
           className="
-            absolute
+            right-[18%]
+            top-[23%]
 
-            left-[11%]
-            top-[11%]
+            h-[125px]
+            w-[125px]
 
-            h-[62%]
-            w-[64%]
-
-            rounded-[100px]
-
-            border
-            border-white/[0.08]
+            opacity-55
           "
+          scale={0.92}
         />
 
-        {/* BRAND A LINE */}
-
-        <div
-          className="
-            absolute
-
-            left-[8%]
-            top-[22%]
-
-            h-[3px]
-            w-[26%]
-
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              brandAColor,
-          }}
-        />
-
-        {/* BRAND B LINE */}
-
-        <div
-          className="
-            absolute
-
-            bottom-[18%]
-            right-[8%]
-
-            h-[3px]
-            w-[26%]
-
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              brandBColor,
-          }}
-        />
-
-        <ParticleField
+        <GeneratedParticles
+          profile={
+            sharedProfile
+          }
           colour={
             brandAColor
           }
           side="left"
         />
 
-        <ParticleField
+        <GeneratedParticles
+          profile={{
+            ...sharedProfile,
+
+            particles:
+              sharedProfile.particles *
+              0.65,
+          }}
           colour={
             brandBColor
           }
           side="right"
         />
 
-        <NeutralInterface
+        <GeneratedLines
+          profile={
+            sharedProfile
+          }
+          colour={
+            brandBColor
+          }
+        />
+
+        <GeneratedVisualizer
+          profile={
+            sharedProfile
+          }
+          colour={
+            brandAColor
+          }
+        />
+
+        <InterfaceStrip
           title="Shared experience"
           subtitle={`${brandAName} × ${brandBName}`}
+          profile={
+            sharedProfile
+          }
         />
       </>
     );
@@ -1381,110 +2860,104 @@ function DoComposition({
   ) {
     return (
       <>
-        <CanvasGrid />
-
-        {/* A GLOW */}
-
-        <div
-          className="
-            absolute
-
-            -right-[12%]
-            -top-[14%]
-
-            h-[330px]
-            w-[330px]
-
-            rounded-full
-
-            blur-[75px]
-          "
-          style={{
-            backgroundColor:
-              alpha(
-                brandAColor,
-                0.28
-              ),
-          }}
+        <GeneratedGrid
+          profile={
+            sharedProfile
+          }
         />
 
-        {/* A FRAME */}
+        <GeneratedTexture
+          profile={
+            sharedProfile
+          }
+        />
 
-        <div
+        <GeneratedShape
+          profile={
+            brandAProfile
+          }
+          colour={
+            brandAColor
+          }
           className="
-            absolute
+            left-[18%]
+            top-[12%]
 
-            left-[9%]
-            right-[9%]
-            top-[10%]
-
-            h-[64%]
-
-            rounded-[28px]
-
-            border-[2px]
+            h-[205px]
+            w-[225px]
           "
-          style={{
-            borderColor:
-              alpha(
-                brandAColor,
-                0.48
-              ),
+        />
+
+        <GeneratedLines
+          profile={
+            brandAProfile
+          }
+          colour={
+            brandAColor
+          }
+        />
+
+        <GeneratedParticles
+          profile={{
+            ...brandAProfile,
+
+            particles:
+              brandAProfile.particles *
+              0.75,
           }}
-        >
-          <div
-            className="
-              absolute
+          colour={
+            brandAColor
+          }
+        />
 
-              left-[18px]
-              top-[18px]
-
-              h-[60px]
-              w-[60px]
-
-              rounded-full
-
-              border
-            "
-            style={{
-              borderColor:
-                alpha(
-                  brandAColor,
-                  0.35
-                ),
-            }}
-          />
-        </div>
-
-        {/* B LOCAL MARKER */}
+        <GeneratedVisualizer
+          profile={
+            brandAProfile
+          }
+          colour={
+            brandAColor
+          }
+        />
 
         <div
           className="
             absolute
 
-            right-[13%]
-            top-[18%]
+            right-[10%]
+            top-[15%]
 
-            h-[8px]
-            w-[46px]
+            h-[7px]
+            w-[42px]
 
             rounded-full
           "
           style={{
             backgroundColor:
               brandBColor,
+
+            transform:
+              `rotate(${
+                brandBProfile.diagonal *
+                12
+              }deg)`,
+
+            borderRadius:
+              `${getRadius(
+                brandBProfile,
+                2,
+                20
+              )}px`,
           }}
         />
 
-        <Visualizer
-          colour={
-            brandAColor
+        <InterfaceStrip
+          title={
+            brandAName
           }
-        />
-
-        <NeutralInterface
-          title={brandAName}
           subtitle={`with ${brandBName}`}
+          profile={
+            brandAProfile
+          }
         />
       </>
     );
@@ -1496,108 +2969,97 @@ function DoComposition({
   ) {
     return (
       <>
-        <CanvasGrid />
-
-        {/* B BACKGROUND GLOW */}
-
-        <div
-          className="
-            absolute
-
-            -left-[15%]
-            -top-[20%]
-
-            h-[420px]
-            w-[420px]
-
-            rounded-full
-
-            blur-[85px]
-          "
-          style={{
-            backgroundColor:
-              alpha(
-                brandBColor,
-                0.30
-              ),
-          }}
+        <GeneratedGrid
+          profile={
+            brandBProfile
+          }
         />
 
-        {/* B SHAPE */}
+        <GeneratedTexture
+          profile={
+            brandBProfile
+          }
+        />
 
-        <div
+        <GeneratedShape
+          profile={
+            brandBProfile
+          }
+          colour={
+            brandBColor
+          }
           className="
-            absolute
-
             left-[19%]
-            top-[13%]
+            top-[12%]
 
             h-[215px]
             w-[215px]
-
-            rounded-[34%]
-
-            border
-
-            rotate-[-12deg]
           "
-          style={{
-            borderColor:
-              alpha(
-                brandBColor,
-                0.46
-              ),
-
-            background:
-              `linear-gradient(
-                145deg,
-                ${alpha(
-                  brandBColor,
-                  0.22
-                )},
-                rgba(255,255,255,0.015)
-              )`,
-          }}
         />
 
-        <Visualizer
+        <GeneratedParticles
+          profile={
+            brandBProfile
+          }
+          colour={
+            brandBColor
+          }
+          side="right"
+        />
+
+        <GeneratedLines
+          profile={
+            brandBProfile
+          }
           colour={
             brandBColor
           }
         />
 
-        <NeutralInterface
-          title={brandBName}
-          subtitle="Immersive experience"
+        <GeneratedVisualizer
+          profile={
+            brandBProfile
+          }
+          colour={
+            brandBColor
+          }
         />
 
-        {/* A ENDORSEMENT */}
+        <InterfaceStrip
+          title={
+            brandBName
+          }
+          subtitle="Consumer-facing experience"
+          profile={
+            brandBProfile
+          }
+        />
 
         <div
           className="
             absolute
 
-            bottom-[12px]
-            right-[14px]
+            bottom-[14px]
+            right-[16px]
 
             flex
             items-center
 
-            gap-[5px]
+            gap-[6px]
 
-            text-[5px]
+            text-[8px]
             uppercase
-            tracking-[0.12em]
+            tracking-[0.11em]
 
-            text-white/24
+            text-white/30
           "
         >
           Powered by
 
           <div
             className="
-              h-[4px]
-              w-[18px]
+              h-[5px]
+              w-[22px]
 
               rounded-full
             "
@@ -1611,36 +3073,45 @@ function DoComposition({
     );
   }
 
-  /* PRESENTS */
+  /* ---------------------------------------------- */
+  /* A PRESENTS B                                   */
+  /* ---------------------------------------------- */
 
   return (
     <>
-      <CanvasGrid />
-
-      {/* A PLATFORM FRAME */}
+      <GeneratedGrid
+        profile={
+          brandAProfile
+        }
+      />
 
       <div
         className="
           absolute
 
-          inset-[24px]
+          inset-[23px]
 
           overflow-hidden
 
-          rounded-[22px]
-
           border
-          border-white/[0.09]
+          border-white/[0.08]
 
-          bg-black/38
+          bg-black/35
         "
+        style={{
+          borderRadius:
+            `${getRadius(
+              brandAProfile,
+              7,
+              30
+            )}px`,
+        }}
       >
-        {/* A UI */}
-
         <div
           className="
             flex
-            h-[35px]
+            h-[38px]
+
             items-center
 
             border-b
@@ -1651,8 +3122,8 @@ function DoComposition({
         >
           <div
             className="
-              h-[4px]
-              w-[28px]
+              h-[5px]
+              w-[30px]
 
               rounded-full
             "
@@ -1666,99 +3137,105 @@ function DoComposition({
             className="
               ml-auto
 
-              text-[5px]
+              text-[8px]
               uppercase
-              tracking-[0.12em]
+              tracking-[0.11em]
 
-              text-white/23
+              text-white/30
             "
           >
             {brandAName} platform
           </p>
         </div>
 
-        {/* B CONTENT MASK */}
-
         <div
           className="
             absolute
 
-            bottom-[13px]
-            left-[13px]
-            right-[13px]
-            top-[48px]
+            bottom-[12px]
+            left-[12px]
+            right-[12px]
+            top-[50px]
 
             overflow-hidden
 
-            rounded-[16px]
-
             border
-            border-white/[0.06]
+            border-white/[0.055]
           "
+          style={{
+            borderRadius:
+              `${getRadius(
+                brandBProfile,
+                6,
+                70
+              )}px`,
+          }}
         >
-          <div
-            className="
-              absolute
-
-              -right-[14%]
-              -top-[35%]
-
-              h-[300px]
-              w-[300px]
-
-              rounded-full
-
-              blur-[70px]
-            "
-            style={{
-              backgroundColor:
-                alpha(
-                  brandBColor,
-                  0.42
-                ),
-            }}
+          <GeneratedTexture
+            profile={
+              brandBProfile
+            }
           />
 
-          <div
-            className="
-              absolute
-
-              left-[16%]
-              top-[18%]
-
-              h-[150px]
-              w-[150px]
-
-              rounded-full
-
-              border
-            "
-            style={{
-              borderColor:
-                alpha(
-                  brandBColor,
-                  0.55
-                ),
-            }}
-          />
-
-          <ParticleField
+          <GeneratedShape
+            profile={
+              brandBProfile
+            }
             colour={
               brandBColor
             }
-            side="right"
+            className="
+              left-[18%]
+              top-[12%]
+
+              h-[140px]
+              w-[155px]
+            "
+          />
+
+          <GeneratedParticles
+            profile={
+              brandBProfile
+            }
+            colour={
+              brandBColor
+            }
+          />
+
+          <GeneratedLines
+            profile={
+              brandBProfile
+            }
+            colour={
+              brandBColor
+            }
+          />
+
+          <GeneratedVisualizer
+            profile={{
+              ...brandBProfile,
+
+              energy:
+                brandBProfile.energy *
+                0.75,
+            }}
+            colour={
+              brandBColor
+            }
           />
 
           <p
             className="
               absolute
 
-              bottom-[16px]
+              bottom-[15px]
               left-[16px]
 
-              text-[15px]
+              text-[16px]
 
-              text-white/72
+              text-white/75
+
+              oook-medium
             "
           >
             {brandBName}
@@ -1770,7 +3247,7 @@ function DoComposition({
 }
 
 /* ------------------------------------------------ */
-/* DON'T COMPOSITION                                */
+/* DON'T                                            */
 /* ------------------------------------------------ */
 
 function DontComposition({
@@ -1781,6 +3258,9 @@ function DontComposition({
 
   brandAColor,
   brandBColor,
+
+  brandAProfile,
+  brandBProfile,
 }: {
   model:
     PartnershipModelId;
@@ -1790,57 +3270,122 @@ function DontComposition({
 
   brandAColor: string;
   brandBColor: string;
+
+  brandAProfile:
+    VisualProfile;
+
+  brandBProfile:
+    VisualProfile;
 }) {
   if (
     model === "axb"
   ) {
     return (
       <>
-        {/* SPLIT BRAND WORLDS */}
-
         <div
           className="
             absolute
+
             inset-y-0
             left-0
 
             w-1/2
+
+            overflow-hidden
+
+            border-r
+            border-black/30
           "
           style={{
-            background:
-              `radial-gradient(
-                circle at 30% 30%,
-                ${brandAColor},
-                ${alpha(
-                  brandAColor,
-                  0.35
-                )}
-              )`,
+            backgroundColor:
+              alpha(
+                brandAColor,
+                0.16
+              ),
           }}
-        />
+        >
+          <GeneratedGrid
+            profile={
+              brandAProfile
+            }
+          />
+
+          <GeneratedShape
+            profile={
+              brandAProfile
+            }
+            colour={
+              brandAColor
+            }
+            className="
+              left-[15%]
+              top-[18%]
+
+              h-[160px]
+              w-[160px]
+            "
+          />
+
+          <GeneratedParticles
+            profile={
+              brandAProfile
+            }
+            colour={
+              brandAColor
+            }
+          />
+        </div>
 
         <div
           className="
             absolute
+
             inset-y-0
             right-0
 
             w-1/2
+
+            overflow-hidden
           "
           style={{
-            background:
-              `radial-gradient(
-                circle at 70% 60%,
-                ${brandBColor},
-                ${alpha(
-                  brandBColor,
-                  0.35
-                )}
-              )`,
+            backgroundColor:
+              alpha(
+                brandBColor,
+                0.16
+              ),
           }}
-        />
+        >
+          <GeneratedGrid
+            profile={
+              brandBProfile
+            }
+          />
 
-        <ConflictingGrid />
+          <GeneratedShape
+            profile={
+              brandBProfile
+            }
+            colour={
+              brandBColor
+            }
+            className="
+              right-[15%]
+              top-[18%]
+
+              h-[160px]
+              w-[160px]
+            "
+          />
+
+          <GeneratedParticles
+            profile={
+              brandBProfile
+            }
+            colour={
+              brandBColor
+            }
+          />
+        </div>
 
         <HugeLabel
           text={`${brandAName} / ${brandBName}`}
@@ -1856,74 +3401,57 @@ function DontComposition({
   ) {
     return (
       <>
-        {/* B DOMINATES */}
-
-        <div
-          className="
-            absolute
-            inset-0
-          "
-          style={{
-            background:
-              `radial-gradient(
-                circle at 50% 40%,
-                ${alpha(
-                  brandBColor,
-                  0.86
-                )},
-                ${alpha(
-                  brandBColor,
-                  0.35
-                )}
-              )`,
-          }}
+        <GeneratedGrid
+          profile={
+            brandBProfile
+          }
         />
 
-        <div
-          className="
-            absolute
-
-            left-[10%]
-            top-[12%]
-
-            h-[235px]
-            w-[235px]
-
-            rounded-full
-
-            border-[3px]
-          "
-          style={{
-            borderColor:
-              brandBColor,
-          }}
+        <GeneratedTexture
+          profile={
+            brandBProfile
+          }
         />
 
-        <ParticleField
+        <GeneratedShape
+          profile={
+            brandBProfile
+          }
           colour={
             brandBColor
           }
-          side="right"
+          className="
+            left-[17%]
+            top-[12%]
+
+            h-[220px]
+            w-[235px]
+          "
+        />
+
+        <GeneratedParticles
+          profile={
+            brandBProfile
+          }
+          colour={
+            brandBColor
+          }
+        />
+
+        <GeneratedVisualizer
+          profile={
+            brandBProfile
+          }
+          colour={
+            brandBColor
+          }
         />
 
         <HugeLabel
-          text={brandBName}
+          text={
+            brandBName
+          }
         />
-
-        <div
-          className="
-            absolute
-
-            bottom-[20px]
-            right-[18px]
-
-            text-[7px]
-
-            text-white/35
-          "
-        >
-          tiny {brandAName}
-        </div>
 
         <BigCross />
       </>
@@ -1936,74 +3464,56 @@ function DontComposition({
   ) {
     return (
       <>
-        {/* A BECOMES THE EXPERIENCE */}
-
-        <div
-          className="
-            absolute
-            inset-0
-          "
-          style={{
-            background:
-              `linear-gradient(
-                135deg,
-                ${alpha(
-                  brandAColor,
-                  0.74
-                )},
-                #060607
-              )`,
-          }}
+        <GeneratedGrid
+          profile={
+            brandAProfile
+          }
         />
 
-        <div
-          className="
-            absolute
-
-            -left-[5%]
-            top-[8%]
-
-            h-[280px]
-            w-[280px]
-
-            rounded-[30%]
-
-            border-[3px]
-
-            rotate-[16deg]
-          "
-          style={{
-            borderColor:
-              brandAColor,
-          }}
+        <GeneratedTexture
+          profile={
+            brandAProfile
+          }
         />
 
-        <Visualizer
+        <GeneratedShape
+          profile={
+            brandAProfile
+          }
+          colour={
+            brandAColor
+          }
+          className="
+            left-[17%]
+            top-[12%]
+
+            h-[220px]
+            w-[235px]
+          "
+        />
+
+        <GeneratedParticles
+          profile={
+            brandAProfile
+          }
+          colour={
+            brandAColor
+          }
+        />
+
+        <GeneratedVisualizer
+          profile={
+            brandAProfile
+          }
           colour={
             brandAColor
           }
         />
 
         <HugeLabel
-          text={brandAName}
-        />
-
-        <div
-          className="
-            absolute
-
-            right-[18px]
-            top-[18px]
-
-            h-[7px]
-            w-[25px]
-
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              brandBColor,
-          }}
+          text={
+            brandAName
+          }
         />
 
         <BigCross />
@@ -2011,22 +3521,19 @@ function DontComposition({
     );
   }
 
-  /* PRESENTS */
-
   return (
     <>
-      {/* B TAKES OVER CHROME */}
-
-      <div
-        className="
-          absolute
-          inset-0
-
-          bg-[#09090a]
-        "
+      <GeneratedGrid
+        profile={
+          brandBProfile
+        }
       />
 
-      {/* B NAV */}
+      <GeneratedTexture
+        profile={
+          brandBProfile
+        }
+      />
 
       <div
         className="
@@ -2035,15 +3542,16 @@ function DontComposition({
           inset-x-0
           top-0
 
-          h-[52px]
+          h-[48px]
         "
         style={{
           backgroundColor:
-            brandBColor,
+            alpha(
+              brandBColor,
+              0.72
+            ),
         }}
       />
-
-      {/* B SIDEBAR */}
 
       <div
         className="
@@ -2051,7 +3559,7 @@ function DontComposition({
 
           bottom-0
           left-0
-          top-[52px]
+          top-[48px]
 
           w-[23%]
         "
@@ -2059,58 +3567,40 @@ function DontComposition({
           backgroundColor:
             alpha(
               brandBColor,
-              0.74
+              0.45
             ),
         }}
       />
 
-      {/* CONTENT */}
-
-      <div
+      <GeneratedShape
+        profile={
+          brandBProfile
+        }
+        colour={
+          brandBColor
+        }
         className="
-          absolute
+          right-[12%]
+          top-[18%]
 
-          bottom-[28px]
-          left-[28%]
-          right-[24px]
-          top-[78px]
-
-          rounded-[18px]
-
-          border
-          border-white/[0.08]
-
-          bg-white/[0.04]
+          h-[190px]
+          w-[200px]
         "
-      >
-        <ParticleField
-          colour={
-            brandBColor
-          }
-          side="right"
-        />
-      </div>
-
-      <HugeLabel
-        text={brandBName}
       />
 
-      <div
-        className="
-          absolute
+      <GeneratedParticles
+        profile={
+          brandBProfile
+        }
+        colour={
+          brandBColor
+        }
+      />
 
-          bottom-[16px]
-          right-[18px]
-
-          h-[5px]
-          w-[24px]
-
-          rounded-full
-        "
-        style={{
-          backgroundColor:
-            brandAColor,
-        }}
+      <HugeLabel
+        text={
+          brandBName
+        }
       />
 
       <BigCross />
@@ -2119,47 +3609,59 @@ function DontComposition({
 }
 
 /* ------------------------------------------------ */
-/* VISUAL HELPERS                                   */
+/* INTERFACE STRIP                                  */
 /* ------------------------------------------------ */
 
-function NeutralInterface({
+function InterfaceStrip({
   title,
   subtitle,
+  profile,
 }: {
   title: string;
   subtitle: string;
+
+  profile:
+    VisualProfile;
 }) {
   return (
     <div
       className="
         absolute
 
-        bottom-[15px]
-        left-[15px]
-        right-[15px]
+        bottom-[14px]
+        left-[14px]
+        right-[14px]
 
         flex
         items-center
 
-        rounded-[12px]
-
         border
-        border-white/[0.08]
+        border-white/[0.07]
 
-        bg-black/46
+        bg-black/44
 
-        px-[11px]
-        py-[9px]
+        px-[12px]
+        py-[10px]
 
         backdrop-blur-[12px]
       "
+      style={{
+        borderRadius:
+          `${getRadius(
+            profile,
+            4,
+            18
+          )}px`,
+      }}
     >
       <div>
         <p
           className="
-            text-[8px]
+            text-[10px]
 
-            text-white/70
+            text-white/75
+
+            oook-medium
           "
         >
           {title}
@@ -2167,11 +3669,11 @@ function NeutralInterface({
 
         <p
           className="
-            mt-[2px]
+            mt-[3px]
 
-            text-[5px]
+            text-[8px]
 
-            text-white/24
+            text-white/32
           "
         >
           {subtitle}
@@ -2183,232 +3685,41 @@ function NeutralInterface({
           ml-auto
 
           flex
-          gap-[4px]
+          gap-[5px]
         "
       >
-        <div
-          className="
-            h-[4px]
-            w-[4px]
+        {Array.from({
+          length:
+            profile.minimalism >
+            0.6
+              ? 2
+              : 4,
+        }).map(
+          (
+            _,
+            index
+          ) => (
+            <div
+              key={index}
+              className="
+                h-[4px]
+                w-[4px]
 
-            rounded-full
+                rounded-full
 
-            bg-white/30
-          "
-        />
-
-        <div
-          className="
-            h-[4px]
-            w-[4px]
-
-            rounded-full
-
-            bg-white/15
-          "
-        />
-
-        <div
-          className="
-            h-[4px]
-            w-[4px]
-
-            rounded-full
-
-            bg-white/10
-          "
-        />
+                bg-white/24
+              "
+            />
+          )
+        )}
       </div>
     </div>
   );
 }
 
-function ParticleField({
-  colour,
-  side,
-}: {
-  colour: string;
-
-  side:
-    | "left"
-    | "right";
-}) {
-  const particles = [
-    [8, 14, 4],
-    [16, 34, 3],
-    [25, 18, 5],
-    [33, 45, 3],
-    [47, 29, 4],
-    [58, 58, 2],
-    [67, 20, 3],
-    [77, 48, 4],
-    [87, 32, 2],
-  ];
-
-  return (
-    <div
-      className={`
-        absolute
-
-        top-[12%]
-
-        h-[58%]
-        w-[36%]
-
-        ${
-          side === "left"
-            ? "left-[5%]"
-            : "right-[5%]"
-        }
-      `}
-    >
-      {particles.map(
-        (
-          [
-            left,
-            top,
-            size,
-          ],
-          index
-        ) => (
-          <div
-            key={index}
-            className="
-              absolute
-
-              rounded-full
-            "
-            style={{
-              left:
-                `${left}%`,
-
-              top:
-                `${top}%`,
-
-              width: size,
-              height: size,
-
-              backgroundColor:
-                alpha(
-                  colour,
-                  0.68
-                ),
-
-              boxShadow:
-                `0 0 ${size * 3}px ${alpha(
-                  colour,
-                  0.38
-                )}`,
-            }}
-          />
-        )
-      )}
-    </div>
-  );
-}
-
-function Visualizer({
-  colour,
-}: {
-  colour: string;
-}) {
-  const heights = [
-    22,
-    46,
-    29,
-    70,
-    42,
-    83,
-    52,
-    34,
-    61,
-    26,
-  ];
-
-  return (
-    <div
-      className="
-        absolute
-
-        bottom-[78px]
-        left-[14%]
-        right-[14%]
-
-        flex
-        h-[90px]
-
-        items-end
-        justify-center
-
-        gap-[5px]
-      "
-    >
-      {heights.map(
-        (
-          height,
-          index
-        ) => (
-          <div
-            key={index}
-            className="
-              w-[5px]
-
-              rounded-full
-            "
-            style={{
-              height,
-
-              backgroundColor:
-                index % 3 === 0
-                  ? colour
-                  : alpha(
-                      colour,
-                      0.34
-                    ),
-            }}
-          />
-        )
-      )}
-    </div>
-  );
-}
-
-function ConflictingGrid() {
-  return (
-    <>
-      <div
-        className="
-          absolute
-          inset-0
-
-          opacity-[0.20]
-
-          [background-image:linear-gradient(rgba(255,255,255,0.18)_2px,transparent_2px),linear-gradient(90deg,rgba(255,255,255,0.18)_2px,transparent_2px)]
-
-          [background-size:38px_38px]
-
-          rotate-[7deg]
-          scale-[1.2]
-        "
-      />
-
-      <div
-        className="
-          absolute
-          inset-0
-
-          opacity-[0.12]
-
-          [background-image:linear-gradient(45deg,rgba(255,255,255,0.35)_1px,transparent_1px)]
-
-          [background-size:24px_24px]
-
-          rotate-[-12deg]
-        "
-      />
-    </>
-  );
-}
+/* ------------------------------------------------ */
+/* LARGE LABEL                                      */
+/* ------------------------------------------------ */
 
 function HugeLabel({
   text,
@@ -2423,7 +3734,7 @@ function HugeLabel({
         left-1/2
         top-1/2
 
-        max-w-[78%]
+        max-w-[74%]
 
         -translate-x-1/2
         -translate-y-1/2
@@ -2442,6 +3753,10 @@ function HugeLabel({
     </p>
   );
 }
+
+/* ------------------------------------------------ */
+/* CROSS                                            */
+/* ------------------------------------------------ */
 
 function BigCross() {
   return (
@@ -2465,11 +3780,11 @@ function BigCross() {
         border
         border-white/14
 
-        bg-black/28
+        bg-black/32
 
-        text-[18px]
+        text-[19px]
 
-        text-white/65
+        text-white/68
 
         backdrop-blur-[10px]
       "
@@ -2480,12 +3795,64 @@ function BigCross() {
 }
 
 /* ------------------------------------------------ */
-/* TOOLKIT                                          */
+/* TOOLKIT PROFILE                                  */
+/* ------------------------------------------------ */
+
+function getProfileForRole(
+  role: PrimitiveRole,
+
+  brandAProfile: VisualProfile,
+  brandBProfile: VisualProfile,
+  sharedProfile: VisualProfile
+) {
+  if (
+    role === "brandA"
+  ) {
+    return brandAProfile;
+  }
+
+  if (
+    role === "brandB" ||
+    role === "content"
+  ) {
+    return brandBProfile;
+  }
+
+  if (
+    role === "restrained"
+  ) {
+    return {
+      ...sharedProfile,
+
+      particles:
+        sharedProfile.particles *
+        0.35,
+
+      glow:
+        sharedProfile.glow *
+        0.35,
+
+      texture:
+        sharedProfile.texture *
+        0.35,
+
+      energy:
+        sharedProfile.energy *
+        0.4,
+    };
+  }
+
+  return sharedProfile;
+}
+
+/* ------------------------------------------------ */
+/* PRIMITIVE CARD                                   */
 /* ------------------------------------------------ */
 
 function PrimitiveCard({
   primitive,
   role,
+  profile,
 
   brandAColor,
   brandBColor,
@@ -2495,6 +3862,9 @@ function PrimitiveCard({
 
   role:
     PrimitiveRole;
+
+  profile:
+    VisualProfile;
 
   brandAColor: string;
   brandBColor: string;
@@ -2511,31 +3881,39 @@ function PrimitiveCard({
       className="
         min-w-0
 
-        rounded-[11px]
+        rounded-[10px]
 
         border
         border-white/[0.06]
 
-        bg-white/[0.018]
+        bg-white/[0.015]
 
-        p-[7px]
+        p-[6px]
       "
     >
       <PrimitiveIcon
-        id={primitive.id}
-        colour={colour}
-        role={role}
+        id={
+          primitive.id
+        }
+        colour={
+          colour
+        }
+        profile={
+          profile
+        }
       />
 
       <p
         className="
-          mt-[6px]
+          mt-[5px]
 
           truncate
 
-          text-[7px]
+          text-[8px]
 
-          text-white/48
+          text-white/55
+
+          oook-medium
         "
       >
         {primitive.label}
@@ -2547,18 +3925,24 @@ function PrimitiveCard({
 
           truncate
 
-          text-[5px]
+          text-[6px]
           uppercase
-          tracking-[0.10em]
+          tracking-[0.08em]
 
-          text-white/18
+          text-white/22
         "
       >
-        {roleLabel(role)}
+        {roleLabel(
+          role
+        )}
       </p>
     </div>
   );
 }
+
+/* ------------------------------------------------ */
+/* ROLE HELPERS                                     */
+/* ------------------------------------------------ */
 
 function getRoleColour(
   role: PrimitiveRole,
@@ -2578,7 +3962,7 @@ function getRoleColour(
     return brandBColor;
   }
 
-  return "rgba(255,255,255,0.48)";
+  return "#FFFFFF";
 }
 
 function roleLabel(
@@ -2613,17 +3997,23 @@ function roleLabel(
 function PrimitiveIcon({
   id,
   colour,
-  role,
+  profile,
 }: {
   id: Primitive;
+
   colour: string;
-  role: PrimitiveRole;
+
+  profile:
+    VisualProfile;
 }) {
-  const baseStyle:
-    CSSProperties = {
-    borderColor:
-      colour,
-  };
+  const radius =
+    getRadius(
+      profile,
+      2,
+      14
+    );
+
+  /* SHAPES */
 
   if (
     id === "shapes"
@@ -2632,7 +4022,6 @@ function PrimitiveIcon({
       <div
         className="
           relative
-
           h-[30px]
         "
       >
@@ -2640,40 +4029,66 @@ function PrimitiveIcon({
           className="
             absolute
 
-            left-[5px]
+            left-[4px]
             top-[4px]
 
             h-[20px]
-            w-[20px]
-
-            rounded-[7px]
+            w-[22px]
 
             border
           "
-          style={baseStyle}
+          style={{
+            borderColor:
+              alpha(
+                colour,
+                0.65
+              ),
+
+            borderRadius:
+              radius,
+
+            transform:
+              `rotate(${
+                getRotation(
+                  profile,
+                  0.7
+                )
+              }deg)`,
+
+            clipPath:
+              getShapeClip(
+                profile
+              ),
+          }}
         />
 
         <div
           className="
             absolute
 
-            right-[5px]
-            top-[8px]
+            right-[4px]
+            top-[9px]
 
-            h-[15px]
-            w-[15px]
-
-            rounded-full
+            h-[14px]
+            w-[14px]
 
             border
 
-            opacity-50
+            opacity-45
           "
-          style={baseStyle}
+          style={{
+            borderColor:
+              colour,
+
+            borderRadius:
+              radius,
+          }}
         />
       </div>
     );
   }
+
+  /* LINES */
 
   if (
     id === "lines"
@@ -2689,37 +4104,58 @@ function PrimitiveIcon({
 
           gap-[5px]
         "
+        style={{
+          transform:
+            `rotate(${
+              profile.diagonal *
+              7
+            }deg)`,
+        }}
       >
         <div
-          className="
-            h-px
-            w-full
-          "
           style={{
+            height:
+              1 +
+              profile.lineWeight *
+                2,
+
+            width:
+              "100%",
+
             backgroundColor:
-              colour,
+              alpha(
+                colour,
+                0.7
+              ),
           }}
         />
 
         <div
-          className="
-            h-px
-            w-[65%]
-          "
           style={{
+            height:
+              Math.max(
+                1,
+                profile.lineWeight *
+                  2
+              ),
+
+            width:
+              `${45 +
+              profile.asymmetry *
+                40}%`,
+
             backgroundColor:
               alpha(
-                normalizeHex(
-                  colour,
-                  "#FFFFFF"
-                ),
-                0.35
+                colour,
+                0.3
               ),
           }}
         />
       </div>
     );
   }
+
+  /* MASKS */
 
   if (
     id === "masks"
@@ -2736,31 +4172,43 @@ function PrimitiveIcon({
       >
         <div
           className="
-            h-[24px]
-            w-[36px]
+            h-[22px]
+            w-[38px]
 
             overflow-hidden
 
-            rounded-full
-
             border
-            border-white/8
+            border-white/[0.08]
           "
+          style={{
+            borderRadius:
+              radius,
+
+            clipPath:
+              getShapeClip(
+                profile
+              ),
+          }}
         >
           <div
             className="
               h-full
-              w-1/2
+              w-[58%]
             "
             style={{
               backgroundColor:
-                colour,
+                alpha(
+                  colour,
+                  0.62
+                ),
             }}
           />
         </div>
       </div>
     );
   }
+
+  /* FRAMES */
 
   if (
     id === "frames"
@@ -2777,61 +4225,95 @@ function PrimitiveIcon({
       >
         <div
           className="
-            h-[23px]
+            h-[22px]
             w-[39px]
-
-            rounded-[6px]
 
             border
           "
-          style={baseStyle}
+          style={{
+            borderRadius:
+              radius,
+
+            borderColor:
+              alpha(
+                colour,
+                0.62
+              ),
+
+            borderWidth:
+              1 +
+              profile.lineWeight *
+                1.5,
+          }}
         />
       </div>
     );
   }
 
+  /* PARTICLES */
+
   if (
-    id === "particles"
+    id ===
+    "particles"
   ) {
     return (
       <div
         className="
           relative
-
           h-[30px]
         "
       >
-        {[5, 13, 21, 29, 37].map(
+        {Array.from({
+          length:
+            Math.round(
+              3 +
+                profile.particles *
+                  8
+            ),
+        }).map(
           (
-            left,
+            _,
             index
           ) => (
             <div
-              key={left}
+              key={index}
               className="
                 absolute
-
-                h-[3px]
-                w-[3px]
-
                 rounded-full
               "
               style={{
-                left,
+                left:
+                  `${
+                    (index *
+                      19) %
+                    90
+                  }%`,
 
                 top:
-                  7 +
-                  ((index * 7) %
-                    16),
+                  `${
+                    4 +
+                    ((index *
+                      11) %
+                      20)
+                  }px`,
+
+                width:
+                  2 +
+                  (index %
+                    3),
+
+                height:
+                  2 +
+                  (index %
+                    3),
 
                 backgroundColor:
-                  colour,
-
-                opacity:
-                  role ===
-                  "restrained"
-                    ? 0.35
-                    : 0.8,
+                  alpha(
+                    colour,
+                    0.35 +
+                      profile.energy *
+                        0.4
+                  ),
               }}
             />
           )
@@ -2840,23 +4322,42 @@ function PrimitiveIcon({
     );
   }
 
+  /* GRID */
+
   if (
     id === "grids"
   ) {
+    const gridSize =
+      Math.round(
+        11 -
+          profile.grid *
+            5
+      );
+
     return (
       <div
         className="
           h-[30px]
-
-          opacity-50
-
-          [background-image:linear-gradient(rgba(255,255,255,0.35)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.35)_1px,transparent_1px)]
-
-          [background-size:9px_9px]
+          opacity-45
         "
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.32) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.32) 1px, transparent 1px)",
+
+          backgroundSize:
+            `${gridSize}px ${gridSize}px`,
+
+          transform:
+            `rotate(${
+              profile.diagonal *
+              4
+            }deg)`,
+        }}
       />
     );
   }
+
+  /* UI */
 
   if (
     id === "ui"
@@ -2865,14 +4366,15 @@ function PrimitiveIcon({
       <div
         className="
           relative
-
           h-[30px]
 
-          rounded-[5px]
-
           border
-          border-white/10
+          border-white/[0.09]
         "
+        style={{
+          borderRadius:
+            radius,
+        }}
       >
         <div
           className="
@@ -2880,15 +4382,21 @@ function PrimitiveIcon({
 
             left-[4px]
             right-[4px]
-            top-[5px]
-
-            h-[2px]
-
-            rounded-full
+            top-[4px]
           "
           style={{
+            height:
+              Math.max(
+                1,
+                profile.lineWeight *
+                  2
+              ),
+
             backgroundColor:
-              colour,
+              alpha(
+                colour,
+                0.55
+              ),
           }}
         />
 
@@ -2899,39 +4407,55 @@ function PrimitiveIcon({
             bottom-[5px]
             left-[4px]
 
-            h-[8px]
+            h-[7px]
             w-[18px]
 
-            rounded-[3px]
-
-            bg-white/8
+            bg-white/[0.07]
           "
+          style={{
+            borderRadius:
+              radius *
+              0.5,
+          }}
         />
       </div>
     );
   }
 
+  /* GRADIENTS */
+
   if (
-    id === "gradients"
+    id ===
+    "gradients"
   ) {
     return (
       <div
         className="
           h-[30px]
-
-          rounded-[5px]
         "
         style={{
+          borderRadius:
+            radius,
+
           background:
             `linear-gradient(
-              90deg,
+              ${
+                90 +
+                profile.diagonal *
+                  40
+              }deg,
               transparent,
-              ${colour}
+              ${alpha(
+                colour,
+                0.65
+              )}
             )`,
         }}
       />
     );
   }
+
+  /* GLOW */
 
   if (
     id === "glow"
@@ -2948,22 +4472,38 @@ function PrimitiveIcon({
       >
         <div
           className="
-            h-[12px]
-            w-[12px]
-
             rounded-full
           "
           style={{
+            width:
+              7 +
+              profile.glow *
+                8,
+
+            height:
+              7 +
+              profile.glow *
+                8,
+
             backgroundColor:
               colour,
 
             boxShadow:
-              `0 0 18px ${colour}`,
+              `0 0 ${
+                5 +
+                profile.glow *
+                  22
+              }px ${alpha(
+                colour,
+                0.7
+              )}`,
           }}
         />
       </div>
     );
   }
+
+  /* TEXTURES */
 
   if (
     id === "textures"
@@ -2972,16 +4512,24 @@ function PrimitiveIcon({
       <div
         className="
           h-[30px]
-
-          rounded-[5px]
-
-          opacity-60
-
-          [background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.18)_0px,rgba(255,255,255,0.18)_1px,transparent_1px,transparent_4px)]
         "
+        style={{
+          borderRadius:
+            radius,
+
+          opacity:
+            0.2 +
+            profile.texture *
+              0.65,
+
+          backgroundImage:
+            "repeating-linear-gradient(135deg, rgba(255,255,255,0.28) 0px, rgba(255,255,255,0.28) 1px, transparent 1px, transparent 4px)",
+        }}
       />
     );
   }
+
+  /* 3D */
 
   if (
     id === "3d"
@@ -3001,36 +4549,54 @@ function PrimitiveIcon({
             h-[20px]
             w-[20px]
 
-            rotate-[28deg]
-
-            rounded-[5px]
-
             border
           "
           style={{
             borderColor:
-              colour,
+              alpha(
+                colour,
+                0.7
+              ),
+
+            borderRadius:
+              radius,
+
+            transform:
+              `rotate(${
+                18 +
+                profile.diagonal *
+                  25
+              }deg)`,
 
             background:
               `linear-gradient(
                 135deg,
                 ${alpha(
-                  normalizeHex(
-                    colour,
-                    "#FFFFFF"
-                  ),
-                  0.28
+                  colour,
+                  0.1 +
+                    profile.depth *
+                      0.26
                 )},
                 transparent
               )`,
+
+            boxShadow:
+              `6px 6px ${
+                4 +
+                profile.depth *
+                  8
+              }px rgba(0,0,0,0.45)`,
           }}
         />
       </div>
     );
   }
 
+  /* VISUALIZER */
+
   if (
-    id === "visualizers"
+    id ===
+    "visualizers"
   ) {
     return (
       <div
@@ -3044,27 +4610,46 @@ function PrimitiveIcon({
           gap-[2px]
         "
       >
-        {[8, 20, 13, 25, 16].map(
+        {Array.from({
+          length:
+            Math.round(
+              4 +
+                profile.energy *
+                  4
+            ),
+        }).map(
           (
-            height,
+            _,
             index
           ) => (
             <div
               key={index}
               className="
-                w-[3px]
-
                 rounded-full
               "
               style={{
-                height,
+                width:
+                  2 +
+                  profile.lineWeight,
+
+                height:
+                  `${
+                    6 +
+                    ((index *
+                      9) %
+                      19) *
+                      (0.5 +
+                        profile.energy *
+                          0.6)
+                  }px`,
 
                 backgroundColor:
-                  colour,
-
-                opacity:
-                  0.35 +
-                  index * 0.12,
+                  alpha(
+                    colour,
+                    0.28 +
+                      index *
+                        0.08
+                  ),
               }}
             />
           )
@@ -3087,25 +4672,37 @@ function PrimitiveIcon({
         gap-[3px]
       "
     >
-      {[14, 22, 10, 26].map(
+      {[12, 20, 9, 24].map(
         (
           height,
           index
         ) => (
           <div
             key={index}
-            className="
-              w-[6px]
-
-              rounded-t-[2px]
-            "
             style={{
+              width:
+                5 +
+                profile.lineWeight *
+                  2,
+
               height,
+
+              borderRadius:
+                `${Math.min(
+                  radius,
+                  4
+                )}px ${Math.min(
+                  radius,
+                  4
+                )}px 0 0`,
 
               backgroundColor:
                 index === 3
-                  ? colour
-                  : "rgba(255,255,255,0.12)",
+                  ? alpha(
+                      colour,
+                      0.62
+                    )
+                  : "rgba(255,255,255,0.11)",
             }}
           />
         )

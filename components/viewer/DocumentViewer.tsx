@@ -14,8 +14,30 @@ import ThumbnailBar from "@/components/viewer/ThumbnailBar";
 
 import { useGuidelineStore } from "@/store/guidelineStore";
 
+/* ------------------------------------------------ */
+/* CONSTANTS                                        */
+/* ------------------------------------------------ */
+
 const PAGE_WIDTH = 1600;
 const PAGE_HEIGHT = 900;
+
+const MIN_SCALE = 0.25;
+const MAX_SCALE = 1.5;
+const ZOOM_STEP = 0.1;
+
+/* ------------------------------------------------ */
+/* HELPERS                                          */
+/* ------------------------------------------------ */
+
+function roundScale(
+  value: number
+) {
+  return (
+    Math.round(
+      value * 100
+    ) / 100
+  );
+}
 
 /* ------------------------------------------------ */
 /* VIEWER                                           */
@@ -23,7 +45,18 @@ const PAGE_HEIGHT = 900;
 
 export default function DocumentViewer() {
   const wrapperRef =
-    useRef<HTMLDivElement>(null);
+    useRef<HTMLDivElement>(
+      null
+    );
+
+  /* ---------------------------------------------- */
+  /* SCALE                                          */
+  /* ---------------------------------------------- */
+
+  const [
+    fitScale,
+    setFitScale,
+  ] = useState(0.5);
 
   const [
     scale,
@@ -31,12 +64,21 @@ export default function DocumentViewer() {
   ] = useState(0.5);
 
   const [
+    fitMode,
+    setFitMode,
+  ] = useState(true);
+
+  /* ---------------------------------------------- */
+  /* PAGE                                           */
+  /* ---------------------------------------------- */
+
+  const [
     currentPage,
     setCurrentPage,
   ] = useState(0);
 
   /* ---------------------------------------------- */
-  /* PARTNERSHIP MODEL                              */
+  /* PARTNERSHIP                                    */
   /* ---------------------------------------------- */
 
   const partnershipModel =
@@ -46,17 +88,8 @@ export default function DocumentViewer() {
     );
 
   /* ---------------------------------------------- */
-  /* DOCUMENT PAGES                                 */
+  /* PAGES                                          */
   /* ---------------------------------------------- */
-
-  /*
-    Navigation now comes directly from the
-    document definition.
-
-    We remove the React components before
-    passing the data to ThumbnailBar because
-    the bar only needs metadata.
-  */
 
   const pages =
     GUIDELINE_PAGES.map(
@@ -72,7 +105,7 @@ export default function DocumentViewer() {
     );
 
   /* ---------------------------------------------- */
-  /* RESET WHEN MODEL CHANGES                       */
+  /* RESET PAGE ON MODEL CHANGE                     */
   /* ---------------------------------------------- */
 
   useEffect(() => {
@@ -80,7 +113,7 @@ export default function DocumentViewer() {
   }, [partnershipModel]);
 
   /* ---------------------------------------------- */
-  /* RESPONSIVE SCALE                               */
+  /* CALCULATE FIT SCALE                            */
   /* ---------------------------------------------- */
 
   useEffect(() => {
@@ -106,13 +139,30 @@ export default function DocumentViewer() {
         availableHeight /
         PAGE_HEIGHT;
 
-      setScale(
+      const nextFitScale =
         Math.min(
           widthScale,
           heightScale,
           1
-        )
+        );
+
+      const safeFitScale =
+        Math.max(
+          MIN_SCALE,
+          nextFitScale
+        );
+
+      setFitScale(
+        safeFitScale
       );
+
+      if (
+        fitMode
+      ) {
+        setScale(
+          safeFitScale
+        );
+      }
     };
 
     updateScale();
@@ -133,7 +183,62 @@ export default function DocumentViewer() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [fitMode]);
+
+  /* ---------------------------------------------- */
+  /* ZOOM                                           */
+  /* ---------------------------------------------- */
+
+  const zoomIn = () => {
+    setFitMode(false);
+
+    setScale(
+      (current) =>
+        Math.min(
+          MAX_SCALE,
+
+          roundScale(
+            current +
+              ZOOM_STEP
+          )
+        )
+    );
+  };
+
+  const zoomOut = () => {
+    setFitMode(false);
+
+    setScale(
+      (current) =>
+        Math.max(
+          MIN_SCALE,
+
+          roundScale(
+            current -
+              ZOOM_STEP
+          )
+        )
+    );
+  };
+
+  const resetToFit = () => {
+    setFitMode(true);
+    setScale(
+      fitScale
+    );
+  };
+
+  /* ---------------------------------------------- */
+  /* DISPLAY SIZE                                   */
+  /* ---------------------------------------------- */
+
+  const scaledWidth =
+    PAGE_WIDTH *
+    scale;
+
+  const scaledHeight =
+    PAGE_HEIGHT *
+    scale;
 
   /* ---------------------------------------------- */
   /* RENDER                                         */
@@ -170,10 +275,15 @@ export default function DocumentViewer() {
           px-[28px]
         "
       >
+        {/* DOCUMENT INFO */}
+
         <div>
           <p
             className="
               text-[15px]
+
+              text-white
+
               oook-medium
             "
           >
@@ -185,6 +295,7 @@ export default function DocumentViewer() {
               mt-[2px]
 
               text-[13px]
+
               text-white/35
             "
           >
@@ -196,89 +307,299 @@ export default function DocumentViewer() {
           </p>
         </div>
 
-        {/* SCALE */}
+        {/* ====================================== */}
+        {/* ZOOM CONTROLS                          */}
+        {/* ====================================== */}
 
         <div
           className="
-            rounded-full
+            flex
+            items-center
 
-            bg-white/[0.06]
-
-            px-[12px]
-            py-[6px]
-
-            text-[12px]
-            text-white/45
+            gap-[7px]
           "
         >
-          {Math.round(
-            scale * 100
-          )}
-          %
+          {/* MINUS */}
+
+          <button
+            type="button"
+
+            onClick={
+              zoomOut
+            }
+
+            disabled={
+              scale <=
+              MIN_SCALE
+            }
+
+            aria-label="Zoom out"
+
+            className="
+              flex
+
+              h-[32px]
+              w-[32px]
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+              border-white/[0.07]
+
+              bg-white/[0.025]
+
+              text-[17px]
+              leading-none
+
+              text-white/45
+
+              transition-all
+
+              hover:border-white/14
+              hover:bg-white/[0.05]
+              hover:text-white/80
+
+              disabled:pointer-events-none
+              disabled:opacity-20
+            "
+          >
+            −
+          </button>
+
+          {/* SCALE */}
+
+          <div
+            className="
+              flex
+              h-[32px]
+              min-w-[60px]
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+              border-white/[0.07]
+
+              bg-white/[0.035]
+
+              px-[10px]
+
+              text-[11px]
+
+              text-white/48
+            "
+          >
+            {Math.round(
+              scale * 100
+            )}
+            %
+          </div>
+
+          {/* PLUS */}
+
+          <button
+            type="button"
+
+            onClick={
+              zoomIn
+            }
+
+            disabled={
+              scale >=
+              MAX_SCALE
+            }
+
+            aria-label="Zoom in"
+
+            className="
+              flex
+
+              h-[32px]
+              w-[32px]
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+              border-white/[0.07]
+
+              bg-white/[0.025]
+
+              text-[17px]
+              leading-none
+
+              text-white/45
+
+              transition-all
+
+              hover:border-white/14
+              hover:bg-white/[0.05]
+              hover:text-white/80
+
+              disabled:pointer-events-none
+              disabled:opacity-20
+            "
+          >
+            +
+          </button>
+
+          {/* FIT */}
+
+          <button
+            type="button"
+
+            onClick={
+              resetToFit
+            }
+
+            className={`
+              flex
+              h-[32px]
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+
+              px-[11px]
+
+              text-[9px]
+
+              transition-all
+
+              ${
+                fitMode
+                  ? `
+                      border-white/15
+                      bg-white
+                      text-black
+                    `
+                  : `
+                      border-white/[0.07]
+                      bg-white/[0.025]
+                      text-white/36
+
+                      hover:border-white/14
+                      hover:bg-white/[0.05]
+                      hover:text-white/70
+                    `
+              }
+            `}
+          >
+            Fit
+          </button>
         </div>
       </header>
 
       {/* ======================================== */}
-      {/* CANVAS                                   */}
+      {/* CANVAS / SCROLL AREA                     */}
       {/* ======================================== */}
 
       <div
         className="
           relative
 
-          flex
+          min-h-0
           flex-1
 
-          items-center
-          justify-center
-
-          overflow-hidden
+          overflow-auto
 
           bg-[#141415]
+
+          [scrollbar-width:thin]
+          [scrollbar-color:rgba(255,255,255,0.12)_transparent]
         "
       >
-        {/* SCALED PAGE CONTAINER */}
+        {/* ====================================== */}
+        {/* SCROLLABLE STAGE                       */}
+        {/* ====================================== */}
 
         <div
           className="
-            overflow-hidden
+            flex
+            shrink-0
 
-            rounded-[4px]
-
-            shadow-[0_30px_100px_rgba(0,0,0,0.45)]
+            items-center
+            justify-center
           "
           style={{
             width:
-              PAGE_WIDTH *
-              scale,
+              `max(100%, ${
+                scaledWidth +
+                80
+              }px)`,
 
             height:
-              PAGE_HEIGHT *
-              scale,
+              `max(100%, ${
+                scaledHeight +
+                80
+              }px)`,
+
+            minWidth:
+              scaledWidth +
+              80,
+
+            minHeight:
+              scaledHeight +
+              80,
           }}
         >
-          {/* ORIGINAL 1600 × 900 PAGE */}
+          {/* ==================================== */}
+          {/* PAGE CONTAINER                       */}
+          {/* ==================================== */}
 
           <div
+            className="
+              shrink-0
+
+              overflow-hidden
+
+              rounded-[4px]
+
+              shadow-[0_30px_100px_rgba(0,0,0,0.45)]
+            "
             style={{
               width:
-                PAGE_WIDTH,
+                scaledWidth,
 
               height:
-                PAGE_HEIGHT,
-
-              transform:
-                `scale(${scale})`,
-
-              transformOrigin:
-                "top left",
+                scaledHeight,
             }}
           >
-            <GuidelineDocument
-              currentPage={
-                currentPage
-              }
-            />
+            {/* ================================== */}
+            {/* ORIGINAL 1600 × 900 PAGE           */}
+            {/* ================================== */}
+
+            <div
+              style={{
+                width:
+                  PAGE_WIDTH,
+
+                height:
+                  PAGE_HEIGHT,
+
+                transform:
+                  `scale(${scale})`,
+
+                transformOrigin:
+                  "top left",
+              }}
+            >
+              <GuidelineDocument
+                currentPage={
+                  currentPage
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -289,9 +610,11 @@ export default function DocumentViewer() {
 
       <ThumbnailBar
         pages={pages}
+
         currentPage={
           currentPage
         }
+
         onPageChange={
           setCurrentPage
         }
