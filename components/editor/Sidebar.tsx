@@ -9,12 +9,22 @@ import {
 
 import BrandCharacterSelector from "./BrandCharacterSelector";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
+
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
 
 import {
   exportGuidelinePdf,
 } from "@/utils/exportGuidelinePdf";
+
+import {
+  useGuidelineThemeStore,
+  type GuidelineTheme,
+} from "@/components/guideline/GuidelinePage";
 
 /* ------------------------------------------------ */
 /* TYPES                                            */
@@ -27,13 +37,17 @@ type BrandSide =
 interface BrandData {
   name: string;
 
-  logoUrl: string | null;
+  logoUrl:
+    string | null;
 
-  primaryColor: string;
+  primaryColor:
+    string;
 
-  secondaryColor?: string;
+  secondaryColor?:
+    string;
 
-  fontFamily?: string;
+  fontFamily?:
+    string;
 }
 
 /* ------------------------------------------------ */
@@ -41,44 +55,85 @@ interface BrandData {
 /* ------------------------------------------------ */
 
 const PARTNERSHIP_MODELS: {
-  id: PartnershipModelId;
-  label: string;
-  description: string;
+  id:
+    PartnershipModelId;
+
+  label:
+    string;
+
+  description:
+    string;
 }[] = [
   {
-    id: "axb",
+    id:
+      "axb",
 
-    label: "A × B",
+    label:
+      "A × B",
 
     description:
       "Equal collaboration",
   },
 
   {
-    id: "aandb",
+    id:
+      "aandb",
 
-    label: "A with B",
+    label:
+      "A with B",
 
     description:
       "Brand A leads",
   },
 
   {
-    id: "poweredByA",
+    id:
+      "poweredByA",
 
-    label: "B powered by A",
+    label:
+      "B powered by A",
 
     description:
       "Brand B owns the experience",
   },
 
   {
-    id: "presentsB",
+    id:
+      "presentsB",
 
-    label: "A presents B",
+    label:
+      "A presents B",
 
     description:
       "A platform / B content",
+  },
+];
+
+/* ------------------------------------------------ */
+/* THEMES                                           */
+/* ------------------------------------------------ */
+
+const THEMES: {
+  id:
+    GuidelineTheme;
+
+  label:
+    string;
+}[] = [
+  {
+    id:
+      "dark",
+
+    label:
+      "Dark",
+  },
+
+  {
+    id:
+      "light",
+
+    label:
+      "Light",
   },
 ];
 
@@ -110,16 +165,26 @@ export default function Sidebar() {
     partnershipModel,
     brandA,
     brandB,
-  } = useGuidelineStore();
+  } =
+    useGuidelineStore();
 
-  /* ---------------------------------------------- */
-  /* EXPORT STATE                                   */
-  /* ---------------------------------------------- */
+  const theme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.theme
+    );
+
+  const setTheme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.setTheme
+    );
 
   const [
     isExporting,
     setIsExporting,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   /* ---------------------------------------------- */
   /* PARTNERSHIP MODEL                              */
@@ -140,7 +205,8 @@ export default function Sidebar() {
   /* ---------------------------------------------- */
 
   const updateBrand = (
-    side: BrandSide,
+    side:
+      BrandSide,
 
     patch:
       Partial<BrandData>
@@ -172,61 +238,66 @@ export default function Sidebar() {
   /* RESET                                          */
   /* ---------------------------------------------- */
 
-  const handleReset = () => {
-    useGuidelineStore.setState(
-      (state) => ({
-        partnershipModel:
-          "axb",
+  const handleReset =
+    () => {
+      setTheme(
+        "dark"
+      );
 
-        brandA: {
-          ...state.brandA,
+      useGuidelineStore.setState(
+        (state) => ({
+          partnershipModel:
+            "axb",
 
-          name:
-            "Brand A",
+          brandA: {
+            ...state.brandA,
 
-          logoUrl:
-            null,
+            name:
+              "Brand A",
 
-          primaryColor:
-            DEFAULT_A_PRIMARY,
+            logoUrl:
+              null,
 
-          secondaryColor:
-            DEFAULT_A_SECONDARY,
+            primaryColor:
+              DEFAULT_A_PRIMARY,
 
-          fontFamily:
-            DEFAULT_FONT,
+            secondaryColor:
+              DEFAULT_A_SECONDARY,
 
-          characterTraits:
-            [],
-        } as typeof state.brandA,
+            fontFamily:
+              DEFAULT_FONT,
 
-        brandB: {
-          ...state.brandB,
+            characterTraits:
+              [],
+          } as typeof state.brandA,
 
-          name:
-            "Brand B",
+          brandB: {
+            ...state.brandB,
 
-          logoUrl:
-            null,
+            name:
+              "Brand B",
 
-          primaryColor:
-            DEFAULT_B_PRIMARY,
+            logoUrl:
+              null,
 
-          secondaryColor:
-            DEFAULT_B_SECONDARY,
+            primaryColor:
+              DEFAULT_B_PRIMARY,
 
-          fontFamily:
-            DEFAULT_FONT,
+            secondaryColor:
+              DEFAULT_B_SECONDARY,
 
-          characterTraits:
-            [],
-        } as typeof state.brandB,
-      })
-    );
-  };
+            fontFamily:
+              DEFAULT_FONT,
+
+            characterTraits:
+              [],
+          } as typeof state.brandB,
+        })
+      );
+    };
 
   /* ---------------------------------------------- */
-  /* EXPORT PDF                                     */
+  /* EXPORT                                         */
   /* ---------------------------------------------- */
 
   const handleExport =
@@ -242,6 +313,15 @@ export default function Sidebar() {
       );
 
       try {
+        /*
+          GuidelineDocument uses the
+          same GuidelinePage theme store.
+
+          Therefore the PDF automatically
+          exports the currently selected
+          Dark / Light appearance.
+        */
+
         await exportGuidelinePdf();
       } catch (
         error
@@ -275,7 +355,7 @@ export default function Sidebar() {
         shrink-0
         flex-col
 
-        border-r
+        border-l
         border-white/[0.07]
 
         bg-[#0b0b0c]
@@ -324,7 +404,138 @@ export default function Sidebar() {
       </header>
 
       {/* ======================================== */}
-      {/* SCROLLABLE CONTENT                       */}
+      {/* DOCUMENT APPEARANCE                       */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          shrink-0
+
+          border-b
+          border-white/[0.07]
+
+          px-[24px]
+          py-[16px]
+        "
+      >
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+
+            gap-[14px]
+          "
+        >
+          <div>
+            <p
+              className="
+                text-[10px]
+                uppercase
+                tracking-[0.12em]
+
+                text-white/48
+
+                oook-medium
+              "
+            >
+              Appearance
+            </p>
+
+            <p
+              className="
+                mt-[3px]
+
+                text-[8px]
+
+                text-white/20
+              "
+            >
+              Document theme
+            </p>
+          </div>
+
+          {/* SEGMENTED SWITCH */}
+
+          <div
+            className="
+              flex
+              shrink-0
+
+              rounded-full
+
+              border
+              border-white/[0.08]
+
+              bg-white/[0.025]
+
+              p-[3px]
+            "
+          >
+            {THEMES.map(
+              (option) => {
+                const active =
+                  theme ===
+                  option.id;
+
+                return (
+                  <button
+                    key={
+                      option.id
+                    }
+
+                    type="button"
+
+                    onClick={() =>
+                      setTheme(
+                        option.id
+                      )
+                    }
+
+                    className={`
+                      flex
+
+                      h-[29px]
+                      min-w-[54px]
+
+                      items-center
+                      justify-center
+
+                      rounded-full
+
+                      px-[11px]
+
+                      text-[8px]
+
+                      transition-all
+                      duration-150
+
+                      ${
+                        active
+                          ? `
+                              bg-white
+                              text-black
+                            `
+                          : `
+                              text-white/30
+
+                              hover:bg-white/[0.05]
+                              hover:text-white/65
+                            `
+                      }
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                );
+              }
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================== */}
+      {/* SCROLLABLE CONFIG                         */}
       {/* ======================================== */}
 
       <div
@@ -599,16 +810,12 @@ export default function Sidebar() {
             }
 
             className="
-              relative
-
               flex
               h-[48px]
               w-full
 
               items-center
               justify-center
-
-              overflow-hidden
 
               rounded-[11px]
 
@@ -666,15 +873,21 @@ function BrandEditor({
   defaultSecondary,
   onChange,
 }: {
-  side: BrandSide;
+  side:
+    BrandSide;
 
-  brand: BrandData;
+  brand:
+    BrandData;
 
-  defaultPrimary: string;
-  defaultSecondary: string;
+  defaultPrimary:
+    string;
+
+  defaultSecondary:
+    string;
 
   onChange: (
-    side: BrandSide,
+    side:
+      BrandSide,
 
     patch:
       Partial<BrandData>
@@ -715,7 +928,7 @@ function BrandEditor({
       description="Brand identity, visual assets and character."
     >
       {/* ======================================== */}
-      {/* BRAND NAME                               */}
+      {/* NAME                                     */}
       {/* ======================================== */}
 
       <EditorGroup
@@ -725,7 +938,8 @@ function BrandEditor({
           type="text"
 
           value={
-            brand.name ?? ""
+            brand.name ??
+            ""
           }
 
           placeholder={
@@ -917,7 +1131,7 @@ function BrandEditor({
 }
 
 /* ------------------------------------------------ */
-/* LOGO CONTROL                                     */
+/* LOGO                                             */
 /* ------------------------------------------------ */
 
 function LogoControl({
@@ -925,12 +1139,15 @@ function LogoControl({
   brand,
   onChange,
 }: {
-  side: BrandSide;
+  side:
+    BrandSide;
 
-  brand: BrandData;
+  brand:
+    BrandData;
 
   onChange: (
-    side: BrandSide,
+    side:
+      BrandSide,
 
     patch:
       Partial<BrandData>
@@ -949,25 +1166,28 @@ function LogoControl({
       event.target
         .files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     const reader =
       new FileReader();
 
-    reader.onload = () => {
-      if (
-        typeof reader.result ===
-        "string"
-      ) {
-        onChange(
-          side,
-          {
-            logoUrl:
-              reader.result,
-          }
-        );
-      }
-    };
+    reader.onload =
+      () => {
+        if (
+          typeof reader.result ===
+          "string"
+        ) {
+          onChange(
+            side,
+            {
+              logoUrl:
+                reader.result,
+            }
+          );
+        }
+      };
 
     reader.readAsDataURL(
       file
@@ -985,7 +1205,9 @@ function LogoControl({
   return (
     <div>
       <input
-        ref={inputRef}
+        ref={
+          inputRef
+        }
 
         type="file"
 
@@ -1049,11 +1271,13 @@ function LogoControl({
 
               alt=""
 
-              draggable={false}
+              draggable={
+                false
+              }
 
               className="
                 max-h-[46px]
-                max-w-[68%]
+                max-w-[72%]
 
                 object-contain
               "
@@ -1183,7 +1407,7 @@ function LogoControl({
 }
 
 /* ------------------------------------------------ */
-/* COLOUR CONTROL                                   */
+/* COLOUR                                           */
 /* ------------------------------------------------ */
 
 function ColourControl({
@@ -1192,13 +1416,18 @@ function ColourControl({
   fallback,
   onChange,
 }: {
-  label: string;
+  label:
+    string;
 
-  value: string;
-  fallback: string;
+  value:
+    string;
+
+  fallback:
+    string;
 
   onChange: (
-    colour: string
+    colour:
+      string
   ) => void;
 }) {
   const safeValue =
@@ -1243,8 +1472,6 @@ function ColourControl({
           gap-[8px]
         "
       >
-        {/* PICKER */}
-
         <label
           className="
             relative
@@ -1298,8 +1525,6 @@ function ColourControl({
           />
         </label>
 
-        {/* HEX */}
-
         <input
           type="text"
 
@@ -1328,7 +1553,9 @@ function ColourControl({
             }
           }}
 
-          spellCheck={false}
+          spellCheck={
+            false
+          }
 
           className="
             min-w-0
@@ -1350,7 +1577,7 @@ function ColourControl({
 }
 
 /* ------------------------------------------------ */
-/* TYPEFACE CONTROL                                 */
+/* TYPEFACE                                         */
 /* ------------------------------------------------ */
 
 function TypefaceControl({
@@ -1358,12 +1585,15 @@ function TypefaceControl({
   value,
   onChange,
 }: {
-  side: BrandSide;
+  side:
+    BrandSide;
 
-  value: string;
+  value:
+    string;
 
   onChange: (
-    value: string
+    value:
+      string
   ) => void;
 }) {
   const inputRef =
@@ -1380,7 +1610,9 @@ function TypefaceControl({
         event.target
           .files?.[0];
 
-      if (!file) return;
+      if (!file) {
+        return;
+      }
 
       try {
         const dataUrl =
@@ -1423,7 +1655,9 @@ function TypefaceControl({
   return (
     <div>
       <input
-        ref={inputRef}
+        ref={
+          inputRef
+        }
 
         type="file"
 
@@ -1445,9 +1679,7 @@ function TypefaceControl({
         className="hidden"
       />
 
-      {/* ======================================== */}
-      {/* PREVIEW                                  */}
-      {/* ======================================== */}
+      {/* PREVIEW */}
 
       <div
         className="
@@ -1538,9 +1770,7 @@ function TypefaceControl({
         </p>
       </div>
 
-      {/* ======================================== */}
-      {/* INPUT                                    */}
-      {/* ======================================== */}
+      {/* CONTROLS */}
 
       <div
         className="
@@ -1640,7 +1870,7 @@ function TypefaceControl({
 }
 
 /* ------------------------------------------------ */
-/* SIDEBAR SECTION                                  */
+/* SECTION                                          */
 /* ------------------------------------------------ */
 
 function SidebarSection({
@@ -1649,11 +1879,14 @@ function SidebarSection({
   description,
   children,
 }: {
-  eyebrow: string;
+  eyebrow:
+    string;
 
-  title: string;
+  title:
+    string;
 
-  description?: string;
+  description?:
+    string;
 
   children:
     ReactNode;
@@ -1741,9 +1974,11 @@ function EditorGroup({
   description,
   children,
 }: {
-  label: string;
+  label:
+    string;
 
-  description?: string;
+  description?:
+    string;
 
   children:
     ReactNode;
@@ -1843,7 +2078,8 @@ function ExportSpinner() {
 /* ------------------------------------------------ */
 
 function isHexColour(
-  value: string
+  value:
+    string
 ) {
   return /^#[0-9a-fA-F]{6}$/.test(
     value.trim()
@@ -1851,8 +2087,11 @@ function isHexColour(
 }
 
 function normalizeColour(
-  value: string,
-  fallback: string
+  value:
+    string,
+
+  fallback:
+    string
 ) {
   if (
     isHexColour(
@@ -1866,7 +2105,8 @@ function normalizeColour(
 }
 
 function cleanFontName(
-  value: string
+  value:
+    string
 ) {
   return value
     .replace(
@@ -1878,7 +2118,8 @@ function cleanFontName(
 }
 
 function readFileAsDataUrl(
-  file: File
+  file:
+    File
 ) {
   return new Promise<string>(
     (

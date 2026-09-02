@@ -1,25 +1,48 @@
 "use client";
 
 import {
-  ReactNode,
   useEffect,
   useState,
+  type ReactNode,
 } from "react";
 
-import GuidelinePage from "./GuidelinePage";
 import BrandLogo from "./BrandLogo";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import GuidelinePage, {
+  useGuidelineThemeStore,
+} from "./GuidelinePage";
 
-/* ------------------------------------------------ */
-/* IMAGES                                           */
-/* ------------------------------------------------ */
+import PartnershipLockup from "./PartnershipLockup";
 
-const BACKGROUND_IMAGE_IDS = Array.from(
-  { length: 10 },
-  (_, index) => index + 1
-);
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
+
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
+
+interface BrandView {
+  name: string;
+  logoUrl: string | null;
+}
+
+interface ClosingConfig {
+  description: string;
+
+  signature: string;
+  overlay: string;
+  cta: string;
+  minimal: string;
+}
+
+/* ================================================= */
+/* IMAGE CONFIG                                      */
+/* ================================================= */
 
 const IMAGE_EXTENSIONS = [
   "jpg",
@@ -28,392 +51,225 @@ const IMAGE_EXTENSIONS = [
   "webp",
 ];
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* MODEL CONFIG                                      */
+/* ================================================= */
 
-type ClosingVariant =
-  | "signature"
-  | "footage"
-  | "cta"
-  | "minimal";
-
-interface ClosingSpec {
-  id: string;
-  title: string;
-  description: string;
-  variant: ClosingVariant;
-}
-
-interface ClosingContent {
-  intro: string;
-
-  closings: [
-    ClosingSpec,
-    ClosingSpec,
-    ClosingSpec,
-    ClosingSpec
-  ];
-}
-
-/* ------------------------------------------------ */
-/* CLOSING HIERARCHY                                */
-/* ------------------------------------------------ */
-
-/*
-  Closing hierarchy follows Page04:
-
-  A × B
-  Equal final prominence.
-
-  A with B
-  A = primary sign-off
-  B = supporting partner
-  approx. 68 / 32
-
-  B powered by A
-  B = consumer-facing owner
-  A = technology endorsement
-  approx. 85 / 15
-
-  A presents B
-  The experience returns to A after
-  the featured B content has ended.
-*/
-
-const CLOSING_HIERARCHY = {
-  axb: {
-    brandA: 50,
-    brandB: 50,
-  },
-
-  aandb: {
-    brandA: 68,
-    brandB: 32,
-  },
-
-  poweredByA: {
-    brandA: 15,
-    brandB: 85,
-  },
-
-  presentsB: {
-    brandA: 70,
-    brandB: 30,
-  },
-} satisfies Record<
-  PartnershipModelId,
-  {
-    brandA: number;
-    brandB: number;
-  }
->;
-
-/* ------------------------------------------------ */
-/* RANDOM IMAGES                                    */
-/* ------------------------------------------------ */
-
-function getRandomImages() {
-  const images = [
-    ...BACKGROUND_IMAGE_IDS,
-  ];
-
-  for (
-    let i = images.length - 1;
-    i > 0;
-    i--
-  ) {
-    const j = Math.floor(
-      Math.random() * (i + 1)
-    );
-
-    [images[i], images[j]] = [
-      images[j],
-      images[i],
-    ];
-  }
-
-  return images.slice(0, 4);
-}
-
-/* ------------------------------------------------ */
-/* CONTENT                                          */
-/* ------------------------------------------------ */
-
-function getClosingContent(
-  model: PartnershipModelId,
-  brandAName: string,
-  brandBName: string
-): ClosingContent {
+function getClosingConfig(
+  model:
+    PartnershipModelId
+): ClosingConfig {
   switch (model) {
-    /* ================================================= */
-    /* A × B                                             */
-    /* ================================================= */
-
     case "axb":
       return {
-        intro:
+        description:
           "Both brands close the experience together with equal optical prominence and a shared final signature.",
 
-        closings: [
-          {
-            id: "01",
-            title: "Final signature",
-            description: "Equal brand sign-off",
-            variant: "signature",
-          },
+        signature:
+          "Equal brand sign-off",
 
-          {
-            id: "02",
-            title: "Over footage",
-            description: "Shared closing overlay",
-            variant: "footage",
-          },
+        overlay:
+          "Shared closing overlay",
 
-          {
-            id: "03",
-            title: "CTA end card",
-            description: "Neutral shared CTA",
-            variant: "cta",
-          },
+        cta:
+          "Neutral shared CTA",
 
-          {
-            id: "04",
-            title: "Minimal closing",
-            description:
-              `${brandAName} × ${brandBName}`,
-            variant: "minimal",
-          },
-        ],
+        minimal:
+          "Brand A × Brand B",
       };
-
-    /* ================================================= */
-    /* A WITH B                                          */
-    /* ================================================= */
 
     case "aandb":
       return {
-        intro:
-          `${brandAName} provides the primary final sign-off while ${brandBName} remains visible as the content partner.`,
+        description:
+          "Brand A owns the closing moment while Brand B remains clearly visible as the supporting partner.",
 
-        closings: [
-          {
-            id: "01",
-            title: "Final signature",
-            description:
-              `${brandAName}-led sign-off`,
-            variant: "signature",
-          },
+        signature:
+          "Brand A-led sign-off",
 
-          {
-            id: "02",
-            title: "Over footage",
-            description:
-              "Primary + partner acknowledgement",
-            variant: "footage",
-          },
+        overlay:
+          "Brand A persistent identity",
 
-          {
-            id: "03",
-            title: "CTA end card",
-            description:
-              `${brandAName}-owned CTA`,
-            variant: "cta",
-          },
+        cta:
+          "Brand A CTA with partner credit",
 
-          {
-            id: "04",
-            title: "Minimal closing",
-            description:
-              `${brandAName} with ${brandBName}`,
-            variant: "minimal",
-          },
-        ],
+        minimal:
+          "Brand A with Brand B",
       };
-
-    /* ================================================= */
-    /* B POWERED BY A                                    */
-    /* ================================================= */
 
     case "poweredByA":
       return {
-        intro:
-          `${brandBName} owns the final consumer relationship. ${brandAName} appears only as a restrained technology and production credit.`,
+        description:
+          "Brand B closes the consumer experience. Brand A remains present only as a clear technology or production endorsement.",
 
-        closings: [
-          {
-            id: "01",
-            title: "Final signature",
-            description:
-              `${brandBName}-owned`,
-            variant: "signature",
-          },
+        signature:
+          "Brand B sign-off",
 
-          {
-            id: "02",
-            title: "Over footage",
-            description:
-              "Technology endorsement",
-            variant: "footage",
-          },
+        overlay:
+          "Brand B + powered-by credit",
 
-          {
-            id: "03",
-            title: "CTA end card",
-            description:
-              `${brandBName}-owned CTA`,
-            variant: "cta",
-          },
+        cta:
+          "Brand B consumer CTA",
 
-          {
-            id: "04",
-            title: "Minimal closing",
-            description:
-              `Powered by ${brandAName}`,
-            variant: "minimal",
-          },
-        ],
+        minimal:
+          "Brand B powered by Brand A",
       };
-
-    /* ================================================= */
-    /* A PRESENTS B                                      */
-    /* ================================================= */
 
     case "presentsB":
     default:
       return {
-        intro:
-          `After ${brandBName} content ends, the experience returns to ${brandAName} for the final product signature.`,
+        description:
+          "Brand B closes the featured content before Brand A returns as the platform or presenting identity.",
 
-        closings: [
-          {
-            id: "01",
-            title: "Final signature",
-            description:
-              `${brandAName} closes`,
-            variant: "signature",
-          },
+        signature:
+          "Featured content sign-off",
 
-          {
-            id: "02",
-            title: "Over footage",
-            description:
-              "Featured content acknowledgement",
-            variant: "footage",
-          },
+        overlay:
+          "Brand B inside Brand A container",
 
-          {
-            id: "03",
-            title: "CTA end card",
-            description:
-              `${brandAName}-owned CTA`,
-            variant: "cta",
-          },
+        cta:
+          "Return to Brand A platform",
 
-          {
-            id: "04",
-            title: "Minimal closing",
-            description:
-              `${brandAName} featuring ${brandBName}`,
-            variant: "minimal",
-          },
-        ],
+        minimal:
+          "Brand A presents Brand B",
       };
   }
 }
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page07() {
   const {
     partnershipModel,
     brandA,
     brandB,
-  } = useGuidelineStore();
+  } =
+    useGuidelineStore();
+
+  const theme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.theme
+    );
+
+  const isLight =
+    theme === "light";
 
   const model =
     partnershipModel as PartnershipModelId;
 
-  const brandAName =
-    brandA.name.trim() || "Brand A";
-
-  const brandBName =
-    brandB.name.trim() || "Brand B";
-
-  const content =
-    getClosingContent(
-      model,
-      brandAName,
-      brandBName
+  const config =
+    getClosingConfig(
+      model
     );
 
-  const hierarchy =
-    CLOSING_HIERARCHY[model];
+  const a:
+    BrandView = {
+    name:
+      brandA.name ||
+      "Brand A",
+
+    logoUrl:
+      brandA.logoUrl ??
+      null,
+  };
+
+  const b:
+    BrandView = {
+    name:
+      brandB.name ||
+      "Brand B",
+
+    logoUrl:
+      brandB.logoUrl ??
+      null,
+  };
 
   const [
     images,
     setImages,
-  ] = useState<number[]>([
-    1,
-    2,
-    3,
-    4,
-  ]);
+  ] =
+    useState([
+      2,
+      5,
+      7,
+      9,
+    ]);
 
-  useEffect(() => {
-    setImages(
-      getRandomImages()
-    );
-  }, [model]);
+  useEffect(
+    () => {
+      const source = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+      ];
+
+      const shuffled =
+        [...source].sort(
+          () =>
+            Math.random() -
+            0.5
+        );
+
+      setImages(
+        shuffled.slice(
+          0,
+          4
+        )
+      );
+    },
+    [model]
+  );
 
   return (
     <GuidelinePage>
-      {/* ================================================= */}
-      {/* HEADER                                            */}
-      {/* ================================================= */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
       <header
         className="
           absolute
 
-          left-[76px]
-          right-[76px]
-          top-[62px]
+          left-[44px]
+          right-[44px]
+          top-[36px]
 
           flex
           items-start
           justify-between
         "
       >
-        <div
-          className="
-            min-w-0
-            max-w-[980px]
-          "
-        >
+        <div>
           <p
             className="
-              text-[13px]
+              text-[11px]
               uppercase
-              tracking-[0.17em]
+              tracking-[0.16em]
 
               text-white/28
             "
           >
-            07 / Closing Identity
+            07 / Closing identity
           </p>
 
           <h1
             className="
               mt-[15px]
 
-              whitespace-nowrap
-
-              text-[52px]
+              text-[50px]
               leading-[0.95]
               tracking-[-0.05em]
+
+              text-white
 
               oook-semibold
             "
@@ -423,148 +279,186 @@ export default function Page07() {
 
           <p
             className="
-              mt-[15px]
+              mt-[16px]
 
-              max-w-[760px]
+              max-w-[820px]
 
-              text-[16px]
+              text-[15px]
               leading-[1.4]
 
               text-white/40
             "
           >
-            {content.intro}
+            {config.description}
           </p>
         </div>
 
         <PartnershipLockup
           model={model}
-          brandAName={brandAName}
-          brandBName={brandBName}
-          brandALogo={brandA.logoUrl}
-          brandBLogo={brandB.logoUrl}
+          brandA={brandA}
+          brandB={brandB}
         />
       </header>
 
-      {/* ================================================= */}
-      {/* GRID                                              */}
-      {/* ================================================= */}
+      {/* ======================================== */}
+      {/* GRID                                     */}
+      {/* ======================================== */}
 
       <section
         className="
           absolute
 
-          left-[76px]
-          right-[76px]
-
-          top-[250px]
           bottom-[74px]
+          left-[44px]
+          right-[44px]
+          top-[225px]
 
           grid
           grid-cols-2
           grid-rows-2
 
-          gap-x-[46px]
-          gap-y-[24px]
+          gap-x-[26px]
+          gap-y-[22px]
         "
       >
-        {content.closings.map(
-          (
-            closing,
-            index
-          ) => (
-            <ClosingCard
-              key={closing.id}
-              closing={closing}
-              model={model}
-              hierarchy={hierarchy}
-              imageId={images[index]}
-              brandAName={brandAName}
-              brandBName={brandBName}
-              brandALogo={brandA.logoUrl}
-              brandBLogo={brandB.logoUrl}
-            />
-          )
-        )}
+        <ClosingCard
+          number="01"
+          title="Final signature"
+          description={
+            config.signature
+          }
+        >
+          <FinalSignature
+            model={model}
+            brandA={a}
+            brandB={b}
+            image={
+              images[0]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ClosingCard>
+
+        <ClosingCard
+          number="02"
+          title="Over footage"
+          description={
+            config.overlay
+          }
+        >
+          <OverFootage
+            model={model}
+            brandA={a}
+            brandB={b}
+            image={
+              images[1]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ClosingCard>
+
+        <ClosingCard
+          number="03"
+          title="CTA end card"
+          description={
+            config.cta
+          }
+        >
+          <CTAEndCard
+            model={model}
+            brandA={a}
+            brandB={b}
+            image={
+              images[2]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ClosingCard>
+
+        <ClosingCard
+          number="04"
+          title="Minimal closing"
+          description={
+            config.minimal
+          }
+        >
+          <MinimalClosing
+            model={model}
+            brandA={a}
+            brandB={b}
+            image={
+              images[3]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ClosingCard>
       </section>
 
-      {/* ================================================= */}
-      {/* FOOTER                                            */}
-      {/* ================================================= */}
+      {/* ======================================== */}
+      {/* FOOTER                                   */}
+      {/* ======================================== */}
 
-      <footer
+      <div
         className="
           absolute
 
-          bottom-[39px]
-          left-[76px]
-          right-[76px]
+          bottom-[36px]
+          left-[44px]
+          right-[44px]
 
           flex
           items-center
           justify-between
-
-          border-t
-          border-white/[0.07]
-
-          pt-[12px]
         "
       >
         <p
           className="
             text-[9px]
-            text-white/20
+
+            text-white/22
           "
         >
-          Closing layouts may adapt to duration,
-          platform and campaign requirements.
+          Closing layouts may adapt to duration, platform and campaign requirements.
         </p>
 
         <p
           className="
             text-[9px]
-            text-white/20
+
+            text-white/22
           "
         >
           Sign-off · CTA · Credits · Ownership · Clear space
         </p>
-      </footer>
+      </div>
     </GuidelinePage>
   );
 }
 
-/* ------------------------------------------------ */
-/* CLOSING CARD                                     */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* CARD                                              */
+/* ================================================= */
 
 function ClosingCard({
-  closing,
-  model,
-  hierarchy,
-  imageId,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
+  number,
+  title,
+  description,
+  children,
 }: {
-  closing: ClosingSpec;
+  number: string;
+  title: string;
+  description: string;
 
-  model: PartnershipModelId;
-
-  hierarchy: {
-    brandA: number;
-    brandB: number;
-  };
-
-  imageId: number;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  children:
+    ReactNode;
 }) {
   return (
     <article
@@ -574,11 +468,9 @@ function ClosingCard({
 
         grid-cols-[112px_minmax(0,1fr)]
 
-        gap-[18px]
+        gap-[14px]
       "
     >
-      {/* LABEL */}
-
       <div
         className="
           flex
@@ -590,37 +482,38 @@ function ClosingCard({
           className="
             text-[8px]
             uppercase
-            tracking-[0.15em]
+            tracking-[0.14em]
 
-            text-white/23
+            text-white/20
           "
         >
-          {closing.id}
+          {number}
         </p>
 
-        <h2
+        <h3
           className="
-            mt-[6px]
+            mt-[8px]
 
-            text-[17px]
-            leading-[1.02]
+            text-[16px]
+            leading-[1.05]
+            tracking-[-0.025em]
 
-            text-white/80
+            text-white/72
 
             oook-medium
           "
         >
-          {closing.title}
-        </h2>
+          {title}
+        </h3>
 
         <div
           className="
-            mt-[9px]
+            mt-[10px]
 
             h-px
-            w-[52px]
+            w-[42px]
 
-            bg-white/14
+            bg-white/[0.14]
           "
         />
 
@@ -628,169 +521,62 @@ function ClosingCard({
           className="
             mt-[9px]
 
-            max-w-[98px]
+            max-w-[92px]
 
-            text-[10px]
-            leading-[1.35]
+            text-[9px]
+            leading-[1.38]
 
-            text-white/33
+            text-white/31
           "
         >
-          {closing.description}
+          {description}
         </p>
       </div>
-
-      {/* VIDEO */}
 
       <div
         className="
           relative
 
-          aspect-video
-          w-full
+          min-h-0
 
           overflow-hidden
 
-          rounded-[18px]
+          rounded-[22px]
 
           border
-          border-white/[0.10]
+          border-white/[0.08]
 
-          bg-[#080808]
+          bg-[#050506]
         "
       >
-        <FrameBackground
-          imageId={imageId}
-        />
-
-        <FrameEffects />
-
-        <ClosingApplication
-          variant={closing.variant}
-          model={model}
-          hierarchy={hierarchy}
-          brandAName={brandAName}
-          brandBName={brandBName}
-          brandALogo={brandALogo}
-          brandBLogo={brandBLogo}
-        />
+        {children}
       </div>
     </article>
   );
 }
 
-/* ------------------------------------------------ */
-/* CLOSING APPLICATION                              */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* BACKGROUND                                        */
+/* ================================================= */
 
-function ClosingApplication({
-  variant,
-  model,
-  hierarchy,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
+function ClosingBackground({
+  image,
 }: {
-  variant: ClosingVariant;
-
-  model: PartnershipModelId;
-
-  hierarchy: {
-    brandA: number;
-    brandB: number;
-  };
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  image: number;
 }) {
-  if (
-    variant === "signature"
-  ) {
-    return (
-      <FinalSignature
-        model={model}
-        hierarchy={hierarchy}
-        brandAName={brandAName}
-        brandBName={brandBName}
-        brandALogo={brandALogo}
-        brandBLogo={brandBLogo}
-      />
-    );
-  }
+  const [
+    extension,
+    setExtension,
+  ] =
+    useState(0);
 
-  if (
-    variant === "footage"
-  ) {
-    return (
-      <FootageSignoff
-        model={model}
-        brandAName={brandAName}
-        brandBName={brandBName}
-        brandALogo={brandALogo}
-        brandBLogo={brandBLogo}
-      />
-    );
-  }
-
-  if (
-    variant === "cta"
-  ) {
-    return (
-      <CTAEndCard
-        model={model}
-        brandAName={brandAName}
-        brandBName={brandBName}
-        brandALogo={brandALogo}
-        brandBLogo={brandBLogo}
-      />
-    );
-  }
-
-  return (
-    <MinimalClosing
-      model={model}
-      hierarchy={hierarchy}
-      brandAName={brandAName}
-      brandBName={brandBName}
-      brandALogo={brandALogo}
-      brandBLogo={brandBLogo}
-    />
+  useEffect(
+    () => {
+      setExtension(0);
+    },
+    [image]
   );
-}
 
-/* ------------------------------------------------ */
-/* 01 — FINAL SIGNATURE                             */
-/* ------------------------------------------------ */
-
-function FinalSignature({
-  model,
-  hierarchy,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-
-  hierarchy: {
-    brandA: number;
-    brandB: number;
-  };
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
   return (
     <>
       <div
@@ -798,1259 +584,455 @@ function FinalSignature({
           absolute
           inset-0
 
-          bg-black/28
-          backdrop-blur-[1px]
+          overflow-hidden
         "
-      />
-
-      {/* A × B */}
-
-      {model === "axb" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            items-center
-            justify-center
-
-            gap-[7%]
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="29%"
-          />
-
-          <span
-            className="
-              text-[17px]
-              text-white/58
-            "
-          >
-            ×
-          </span>
-
-          <ClosingLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="29%"
-          />
-        </div>
-      )}
-
-      {/* A WITH B */}
-
-      {model === "aandb" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            flex-col
-            items-center
-            justify-center
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="35%"
-          />
-
-          <p
-            className="
-              my-[2%]
-
-              text-[6px]
-              uppercase
-              tracking-[0.14em]
-
-              text-white/36
-            "
-          >
-            in collaboration with
-          </p>
-
-          <ClosingLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="18%"
-          />
-        </div>
-      )}
-
-      {/* POWERED BY */}
-
-      {model === "poweredByA" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            flex-col
-            items-center
-            justify-center
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="40%"
-          />
-
-          <div
-            className="
-              mt-[8px]
-
-              flex
-              items-center
-
-              gap-[6px]
-            "
-          >
-            <span
-              className="
-                text-[5px]
-                uppercase
-                tracking-[0.16em]
-
-                text-white/30
-              "
-            >
-              Powered by
-            </span>
-
-            <ClosingLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-              width="11%"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* PRESENTS */}
-
-      {model === "presentsB" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            flex-col
-            items-center
-            justify-center
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="36%"
-          />
-
-          <p
-            className="
-              mt-[7px]
-
-              text-[6px]
-              text-white/35
-            "
-          >
-            A {brandAName} immersive experience
-          </p>
-
-          <p
-            className="
-              mt-[4px]
-
-              text-[5px]
-              text-white/22
-            "
-          >
-            featuring {brandBName}
-          </p>
-        </div>
-      )}
-
-      <HierarchyMarker
-        brandA={hierarchy.brandA}
-        brandB={hierarchy.brandB}
-      />
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* 02 — OVER FOOTAGE                                */
-/* ------------------------------------------------ */
-
-function FootageSignoff({
-  model,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  return (
-    <>
-      <div
-        className="
-          absolute
-          inset-x-0
-          bottom-0
-
-          h-[46%]
-
-          bg-gradient-to-t
-
-          from-black/80
-          via-black/35
-          to-transparent
-        "
-      />
-
-      <div
-        className="
-          absolute
-
-          bottom-[7%]
-          left-[6%]
-          right-[6%]
-        "
+        style={{
+          filter:
+            "grayscale(0.96) contrast(1.04)",
+        }}
       >
-        <VideoGlass>
-          {/* A × B */}
-
-          {model === "axb" && (
-            <div
-              className="
-                flex
-                min-h-[28px]
-
-                items-center
-                justify-between
-
-                gap-[10px]
-              "
-            >
-              <MiniLogo
-                logoUrl={brandALogo}
-                fallback={brandAName}
-                width="66px"
-              />
-
-              <p
-                className="
-                  text-[7px]
-                  text-white/42
-                "
-              >
-                Thank you for watching
-              </p>
-
-              <MiniLogo
-                logoUrl={brandBLogo}
-                fallback={brandBName}
-                width="66px"
-              />
-            </div>
-          )}
-
-          {/* A WITH B */}
-
-          {model === "aandb" && (
-            <div
-              className="
-                flex
-                min-h-[28px]
-
-                items-center
-
-                gap-[10px]
-              "
-            >
-              <MiniLogo
-                logoUrl={brandALogo}
-                fallback={brandAName}
-                width="80px"
-              />
-
-              <div className="flex-1" />
-
-              <span
-                className="
-                  text-[5px]
-                  text-white/25
-                "
-              >
-                with
-              </span>
-
-              <MiniLogo
-                logoUrl={brandBLogo}
-                fallback={brandBName}
-                width="42px"
-              />
-            </div>
-          )}
-
-          {/* POWERED */}
-
-          {model === "poweredByA" && (
-            <div
-              className="
-                flex
-                min-h-[28px]
-
-                items-center
-
-                gap-[10px]
-              "
-            >
-              <MiniLogo
-                logoUrl={brandBLogo}
-                fallback={brandBName}
-                width="86px"
-              />
-
-              <div className="flex-1" />
-
-              <span
-                className="
-                  text-[5px]
-                  uppercase
-                  tracking-[0.14em]
-
-                  text-white/25
-                "
-              >
-                Technology by
-              </span>
-
-              <MiniLogo
-                logoUrl={brandALogo}
-                fallback={brandAName}
-                width="34px"
-              />
-            </div>
-          )}
-
-          {/* PRESENTS */}
-
-          {model === "presentsB" && (
-            <div
-              className="
-                flex
-                min-h-[28px]
-
-                items-center
-
-                gap-[8px]
-              "
-            >
-              <MiniLogo
-                logoUrl={brandALogo}
-                fallback={brandAName}
-                width="74px"
-              />
-
-              <p
-                className="
-                  ml-[5px]
-
-                  text-[6px]
-                  text-white/36
-                "
-              >
-                Immersive experiences beyond the screen
-              </p>
-
-              <div className="flex-1" />
-
-              <span
-                className="
-                  text-[5px]
-                  text-white/22
-                "
-              >
-                featuring
-              </span>
-
-              <MiniLogo
-                logoUrl={brandBLogo}
-                fallback={brandBName}
-                width="42px"
-              />
-            </div>
-          )}
-        </VideoGlass>
-      </div>
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* 03 — CTA END CARD                                */
-/* ------------------------------------------------ */
-
-function CTAEndCard({
-  model,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  const ownerLogo =
-    model === "poweredByA"
-      ? brandBLogo
-      : brandALogo;
-
-  const ownerName =
-    model === "poweredByA"
-      ? brandBName
-      : brandAName;
-
-  return (
-    <>
-      {/* GLASS CTA */}
-
-      <div
-        className="
-          absolute
-
-          left-[7%]
-          top-1/2
-
-          w-[52%]
-
-          -translate-y-1/2
-        "
-      >
-        <VideoGlass>
-          <p
-            className="
-              text-[6px]
-              uppercase
-              tracking-[0.14em]
-
-              text-white/28
-            "
-          >
-            Continue the experience
-          </p>
-
-          <p
-            className="
-              mt-[5px]
-
-              text-[14px]
-              leading-[1.05]
-              tracking-[-0.03em]
-
-              text-white/82
-
-              oook-medium
-            "
-          >
-            Discover more
-          </p>
-
-          <div
-            className="
-              mt-[9px]
-
-              inline-flex
-
-              rounded-full
-
-              border
-              border-white/12
-
-              bg-white/[0.05]
-
-              px-[10px]
-              py-[5px]
-            "
-          >
-            <span
-              className="
-                text-[6px]
-                text-white/48
-              "
-            >
-              Visit experience →
-            </span>
-          </div>
-        </VideoGlass>
-      </div>
-
-      {/* OWNER */}
-
-      <div
-        className="
-          absolute
-
-          bottom-[8%]
-          right-[6%]
-
-          w-[24%]
-        "
-      >
-        <ClosingLogo
-          logoUrl={ownerLogo}
-          fallback={ownerName}
-          width="100%"
-        />
-      </div>
-
-      {/* MODEL-SPECIFIC CREDIT */}
-
-      {model === "axb" && (
-        <div
-          className="
-            absolute
-
-            right-[6%]
-            top-[9%]
-
-            w-[24%]
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="100%"
-          />
-        </div>
-      )}
-
-      {model === "aandb" && (
-        <div
-          className="
-            absolute
-
-            right-[6%]
-            top-[9%]
-
-            flex
-            items-center
-
-            gap-[5px]
-          "
-        >
-          <span
-            className="
-              text-[5px]
-              text-white/23
-            "
-          >
-            with
-          </span>
-
-          <MiniLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="44px"
-          />
-        </div>
-      )}
-
-      {model === "poweredByA" && (
-        <div
-          className="
-            absolute
-
-            right-[6%]
-            top-[9%]
-
-            flex
-            items-center
-
-            gap-[5px]
-          "
-        >
-          <span
-            className="
-              text-[5px]
-              uppercase
-              tracking-[0.12em]
-
-              text-white/23
-            "
-          >
-            Powered by
-          </span>
-
-          <MiniLogo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="36px"
-          />
-        </div>
-      )}
-
-      {model === "presentsB" && (
-        <div
-          className="
-            absolute
-
-            right-[6%]
-            top-[9%]
-
-            flex
-            items-center
-
-            gap-[5px]
-          "
-        >
-          <span
-            className="
-              text-[5px]
-              text-white/23
-            "
-          >
-            featuring
-          </span>
-
-          <MiniLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="48px"
-          />
-        </div>
-      )}
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* 04 — MINIMAL CLOSING                             */
-/* ------------------------------------------------ */
-
-function MinimalClosing({
-  model,
-  hierarchy,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-
-  hierarchy: {
-    brandA: number;
-    brandB: number;
-  };
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  return (
-    <>
-      <div
-        className="
-          absolute
-          inset-0
-
-          bg-black/30
-        "
-      />
-
-      <ClosingLines />
-
-      {/* A × B */}
-
-      {model === "axb" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            items-center
-            justify-center
-
-            gap-[6%]
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="24%"
-          />
-
-          <span
-            className="
-              text-[13px]
-              text-white/50
-            "
-          >
-            ×
-          </span>
-
-          <ClosingLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="24%"
-          />
-        </div>
-      )}
-
-      {/* A WITH B */}
-
-      {model === "aandb" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            items-center
-            justify-center
-
-            gap-[7%]
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="32%"
-          />
-
-          <span
-            className="
-              text-[6px]
-              text-white/35
-            "
-          >
-            with
-          </span>
-
-          <ClosingLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="16%"
-          />
-        </div>
-      )}
-
-      {/* POWERED */}
-
-      {model === "poweredByA" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            flex-col
-            items-center
-            justify-center
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-            width="36%"
-          />
-
-          <div
-            className="
-              mt-[7px]
-
-              flex
-              items-center
-
-              gap-[5px]
-            "
-          >
-            <span
-              className="
-                text-[5px]
-                uppercase
-                tracking-[0.14em]
-
-                text-white/28
-              "
-            >
-              Powered by
-            </span>
-
-            <ClosingLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-              width="10%"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* PRESENTS */}
-
-      {model === "presentsB" && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            flex
-            flex-col
-            items-center
-            justify-center
-          "
-        >
-          <ClosingLogo
-            logoUrl={brandALogo}
-            fallback={brandAName}
-            width="32%"
-          />
-
-          <p
-            className="
-              mt-[6px]
-
-              text-[6px]
-              text-white/32
-            "
-          >
-            featuring {brandBName}
-          </p>
-        </div>
-      )}
-
-      <HierarchyMarker
-        brandA={hierarchy.brandA}
-        brandB={hierarchy.brandB}
-      />
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* HIERARCHY MARKER                                 */
-/* ------------------------------------------------ */
-
-function HierarchyMarker({
-  brandA,
-  brandB,
-}: {
-  brandA: number;
-  brandB: number;
-}) {
-  return (
-    <div
-      className="
-        absolute
-
-        bottom-[5%]
-        right-[5%]
-      "
-    >
-      <p
-        className="
-          text-[5px]
-          uppercase
-          tracking-[0.14em]
-
-          text-white/16
-        "
-      >
-        A {brandA}% · B {brandB}%
-      </p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* LOGOS                                            */
-/* ------------------------------------------------ */
-
-function ClosingLogo({
-  logoUrl,
-  fallback,
-  width,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-  width: string;
-}) {
-  return (
-    <div
-      style={{
-        width,
-        aspectRatio: "3 / 1",
-        flexShrink: 0,
-
-        filter: `
-          drop-shadow(
-            0 10px 22px
-            rgba(0,0,0,0.70)
-          )
-          drop-shadow(
-            0 2px 6px
-            rgba(0,0,0,0.82)
-          )
-        `,
-      }}
-    >
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
-      />
-    </div>
-  );
-}
-
-function MiniLogo({
-  logoUrl,
-  fallback,
-  width,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-  width: string;
-}) {
-  return (
-    <div
-      style={{
-        width,
-        aspectRatio: "3 / 1",
-        flexShrink: 0,
-      }}
-    >
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* BACKGROUND                                       */
-/* ------------------------------------------------ */
-
-function FrameBackground({
-  imageId,
-}: {
-  imageId: number;
-}) {
-  const [
-    extensionIndex,
-    setExtensionIndex,
-  ] = useState(0);
-
-  const [
-    failed,
-    setFailed,
-  ] = useState(false);
-
-  useEffect(() => {
-    setExtensionIndex(0);
-    setFailed(false);
-  }, [imageId]);
-
-  const src =
-    `/images/image${imageId}.${IMAGE_EXTENSIONS[extensionIndex]}`;
-
-  return (
-    <>
-      {!failed && (
         <img
-          src={src}
+          src={`/images/image${image}.${IMAGE_EXTENSIONS[extension]}`}
           alt=""
           draggable={false}
           onError={() => {
             if (
-              extensionIndex <
-              IMAGE_EXTENSIONS.length - 1
+              extension <
+              IMAGE_EXTENSIONS.length -
+                1
             ) {
-              setExtensionIndex(
+              setExtension(
                 (current) =>
                   current + 1
               );
-            } else {
-              setFailed(true);
             }
           }}
           className="
-            absolute
-            inset-0
-
             h-full
             w-full
 
-            scale-[1.03]
+            scale-[1.035]
 
             object-cover
-
-            grayscale
-            saturate-0
-
-            opacity-[0.9]
           "
         />
-      )}
-
-      {failed && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            bg-[radial-gradient(circle_at_70%_15%,rgba(255,255,255,0.08),transparent_34%),linear-gradient(180deg,#111_0%,#050505_100%)]
-          "
-        />
-      )}
-
-      <div
-        className="
-          absolute
-          inset-0
-
-          bg-[linear-gradient(180deg,rgba(0,0,0,0.03)_0%,rgba(0,0,0,0.10)_45%,rgba(0,0,0,0.52)_100%)]
-        "
-      />
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* EFFECTS                                          */
-/* ------------------------------------------------ */
-
-function FrameEffects() {
-  return (
-    <>
-      {/* REFLECTION */}
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-
-          -left-[18%]
-          top-[3%]
-
-          h-[54%]
-          w-[80%]
-
-          rotate-[-13deg]
-
-          bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,0.045)_48%,transparent_72%)]
-
-          blur-[8px]
-        "
-      />
-
-      {/* NOISE */}
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-
-          opacity-[0.08]
-
-          mix-blend-screen
-
-          [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_3px),repeating-linear-gradient(90deg,rgba(255,255,255,0.018)_0px,rgba(255,255,255,0.018)_1px,transparent_1px,transparent_4px)]
-        "
-      />
-
-      {/* BORDER */}
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-
-          rounded-[18px]
-
-          shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
-        "
-      />
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* GLASS                                            */
-/* ------------------------------------------------ */
-
-function VideoGlass({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className="
-        relative
-
-        overflow-hidden
-
-        rounded-[9px]
-
-        border
-        border-white/[0.10]
-
-        bg-black/40
-
-        px-[9px]
-        py-[6px]
-
-        backdrop-blur-[14px]
-
-        shadow-[0_8px_24px_rgba(0,0,0,0.22)]
-      "
-    >
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-
-          left-[8%]
-          right-[8%]
-          top-0
-
-          h-px
-
-          bg-gradient-to-r
-
-          from-transparent
-          via-white/24
-          to-transparent
-        "
-      />
-
-      <div className="relative">
-        {children}
       </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* CLOSING GRAPHIC LINES                            */
-/* ------------------------------------------------ */
-
-function ClosingLines() {
-  return (
-    <>
-      <div
-        className="
-          absolute
-
-          -left-[8%]
-          top-[16%]
-
-          h-[68%]
-          w-[30%]
-
-          rounded-[50%]
-
-          border
-          border-white/[0.055]
-        "
-      />
 
       <div
         className="
           absolute
+          inset-0
 
-          -right-[8%]
-          top-[16%]
-
-          h-[68%]
-          w-[30%]
-
-          rounded-[50%]
-
-          border
-          border-white/[0.055]
-        "
-      />
-
-      <div
-        className="
-          absolute
-
-          left-[12%]
-          right-[12%]
-          top-1/2
-
-          h-px
-
-          bg-gradient-to-r
-
+          bg-gradient-to-b
           from-transparent
-          via-white/[0.06]
-          to-transparent
+          via-transparent
+          to-black/38
         "
       />
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* TOP RIGHT PARTNERSHIP LOCKUP                     */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* FINAL SIGNATURE                                   */
+/* ================================================= */
 
-function PartnershipLockup({
+function FinalSignature({
   model,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
+  brandA,
+  brandB,
+  image,
+  isLight,
 }: {
-  model: PartnershipModelId;
+  model:
+    PartnershipModelId;
 
-  brandAName: string;
-  brandBName: string;
+  brandA:
+    BrandView;
 
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
 }) {
+  return (
+    <>
+      <ClosingBackground
+        image={image}
+      />
+
+      <div
+        className="
+          absolute
+          inset-0
+
+          flex
+          items-center
+          justify-center
+        "
+      >
+        <ClosingLockup
+          model={model}
+          brandA={brandA}
+          brandB={brandB}
+          isLight={isLight}
+          large
+        />
+      </div>
+    </>
+  );
+}
+
+/* ================================================= */
+/* OVER FOOTAGE                                      */
+/* ================================================= */
+
+function OverFootage({
+  model,
+  brandA,
+  brandB,
+  image,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <>
+      <ClosingBackground
+        image={image}
+      />
+
+      <div
+        className="
+          absolute
+
+          bottom-[14px]
+          left-[14px]
+          right-[14px]
+
+          flex
+          min-h-[52px]
+
+          items-center
+          justify-between
+
+          rounded-[11px]
+
+          border
+          border-white/[0.09]
+
+          bg-black/55
+
+          px-[12px]
+
+          backdrop-blur-[12px]
+        "
+      >
+        <ClosingLockup
+          model={model}
+          brandA={brandA}
+          brandB={brandB}
+          isLight={isLight}
+        />
+
+        <p
+          className="
+            text-[7px]
+
+            text-white/25
+          "
+        >
+          Thank you for watching
+        </p>
+      </div>
+    </>
+  );
+}
+
+/* ================================================= */
+/* CTA END CARD                                      */
+/* ================================================= */
+
+function CTAEndCard({
+  model,
+  brandA,
+  brandB,
+  image,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
+}) {
+  const primary =
+    model ===
+    "poweredByA"
+      ? brandB
+      : brandA;
+
+  const secondary =
+    primary === brandA
+      ? brandB
+      : brandA;
+
+  const eyebrowColour =
+    isLight
+      ? "rgba(10,10,10,.42)"
+      : "rgba(255,255,255,.28)";
+
+  const titleColour =
+    isLight
+      ? "rgba(10,10,10,.82)"
+      : "rgba(255,255,255,.76)";
+
+  return (
+    <>
+      <ClosingBackground
+        image={image}
+      />
+
+      <div
+        className="
+          absolute
+
+          bottom-[24px]
+          left-[24px]
+
+          w-[48%]
+
+          rounded-[13px]
+
+          border
+          border-white/[0.09]
+
+          bg-black/55
+
+          p-[13px]
+
+          backdrop-blur-[12px]
+        "
+      >
+        <p
+          className="
+            text-[7px]
+            uppercase
+            tracking-[0.12em]
+          "
+          style={{
+            color:
+              eyebrowColour,
+          }}
+        >
+          Continue the experience
+        </p>
+
+        <p
+          className="
+            mt-[5px]
+
+            text-[14px]
+
+            oook-medium
+          "
+          style={{
+            color:
+              titleColour,
+          }}
+        >
+          Discover more
+        </p>
+
+        <button
+          type="button"
+          className="
+            mt-[10px]
+
+            rounded-full
+
+            border
+            border-white/[0.11]
+
+            bg-white
+
+            px-[11px]
+            py-[6px]
+
+            text-[7px]
+
+            text-black
+          "
+        >
+          Visit experience →
+        </button>
+      </div>
+
+      <div
+        className="
+          absolute
+
+          right-[20px]
+          top-[20px]
+        "
+      >
+        <ClosingLogo
+          brand={secondary}
+          width={80}
+          isLight={isLight}
+          floating
+        />
+      </div>
+
+      <div
+        className="
+          absolute
+
+          bottom-[18px]
+          right-[20px]
+        "
+      >
+        <ClosingLogo
+          brand={primary}
+          width={100}
+          isLight={isLight}
+          floating
+        />
+      </div>
+    </>
+  );
+}
+
+/* ================================================= */
+/* MINIMAL CLOSING                                   */
+/* ================================================= */
+
+function MinimalClosing({
+  model,
+  brandA,
+  brandB,
+  image,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <>
+      <ClosingBackground
+        image={image}
+      />
+
+      <div
+        className="
+          absolute
+          inset-0
+
+          flex
+          items-center
+          justify-center
+        "
+      >
+        <ClosingLockup
+          model={model}
+          brandA={brandA}
+          brandB={brandB}
+          isLight={isLight}
+          minimal
+        />
+      </div>
+
+      <div
+        className="
+          absolute
+
+          bottom-[13px]
+          left-1/2
+
+          h-px
+          w-[34%]
+
+          -translate-x-1/2
+
+          bg-white/[0.08]
+        "
+      />
+    </>
+  );
+}
+
+/* ================================================= */
+/* LOCKUP                                            */
+/* ================================================= */
+
+function ClosingLockup({
+  model,
+  brandA,
+  brandB,
+  isLight,
+  large = false,
+  minimal = false,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  isLight:
+    boolean;
+
+  large?: boolean;
+  minimal?: boolean;
+}) {
+  const equalWidth =
+    large
+      ? 146
+      : minimal
+        ? 96
+        : 70;
+
   if (
     model === "axb"
   ) {
@@ -2059,27 +1041,27 @@ function PartnershipLockup({
         className="
           flex
           items-center
+          justify-center
 
-          gap-[14px]
+          gap-[13px]
         "
       >
-        <TopLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
+        <ClosingLogo
+          brand={brandA}
+          width={equalWidth}
+          isLight={isLight}
+          floating
         />
 
-        <span
-          className="
-            text-[20px]
-            text-white/18
-          "
-        >
+        <Symbol>
           ×
-        </span>
+        </Symbol>
 
-        <TopLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
+        <ClosingLogo
+          brand={brandB}
+          width={equalWidth}
+          isLight={isLight}
+          floating
         />
       </div>
     );
@@ -2092,83 +1074,88 @@ function PartnershipLockup({
       <div
         className="
           flex
-          items-end
+          items-center
+          justify-center
 
-          gap-[20px]
+          gap-[11px]
         "
       >
-        <TopLabeledLogo
-          label="Immersive experience by"
-          logoUrl={brandALogo}
-          fallback={brandAName}
+        <ClosingLogo
+          brand={brandA}
+          width={
+            large
+              ? 165
+              : minimal
+                ? 110
+                : 78
+          }
+          isLight={isLight}
+          floating
         />
 
-        <TopLabeledLogo
-          label="In collaboration with"
-          logoUrl={brandBLogo}
-          fallback={brandBName}
+        <Relationship>
+          with
+        </Relationship>
+
+        <ClosingLogo
+          brand={brandB}
+          width={
+            large
+              ? 88
+              : minimal
+                ? 58
+                : 42
+          }
+          isLight={isLight}
+          floating
         />
       </div>
     );
   }
 
   if (
-    model === "poweredByA"
+    model ===
+    "poweredByA"
   ) {
     return (
       <div
         className="
           flex
-          flex-col
-          items-end
+          items-center
+          justify-center
+
+          gap-[11px]
         "
       >
-        <div
-          className="
-            h-[37px]
-            w-[140px]
-          "
-        >
-          <BrandLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-          />
-        </div>
+        <ClosingLogo
+          brand={brandB}
+          width={
+            large
+              ? 175
+              : minimal
+                ? 118
+                : 82
+          }
+          isLight={isLight}
+          floating
+        />
 
-        <div
-          className="
-            mt-[5px]
+        <Relationship>
+          powered by
+        </Relationship>
 
-            flex
-            items-center
-
-            gap-[7px]
-          "
-        >
-          <span
-            className="
-              text-[6px]
-              uppercase
-              tracking-[0.14em]
-
-              text-white/18
-            "
-          >
-            Powered by
-          </span>
-
-          <div
-            className="
-              h-[20px]
-              w-[78px]
-            "
-          >
-            <BrandLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-            />
-          </div>
-        </div>
+        <ClosingLogo
+          brand={brandA}
+          width={
+            large
+              ? 70
+              : minimal
+                ? 50
+                : 34
+          }
+          isLight={isLight}
+          floating
+        />
       </div>
     );
   }
@@ -2177,112 +1164,172 @@ function PartnershipLockup({
     <div
       className="
         flex
-        flex-col
-        items-end
+        items-center
+        justify-center
+
+        gap-[11px]
       "
     >
-      <div
-        className="
-          h-[24px]
-          w-[96px]
-        "
-      >
-        <BrandLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-        />
-      </div>
+      <ClosingLogo
+        brand={brandA}
+        width={
+          large
+            ? 86
+            : minimal
+              ? 62
+              : 38
+        }
+        isLight={isLight}
+        floating
+      />
 
-      <p
-        className="
-          my-[3px]
+      <Relationship>
+        presents
+      </Relationship>
 
-          text-[6px]
-          uppercase
-          tracking-[0.15em]
-
-          text-white/18
-        "
-      >
-        Presents
-      </p>
-
-      <div
-        className="
-          h-[34px]
-          w-[128px]
-        "
-      >
-        <BrandLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* TOP LOGOS                                        */
-/* ------------------------------------------------ */
-
-function TopLogo({
-  logoUrl,
-  fallback,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-}) {
-  return (
-    <div
-      className="
-        h-[36px]
-        w-[118px]
-      "
-    >
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
+      <ClosingLogo
+        brand={brandB}
+        width={
+          large
+            ? 160
+            : minimal
+              ? 108
+              : 78
+        }
+        isLight={isLight}
+        floating
       />
     </div>
   );
 }
 
-function TopLabeledLogo({
-  label,
+/* ================================================= */
+/* LOGO                                              */
+/* ================================================= */
 
-  logoUrl,
-  fallback,
+function ClosingLogo({
+  brand,
+  width,
+  isLight,
+  floating = false,
 }: {
-  label: string;
+  brand:
+    BrandView;
 
-  logoUrl: string | null;
-  fallback: string;
+  width:
+    number;
+
+  isLight:
+    boolean;
+
+  floating?:
+    boolean;
+}) {
+  const shadow =
+    !floating
+      ? "none"
+      : isLight
+        ? `
+          drop-shadow(
+            0 8px 22px
+            rgba(255,255,255,.90)
+          )
+          drop-shadow(
+            0 0 7px
+            rgba(255,255,255,.58)
+          )
+        `
+        : `
+          drop-shadow(
+            0 8px 22px
+            rgba(0,0,0,.62)
+          )
+          drop-shadow(
+            0 2px 5px
+            rgba(0,0,0,.64)
+          )
+        `;
+
+  return (
+    <div
+      className="
+        flex
+        shrink-0
+
+        items-center
+        justify-center
+      "
+      style={{
+        width,
+
+        height:
+          Math.max(
+            18,
+            width / 3
+          ),
+
+        filter:
+          shadow,
+      }}
+    >
+      <BrandLogo
+        logoUrl={
+          brand.logoUrl
+        }
+        fallback={
+          brand.name
+        }
+      />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* SMALL ELEMENTS                                    */
+/* ================================================= */
+
+function Symbol({
+  children,
+}: {
+  children:
+    ReactNode;
 }) {
   return (
-    <div>
-      <p
-        className="
-          mb-[4px]
+    <span
+      className="
+        shrink-0
 
-          text-[6px]
-          text-white/16
-        "
-      >
-        {label}
-      </p>
+        text-[15px]
 
-      <div
-        className="
-          h-[30px]
-          w-[116px]
-        "
-      >
-        <BrandLogo
-          logoUrl={logoUrl}
-          fallback={fallback}
-        />
-      </div>
-    </div>
+        text-white/38
+      "
+    >
+      {children}
+    </span>
+  );
+}
+
+function Relationship({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  return (
+    <span
+      className="
+        shrink-0
+
+        whitespace-nowrap
+
+        text-[7px]
+        uppercase
+        tracking-[0.11em]
+
+        text-white/28
+      "
+    >
+      {children}
+    </span>
   );
 }

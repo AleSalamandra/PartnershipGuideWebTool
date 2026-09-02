@@ -1,56 +1,55 @@
 @import "tailwindcss";
 
+/* ================================================= */
+/* ROOT                                              */
+/* ================================================= */
+
 :root {
-  --app-bg: #0b0b0c;
-  --panel-bg: #111112;
-  --panel-raised: #161617;
-
-  --page-bg: #000000;
-
-  --text: #f5f5f7;
-  --text-secondary: #a1a1a6;
-  --text-tertiary: #66666b;
-
-  --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.18);
-
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 28px;
-
-  --font-oook: "oook-variable", sans-serif;
+  --background: #0d0d0e;
+  --foreground: #ffffff;
 }
 
-html,
-body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
 
-html {
-  background: var(--app-bg);
-}
-
-body {
-  overflow: hidden;
-  background: var(--app-bg);
-  color: var(--text);
-
-  font-family: var(--font-oook);
-  font-variation-settings: "wght" 400;
-
-  -webkit-font-smoothing: antialiased;
-  text-rendering: geometricPrecision;
-}
+/* ================================================= */
+/* BASE                                              */
+/* ================================================= */
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+
+  background: var(--background);
+  color: var(--foreground);
+
+  font-family:
+    "oook-variable",
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  font-variation-settings:
+    "wght" 400;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 button,
 input,
+textarea,
 select {
   font: inherit;
 }
@@ -59,55 +58,1009 @@ button {
   cursor: pointer;
 }
 
-::selection {
-  background: white;
-  color: black;
+img,
+video,
+canvas,
+svg {
+  display: block;
 }
 
-/* OOOk variable helpers */
+
+/* ================================================= */
+/* OOOK                                              */
+/* ================================================= */
 
 .oook-light {
-  font-family: var(--font-oook);
-  font-variation-settings: "wght" 300;
+  font-family:
+    "oook-variable",
+    sans-serif;
+
+  font-variation-settings:
+    "wght" 300;
 }
 
 .oook-regular {
-  font-family: var(--font-oook);
-  font-variation-settings: "wght" 400;
+  font-family:
+    "oook-variable",
+    sans-serif;
+
+  font-variation-settings:
+    "wght" 400;
 }
 
 .oook-medium {
-  font-family: var(--font-oook);
-  font-variation-settings: "wght" 500;
+  font-family:
+    "oook-variable",
+    sans-serif;
+
+  font-variation-settings:
+    "wght" 500;
 }
 
 .oook-semibold {
-  font-family: var(--font-oook);
-  font-variation-settings: "wght" 600;
+  font-family:
+    "oook-variable",
+    sans-serif;
+
+  font-variation-settings:
+    "wght" 600;
 }
 
 .oook-bold {
-  font-family: var(--font-oook);
-  font-variation-settings: "wght" 700;
+  font-family:
+    "oook-variable",
+    sans-serif;
+
+  font-variation-settings:
+    "wght" 700;
 }
 
-/* scrollbars */
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+/* ================================================= */
+/* SELECTION                                         */
+/* ================================================= */
+
+::selection {
+  background:
+    rgba(255, 255, 255, 0.92);
+
+  color:
+    #000000;
 }
 
-*::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+
+/* ================================================= */
+/* SCROLLBAR                                         */
+/* ================================================= */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
 }
 
-*::-webkit-scrollbar-track {
-  background: transparent;
+::-webkit-scrollbar-track {
+  background:
+    transparent;
 }
 
-*::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
+::-webkit-scrollbar-thumb {
+  border-radius:
+    999px;
+
+  background:
+    rgba(255, 255, 255, 0.11);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background:
+    rgba(255, 255, 255, 0.18);
+}
+
+
+/* ================================================= */
+/* GUIDELINE PAGE                                    */
+/* ================================================= */
+
+.guideline-page {
+  position:
+    relative;
+
+  width:
+    1600px;
+
+  height:
+    900px;
+
+  flex-shrink:
+    0;
+
+  overflow:
+    hidden;
+}
+
+
+/* ================================================= */
+/* DARK MODE                                         */
+/* ================================================= */
+
+.guideline-theme-dark {
+  color-scheme:
+    dark;
+
+  background-color:
+    #000000;
+
+  color:
+    #ffffff;
+}
+
+
+/* ================================================= */
+/* LIGHT MODE                                        */
+/* ================================================= */
+
+.guideline-theme-light {
+  color-scheme:
+    light;
+
+  background-color:
+    #f5f5f3 !important;
+
+  color:
+    #0a0a0a !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — SOLID NEUTRAL BACKGROUNDS                 */
+/* ================================================= */
+
+/*
+  Inline colours are excluded wherever possible.
+
+  This protects:
+
+  Brand A Primary
+  Brand A Secondary
+  Brand B Primary
+  Brand B Secondary
+*/
+
+.guideline-theme-light
+[class~="bg-black"]:not([style*="background"]) {
+  background-color:
+    #f5f5f3 !important;
+}
+
+
+.guideline-theme-light
+[class~="bg-white"]:not([style*="background"]) {
+  background-color:
+    #0a0a0a !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — COMMON DARK SURFACES                      */
+/* ================================================= */
+
+.guideline-theme-light
+:is(
+  [class~="bg-[#050506]"],
+  [class~="bg-[#09090A]"],
+  [class~="bg-[#09090a]"],
+  [class~="bg-[#0b0b0c]"],
+  [class~="bg-[#0d0d0e]"],
+  [class~="bg-[#101011]"],
+  [class~="bg-[#141415]"]
+):not([style*="background"]) {
+  background-color:
+    #f1f1ef !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — NEUTRAL GREY                              */
+/* ================================================= */
+
+.guideline-theme-light
+[class~="bg-[#777]"]:not([style*="background"]) {
+  background-color:
+    #a5a5a2 !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — SUBTLE WHITE SURFACES                     */
+/* ================================================= */
+
+/*
+  Dark mode:
+  translucent white over black.
+
+  Light mode:
+  translucent black over white.
+*/
+
+.guideline-theme-light
+:is(
+  [class~="bg-white/[0.015]"],
+  [class~="bg-white/[0.016]"],
+  [class~="bg-white/[0.018]"],
+  [class~="bg-white/[0.022]"],
+  [class~="bg-white/[0.025]"],
+  [class~="bg-white/[0.028]"],
+  [class~="bg-white/[0.032]"],
+  [class~="bg-white/[0.035]"]
+):not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.025) !important;
+}
+
+
+.guideline-theme-light
+:is(
+  [class~="bg-white/[0.04]"],
+  [class~="bg-white/[0.05]"],
+  [class~="bg-white/[0.06]"],
+  [class~="bg-white/[0.065]"],
+  [class~="bg-white/[0.07]"],
+  [class~="bg-white/[0.075]"],
+  [class~="bg-white/[0.08]"],
+  [class~="bg-white/[0.09]"]
+):not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.065) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — STANDARD WHITE ALPHA                      */
+/* ================================================= */
+
+.guideline-theme-light
+[class~="bg-white/5"]:not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.05) !important;
+}
+
+
+.guideline-theme-light
+[class~="bg-white/10"]:not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.10) !important;
+}
+
+
+.guideline-theme-light
+[class~="bg-white/20"]:not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.20) !important;
+}
+
+
+.guideline-theme-light
+[class~="bg-white/30"]:not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.30) !important;
+}
+
+
+.guideline-theme-light
+[class~="bg-white/40"]:not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.40) !important;
+}
+
+
+.guideline-theme-light
+[class~="bg-white/50"]:not([style*="background"]) {
+  background-color:
+    rgba(10, 10, 10, 0.50) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — DARK GLASS                                */
+/* ================================================= */
+
+/*
+  Dark translucent panels become light glass.
+*/
+
+.guideline-theme-light
+:is(
+  [class~="bg-black/20"],
+  [class~="bg-black/30"],
+  [class~="bg-black/36"],
+  [class~="bg-black/38"],
+  [class~="bg-black/42"],
+  [class~="bg-black/45"],
+  [class~="bg-black/46"],
+  [class~="bg-black/48"]
+):not([style*="background"]) {
+  background-color:
+    rgba(255, 255, 255, 0.50) !important;
+}
+
+
+.guideline-theme-light
+:is(
+  [class~="bg-black/50"],
+  [class~="bg-black/52"],
+  [class~="bg-black/55"],
+  [class~="bg-black/60"],
+  [class~="bg-black/62"],
+  [class~="bg-black/64"],
+  [class~="bg-black/65"],
+  [class~="bg-black/68"],
+  [class~="bg-black/70"],
+  [class~="bg-black/75"],
+  [class~="bg-black/80"]
+):not([style*="background"]) {
+  background-color:
+    rgba(255, 255, 255, 0.74) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — TEXT                                      */
+/* ================================================= */
+
+/* ------------------------------------------------- */
+/* FULL WHITE                                        */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+[class~="text-white"]:not([style*="color"]) {
+  color:
+    #0a0a0a !important;
+}
+
+
+/* ------------------------------------------------- */
+/* HIGH EMPHASIS                                     */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+:is(
+  [class~="text-white/92"],
+  [class~="text-white/90"],
+  [class~="text-white/86"],
+  [class~="text-white/85"],
+  [class~="text-white/84"],
+  [class~="text-white/82"],
+  [class~="text-white/80"]
+):not([style*="color"]) {
+  color:
+    rgba(10, 10, 10, 0.88) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* STRONG SECONDARY                                  */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+:is(
+  [class~="text-white/78"],
+  [class~="text-white/75"],
+  [class~="text-white/74"],
+  [class~="text-white/72"],
+  [class~="text-white/70"],
+  [class~="text-white/68"],
+  [class~="text-white/67"],
+  [class~="text-white/65"],
+  [class~="text-white/62"],
+  [class~="text-white/60"]
+):not([style*="color"]) {
+  color:
+    rgba(10, 10, 10, 0.68) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* MEDIUM SECONDARY                                  */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+:is(
+  [class~="text-white/58"],
+  [class~="text-white/55"],
+  [class~="text-white/54"],
+  [class~="text-white/53"],
+  [class~="text-white/52"],
+  [class~="text-white/50"],
+  [class~="text-white/48"],
+  [class~="text-white/45"],
+  [class~="text-white/44"],
+  [class~="text-white/42"],
+  [class~="text-white/40"]
+):not([style*="color"]) {
+  color:
+    rgba(10, 10, 10, 0.48) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* LOW EMPHASIS                                      */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+:is(
+  [class~="text-white/38"],
+  [class~="text-white/35"],
+  [class~="text-white/34"],
+  [class~="text-white/32"],
+  [class~="text-white/31"],
+  [class~="text-white/30"],
+  [class~="text-white/28"],
+  [class~="text-white/27"],
+  [class~="text-white/25"],
+  [class~="text-white/24"],
+  [class~="text-white/23"],
+  [class~="text-white/22"],
+  [class~="text-white/21"],
+  [class~="text-white/20"]
+):not([style*="color"]) {
+  color:
+    rgba(10, 10, 10, 0.30) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* VERY LOW EMPHASIS                                 */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+:is(
+  [class~="text-white/18"],
+  [class~="text-white/15"],
+  [class~="text-white/14"],
+  [class~="text-white/13"],
+  [class~="text-white/12"],
+  [class~="text-white/10"]
+):not([style*="color"]) {
+  color:
+    rgba(10, 10, 10, 0.16) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — BLACK TEXT                                */
+/* ================================================= */
+
+/*
+  Used mainly on white UI controls in Dark Mode.
+
+  Since those controls become black in Light,
+  their text becomes white.
+*/
+
+.guideline-theme-light
+[class~="text-black"]:not([style*="color"]) {
+  color:
+    #ffffff !important;
+}
+
+
+.guideline-theme-light
+[class~="text-black/80"]:not([style*="color"]) {
+  color:
+    rgba(255, 255, 255, 0.80) !important;
+}
+
+
+.guideline-theme-light
+[class~="text-black/42"]:not([style*="color"]) {
+  color:
+    rgba(255, 255, 255, 0.42) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — BORDERS                                   */
+/* ================================================= */
+
+/* ------------------------------------------------- */
+/* FALLBACK                                          */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+[class*="border-white"]:not([style*="border-color"]) {
+  border-color:
+    rgba(10, 10, 10, 0.10) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* SOLID                                             */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+[class~="border-white"]:not([style*="border-color"]) {
+  border-color:
+    #0a0a0a !important;
+}
+
+
+/* ------------------------------------------------- */
+/* STRONG                                            */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+:is(
+  [class~="border-white/35"],
+  [class~="border-white/22"],
+  [class~="border-white/18"],
+  [class~="border-white/17"],
+  [class~="border-white/16"],
+  [class~="border-white/14"],
+  [class~="border-white/13"],
+  [class~="border-white/12"],
+  [class~="border-white/10"]
+):not([style*="border-color"]) {
+  border-color:
+    rgba(10, 10, 10, 0.14) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* SUBTLE                                            */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+:is(
+  [class~="border-white/[0.09]"],
+  [class~="border-white/[0.08]"],
+  [class~="border-white/[0.075]"],
+  [class~="border-white/[0.07]"],
+  [class~="border-white/[0.065]"],
+  [class~="border-white/[0.06]"],
+  [class~="border-white/[0.055]"],
+  [class~="border-white/[0.05]"]
+):not([style*="border-color"]) {
+  border-color:
+    rgba(10, 10, 10, 0.08) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — FILLS                                     */
+/* ================================================= */
+
+.guideline-theme-light
+[class*="fill-white"]:not([style*="fill"]) {
+  fill:
+    #0a0a0a !important;
+}
+
+
+.guideline-theme-light
+[class*="fill-black"]:not([style*="fill"]) {
+  fill:
+    #ffffff !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — STROKES                                   */
+/* ================================================= */
+
+.guideline-theme-light
+[class*="stroke-white"]:not([style*="stroke"]) {
+  stroke:
+    #0a0a0a !important;
+}
+
+
+.guideline-theme-light
+[class*="stroke-black"]:not([style*="stroke"]) {
+  stroke:
+    #ffffff !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — OUTLINES                                  */
+/* ================================================= */
+
+.guideline-theme-light
+[class*="outline-white"]:not([style*="outline-color"]) {
+  outline-color:
+    rgba(10, 10, 10, 0.18) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — BLACK GRADIENTS                           */
+/* ================================================= */
+
+/* ------------------------------------------------- */
+/* FROM                                              */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+[class~="from-black"] {
+  --tw-gradient-from:
+    #ffffff
+    var(--tw-gradient-from-position) !important;
+
+  --tw-gradient-to:
+    rgb(255 255 255 / 0)
+    var(--tw-gradient-to-position) !important;
+}
+
+
+.guideline-theme-light
+[class~="from-black/80"] {
+  --tw-gradient-from:
+    rgba(255, 255, 255, 0.80)
+    var(--tw-gradient-from-position) !important;
+}
+
+
+.guideline-theme-light
+:is(
+  [class~="from-black/65"],
+  [class~="from-black/64"],
+  [class~="from-black/62"]
+) {
+  --tw-gradient-from:
+    rgba(255, 255, 255, 0.64)
+    var(--tw-gradient-from-position) !important;
+}
+
+
+.guideline-theme-light
+[class~="from-black/55"] {
+  --tw-gradient-from:
+    rgba(255, 255, 255, 0.55)
+    var(--tw-gradient-from-position) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* VIA                                               */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+[class~="via-black/30"] {
+  --tw-gradient-via:
+    rgba(255, 255, 255, 0.30)
+    var(--tw-gradient-via-position) !important;
+}
+
+
+.guideline-theme-light
+[class~="via-black/20"] {
+  --tw-gradient-via:
+    rgba(255, 255, 255, 0.20)
+    var(--tw-gradient-via-position) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* TO                                                */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+[class~="to-black"] {
+  --tw-gradient-to:
+    #ffffff
+    var(--tw-gradient-to-position) !important;
+}
+
+
+.guideline-theme-light
+[class~="to-black/20"] {
+  --tw-gradient-to:
+    rgba(255, 255, 255, 0.20)
+    var(--tw-gradient-to-position) !important;
+}
+
+
+/* ================================================= */
+/* LIGHT — WHITE GRADIENTS                           */
+/* ================================================= */
+
+.guideline-theme-light
+[class~="from-white"] {
+  --tw-gradient-from:
+    #0a0a0a
+    var(--tw-gradient-from-position) !important;
+
+  --tw-gradient-to:
+    rgb(10 10 10 / 0)
+    var(--tw-gradient-to-position) !important;
+}
+
+
+.guideline-theme-light
+[class~="from-white/[0.08]"] {
+  --tw-gradient-from:
+    rgba(10, 10, 10, 0.08)
+    var(--tw-gradient-from-position) !important;
+}
+
+
+/* ================================================= */
+/* IMAGES — BASE                                     */
+/* ================================================= */
+
+/*
+  By default NO image is altered.
+
+  This is crucial for uploaded logos.
+*/
+
+.guideline-theme-dark img,
+.guideline-theme-light img {
+  filter:
+    none;
+}
+
+
+/* ================================================= */
+/* LIGHT — BACKGROUND / FOOTAGE IMAGES               */
+/* ================================================= */
+
+/*
+  Only imagery from the guideline asset library:
+
+  /public/images/image1...
+  /public/images/image2...
+  ...
+
+  receives inversion.
+
+  Examples:
+
+  /images/image1.jpg
+  /images/image4.webp
+  /images/image10.png
+*/
+
+.guideline-theme-light
+img[src*="/images/image"] {
+  filter:
+    invert(1) !important;
+}
+
+
+/* ================================================= */
+/* UPLOADED BRAND LOGOS                              */
+/* ================================================= */
+
+/*
+  Sidebar uploads generate:
+
+  data:image/...
+
+  or, if the uploader changes in the future:
+
+  blob:...
+
+  These are always treated as brand assets.
+  Their actual pixels are NEVER inverted.
+*/
+
+
+/* ------------------------------------------------- */
+/* DARK — LOGO SHADOW                                */
+/* ------------------------------------------------- */
+
+.guideline-theme-dark
+img[src^="data:image/"],
+.guideline-theme-dark
+img[src^="blob:"] {
+  filter:
+    drop-shadow(
+      0 5px 22px
+      rgba(0, 0, 0, 0.48)
+    ) !important;
+}
+
+
+/* ------------------------------------------------- */
+/* LIGHT — LOGO HALO                                */
+/* ------------------------------------------------- */
+
+.guideline-theme-light
+img[src^="data:image/"],
+.guideline-theme-light
+img[src^="blob:"] {
+  filter:
+    drop-shadow(
+      0 5px 22px
+      rgba(255, 255, 255, 0.86)
+    )
+    drop-shadow(
+      0 0 8px
+      rgba(255, 255, 255, 0.55)
+    ) !important;
+}
+
+
+/* ================================================= */
+/* TAILWIND DROP SHADOWS — DARK                      */
+/* ================================================= */
+
+/*
+  Some guideline pages apply a Tailwind arbitrary
+  drop-shadow directly to the image or to its
+  wrapper:
+
+  drop-shadow-[0_4px_20px_rgba(0,0,0,0.42)]
+
+  Therefore controlling only data:image is not
+  enough.
+
+  In Dark Mode these remain neutral/dark.
+*/
+
+.guideline-theme-dark
+[class*="drop-shadow"] {
+  filter:
+    drop-shadow(
+      0 5px 22px
+      rgba(0, 0, 0, 0.48)
+    ) !important;
+}
+
+
+/* ================================================= */
+/* TAILWIND DROP SHADOWS — LIGHT                     */
+/* ================================================= */
+
+/*
+  Every neutral Tailwind drop shadow inside the
+  document becomes a light halo.
+
+  This removes dark logo shadows that were still
+  visible in Page05 / Page06 / Page07 etc.
+*/
+
+.guideline-theme-light
+[class*="drop-shadow"] {
+  filter:
+    drop-shadow(
+      0 5px 22px
+      rgba(255, 255, 255, 0.86)
+    )
+    drop-shadow(
+      0 0 8px
+      rgba(255, 255, 255, 0.55)
+    ) !important;
+}
+
+
+/* ================================================= */
+/* EXTRA LOGO PROTECTION                             */
+/* ================================================= */
+
+/*
+  These rules intentionally appear AFTER the
+  generic drop-shadow rules.
+
+  If a logo carries both:
+
+  src="data:image/..."
+  +
+  class="drop-shadow-[...]"
+
+  this guarantees the Light version still gets
+  the correct white halo and never invert().
+*/
+
+.guideline-theme-light
+img[src^="data:image/"][class*="drop-shadow"],
+.guideline-theme-light
+img[src^="blob:"][class*="drop-shadow"] {
+  filter:
+    drop-shadow(
+      0 5px 22px
+      rgba(255, 255, 255, 0.90)
+    )
+    drop-shadow(
+      0 0 8px
+      rgba(255, 255, 255, 0.60)
+    ) !important;
+}
+
+
+.guideline-theme-dark
+img[src^="data:image/"][class*="drop-shadow"],
+.guideline-theme-dark
+img[src^="blob:"][class*="drop-shadow"] {
+  filter:
+    drop-shadow(
+      0 5px 22px
+      rgba(0, 0, 0, 0.48)
+    ) !important;
+}
+
+
+/* ================================================= */
+/* VIDEO / CANVAS                                    */
+/* ================================================= */
+
+.guideline-theme-dark video,
+.guideline-theme-light video,
+.guideline-theme-dark canvas,
+.guideline-theme-light canvas {
+  filter:
+    none;
+}
+
+
+/* ================================================= */
+/* LIGHT — BOX SHADOWS                               */
+/* ================================================= */
+
+/*
+  Normal box shadows stay neutral.
+
+  This section does NOT control drop-shadow();
+  logo shadows are handled above.
+*/
+
+.guideline-theme-light
+[class*="shadow-"] {
+  --tw-shadow-color:
+    rgba(0, 0, 0, 0.10);
+}
+
+
+/* ================================================= */
+/* THEME TRANSITIONS                                 */
+/* ================================================= */
+
+.guideline-page,
+.guideline-page div,
+.guideline-page section,
+.guideline-page article,
+.guideline-page header,
+.guideline-page footer,
+.guideline-page aside,
+.guideline-page p,
+.guideline-page span,
+.guideline-page h1,
+.guideline-page h2,
+.guideline-page h3,
+.guideline-page h4,
+.guideline-page button {
+  transition:
+    background-color
+      180ms ease-out,
+    border-color
+      180ms ease-out,
+    color
+      180ms ease-out,
+    outline-color
+      180ms ease-out;
+}
+
+
+/* ================================================= */
+/* IMAGE TRANSITION                                  */
+/* ================================================= */
+
+.guideline-page img,
+.guideline-page
+[class*="drop-shadow"] {
+  transition:
+    filter
+      220ms ease-out;
+}
+
+
+/* ================================================= */
+/* VIDEO / CANVAS TRANSITION                         */
+/* ================================================= */
+
+.guideline-page video,
+.guideline-page canvas {
+  transition:
+    none;
 }

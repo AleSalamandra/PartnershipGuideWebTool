@@ -1,25 +1,114 @@
 "use client";
 
 import {
-  ReactNode,
   useEffect,
   useState,
+  type ReactNode,
 } from "react";
 
-import GuidelinePage from "./GuidelinePage";
 import BrandLogo from "./BrandLogo";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import GuidelinePage, {
+  useGuidelineThemeStore,
+} from "./GuidelinePage";
 
-/* ------------------------------------------------ */
-/* IMAGES                                           */
-/* ------------------------------------------------ */
+import PartnershipLockup from "./PartnershipLockup";
 
-const BACKGROUND_IMAGE_IDS = Array.from(
-  { length: 10 },
-  (_, index) => index + 1
-);
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
+
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
+
+type BrandRole =
+  | "equal"
+  | "brandALead"
+  | "brandBLead";
+
+interface HierarchyConfig {
+  brandA:
+    number;
+
+  brandB:
+    number;
+
+  role:
+    BrandRole;
+}
+
+interface BrandView {
+  name:
+    string;
+
+  logoUrl:
+    string | null;
+}
+
+
+/* ================================================= */
+/* HIERARCHY                                         */
+/* ================================================= */
+
+const BRAND_HIERARCHY:
+  Record<
+    PartnershipModelId,
+    HierarchyConfig
+  > = {
+  axb: {
+    brandA:
+      50,
+
+    brandB:
+      50,
+
+    role:
+      "equal",
+  },
+
+  aandb: {
+    brandA:
+      68,
+
+    brandB:
+      32,
+
+    role:
+      "brandALead",
+  },
+
+  poweredByA: {
+    brandA:
+      15,
+
+    brandB:
+      85,
+
+    role:
+      "brandBLead",
+  },
+
+  presentsB: {
+    brandA:
+      35,
+
+    brandB:
+      65,
+
+    role:
+      "brandBLead",
+  },
+};
+
+
+/* ================================================= */
+/* IMAGE CONFIG                                      */
+/* ================================================= */
 
 const IMAGE_EXTENSIONS = [
   "jpg",
@@ -28,348 +117,110 @@ const IMAGE_EXTENSIONS = [
   "webp",
 ];
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
 
-type ApplicationVariant =
-  | "hero"
-  | "lowerThird"
-  | "overlay"
-  | "transition";
-
-type BrandRole =
-  | "equal"
-  | "brandALead"
-  | "brandBLead";
-
-interface ApplicationSpec {
-  id: string;
-  title: string;
-  description: string;
-  variant: ApplicationVariant;
-}
-
-interface ModelContent {
-  intro: string;
-  applications: [
-    ApplicationSpec,
-    ApplicationSpec,
-    ApplicationSpec,
-    ApplicationSpec
-  ];
-}
-
-interface HierarchyConfig {
-  brandA: number;
-  brandB: number;
-  role: BrandRole;
-}
-
-/* ------------------------------------------------ */
-/* BRAND HIERARCHY                                  */
-/* ------------------------------------------------ */
-
-/*
-  These values drive the relative visual scale
-  across this page.
-
-  A × B
-  50 / 50
-
-  A with B
-  ~68 / 32
-
-  B powered by A
-  ~15 / 85
-
-  A presents B
-  Platform A remains the owner of the visual
-  container, while B receives greater prominence
-  as featured content.
-*/
-
-const BRAND_HIERARCHY: Record<
-  PartnershipModelId,
-  HierarchyConfig
-> = {
-  axb: {
-    brandA: 50,
-    brandB: 50,
-    role: "equal",
-  },
-
-  aandb: {
-    brandA: 68,
-    brandB: 32,
-    role: "brandALead",
-  },
-
-  poweredByA: {
-    brandA: 15,
-    brandB: 85,
-    role: "brandBLead",
-  },
-
-  presentsB: {
-    brandA: 35,
-    brandB: 65,
-    role: "brandBLead",
-  },
-};
-
-/* ------------------------------------------------ */
-/* RANDOM IMAGES                                    */
-/* ------------------------------------------------ */
-
-function getRandomImages() {
-  const images = [
-    ...BACKGROUND_IMAGE_IDS,
-  ];
-
-  for (
-    let i = images.length - 1;
-    i > 0;
-    i--
-  ) {
-    const j = Math.floor(
-      Math.random() * (i + 1)
-    );
-
-    [images[i], images[j]] = [
-      images[j],
-      images[i],
-    ];
-  }
-
-  return images.slice(0, 4);
-}
-
-/* ------------------------------------------------ */
-/* MODEL CONTENT                                    */
-/* ------------------------------------------------ */
-
-function getModelContent(
-  model: PartnershipModelId,
-  brandAName: string,
-  brandBName: string
-): ModelContent {
-  switch (model) {
-    /* ================================================= */
-    /* A × B                                             */
-    /* ================================================= */
-
-    case "axb":
-      return {
-        intro:
-          "Both identities share the visual system with equivalent prominence across content applications.",
-
-        applications: [
-          {
-            id: "01",
-            title: "Hero frame",
-            description: "Equal brand presence",
-            variant: "hero",
-          },
-          {
-            id: "02",
-            title: "Lower third",
-            description: "Shared persistent identity",
-            variant: "lowerThird",
-          },
-          {
-            id: "03",
-            title: "Information overlay",
-            description: "Neutral co-branded UI",
-            variant: "overlay",
-          },
-          {
-            id: "04",
-            title: "Transition",
-            description:
-              `${brandAName} × ${brandBName}`,
-            variant: "transition",
-          },
-        ],
-      };
-
-    /* ================================================= */
-    /* A WITH B                                          */
-    /* ================================================= */
-
-    case "aandb":
-      return {
-        intro:
-          `${brandAName} defines the visual environment while ${brandBName} remains clearly visible as the content partner.`,
-
-        applications: [
-          {
-            id: "01",
-            title: "Hero frame",
-            description:
-              `${brandAName}-led composition`,
-            variant: "hero",
-          },
-          {
-            id: "02",
-            title: "Lower third",
-            description:
-              "Primary + supporting identity",
-            variant: "lowerThird",
-          },
-          {
-            id: "03",
-            title: "Information overlay",
-            description:
-              `${brandAName} interface language`,
-            variant: "overlay",
-          },
-          {
-            id: "04",
-            title: "Transition",
-            description:
-              `${brandAName} with ${brandBName}`,
-            variant: "transition",
-          },
-        ],
-      };
-
-    /* ================================================= */
-    /* B POWERED BY A                                    */
-    /* ================================================= */
-
-    case "poweredByA":
-      return {
-        intro:
-          `${brandBName} owns the consumer-facing visual system. ${brandAName} appears only as a restrained technology endorsement.`,
-
-        applications: [
-          {
-            id: "01",
-            title: "Hero frame",
-            description:
-              `${brandBName}-owned experience`,
-            variant: "hero",
-          },
-          {
-            id: "02",
-            title: "Lower third",
-            description:
-              "Technology endorsement",
-            variant: "lowerThird",
-          },
-          {
-            id: "03",
-            title: "Information overlay",
-            description:
-              `${brandBName} interface`,
-            variant: "overlay",
-          },
-          {
-            id: "04",
-            title: "Transition",
-            description:
-              `${brandBName} powered by ${brandAName}`,
-            variant: "transition",
-          },
-        ],
-      };
-
-    /* ================================================= */
-    /* A PRESENTS B                                      */
-    /* ================================================= */
-
-    case "presentsB":
-    default:
-      return {
-        intro:
-          `${brandAName} owns the visual container while ${brandBName} becomes the featured content identity.`,
-
-        applications: [
-          {
-            id: "01",
-            title: "Hero frame",
-            description:
-              `${brandAName} presents ${brandBName}`,
-            variant: "hero",
-          },
-          {
-            id: "02",
-            title: "Lower third",
-            description:
-              "Platform + featured content",
-            variant: "lowerThird",
-          },
-          {
-            id: "03",
-            title: "Information overlay",
-            description:
-              `${brandAName} container`,
-            variant: "overlay",
-          },
-          {
-            id: "04",
-            title: "Transition",
-            description:
-              "Presented content bumper",
-            variant: "transition",
-          },
-        ],
-      };
-  }
-}
-
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page06() {
   const {
     partnershipModel,
     brandA,
     brandB,
-  } = useGuidelineStore();
+  } =
+    useGuidelineStore();
+
+  const theme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.theme
+    );
+
+  const isLight =
+    theme ===
+    "light";
 
   const model =
     partnershipModel as PartnershipModelId;
 
-  const brandAName =
-    brandA.name.trim() || "Brand A";
-
-  const brandBName =
-    brandB.name.trim() || "Brand B";
-
-  const content =
-    getModelContent(
-      model,
-      brandAName,
-      brandBName
-    );
-
   const hierarchy =
-    BRAND_HIERARCHY[model];
+    BRAND_HIERARCHY[
+      model
+    ];
+
+  const a:
+    BrandView = {
+    name:
+      brandA.name ||
+      "Brand A",
+
+    logoUrl:
+      brandA.logoUrl ??
+      null,
+  };
+
+  const b:
+    BrandView = {
+    name:
+      brandB.name ||
+      "Brand B",
+
+    logoUrl:
+      brandB.logoUrl ??
+      null,
+  };
 
   const [
     images,
     setImages,
-  ] = useState<number[]>([
-    1,
-    2,
-    3,
-    4,
-  ]);
+  ] =
+    useState([
+      2,
+      4,
+      7,
+      9,
+    ]);
 
-  useEffect(() => {
-    setImages(
-      getRandomImages()
-    );
-  }, [model]);
+  useEffect(
+    () => {
+      const available =
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+        ];
+
+      const shuffled =
+        [
+          ...available,
+        ].sort(
+          () =>
+            Math.random() -
+            0.5
+        );
+
+      setImages(
+        shuffled.slice(
+          0,
+          4
+        )
+      );
+    },
+    [model]
+  );
 
   return (
     <GuidelinePage>
-      {/* ================================================= */}
-      {/* HEADER                                            */}
-      {/* ================================================= */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
       <header
         className="
@@ -384,24 +235,17 @@ export default function Page06() {
           justify-between
         "
       >
-        {/* TITLE */}
-
-        <div
-          className="
-            min-w-0
-            max-w-[980px]
-          "
-        >
+        <div>
           <p
             className="
-              text-[13px]
+              text-[12px]
               uppercase
-              tracking-[0.17em]
+              tracking-[0.16em]
 
               text-white/28
             "
           >
-            06 / Content Identity
+            06 / Content identity
           </p>
 
           <h1
@@ -413,6 +257,8 @@ export default function Page06() {
               text-[52px]
               leading-[0.95]
               tracking-[-0.05em]
+
+              text-white
 
               oook-semibold
             "
@@ -432,68 +278,145 @@ export default function Page06() {
               text-white/40
             "
           >
-            {content.intro}
+            Four recurring content applications showing how partnership hierarchy remains visible without interrupting the experience.
           </p>
         </div>
 
-        {/* PARTNERSHIP SIGNATURE */}
-
         <PartnershipLockup
           model={model}
-          brandAName={brandAName}
-          brandBName={brandBName}
-          brandALogo={brandA.logoUrl}
-          brandBLogo={brandB.logoUrl}
+          brandA={brandA}
+          brandB={brandB}
         />
       </header>
 
-      {/* ================================================= */}
-      {/* APPLICATION GRID                                  */}
-      {/* ================================================= */}
+      {/* ======================================== */}
+      {/* APPLICATION GRID                         */}
+      {/* ======================================== */}
 
       <section
         className="
           absolute
 
+          bottom-[74px]
           left-[76px]
           right-[76px]
-
           top-[250px]
-          bottom-[74px]
 
           grid
           grid-cols-2
           grid-rows-2
 
-          gap-x-[46px]
-          gap-y-[24px]
+          gap-x-[26px]
+          gap-y-[22px]
         "
       >
-        {content.applications.map(
-          (
-            application,
-            index
-          ) => (
-            <ApplicationCard
-              key={application.id}
-              application={application}
-              model={model}
-              hierarchy={hierarchy}
-              imageId={images[index]}
-              brandAName={brandAName}
-              brandBName={brandBName}
-              brandALogo={brandA.logoUrl}
-              brandBLogo={brandB.logoUrl}
-            />
-          )
-        )}
+        <ApplicationCard
+          number="01"
+
+          title="Hero frame"
+
+          description={
+            model ===
+            "axb"
+              ? "Equal brand presence"
+              : model ===
+                  "aandb"
+                ? "Brand A-led hero"
+                : model ===
+                    "poweredByA"
+                  ? "Brand B consumer identity"
+                  : "Featured Brand B content"
+          }
+        >
+          <HeroApplication
+            model={model}
+            hierarchy={
+              hierarchy
+            }
+            brandA={a}
+            brandB={b}
+            image={
+              images[0]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ApplicationCard>
+
+        <ApplicationCard
+          number="02"
+
+          title="Lower third"
+
+          description="Persistent shared identity"
+        >
+          <LowerThirdApplication
+            model={model}
+            brandA={a}
+            brandB={b}
+            image={
+              images[1]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ApplicationCard>
+
+        <ApplicationCard
+          number="03"
+
+          title="Information overlay"
+
+          description="Neutral co-branded UI"
+        >
+          <OverlayApplication
+            model={model}
+            brandA={a}
+            brandB={b}
+            image={
+              images[2]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ApplicationCard>
+
+        <ApplicationCard
+          number="04"
+
+          title="Transition"
+
+          description={
+            getTransitionDescription(
+              model
+            )
+          }
+        >
+          <TransitionApplication
+            model={model}
+            hierarchy={
+              hierarchy
+            }
+            brandA={a}
+            brandB={b}
+            image={
+              images[3]
+            }
+            isLight={
+              isLight
+            }
+          />
+        </ApplicationCard>
       </section>
 
-      {/* ================================================= */}
-      {/* FOOTER                                            */}
-      {/* ================================================= */}
+      {/* ======================================== */}
+      {/* FOOTER                                   */}
+      {/* ======================================== */}
 
-      <footer
+      <div
         className="
           absolute
 
@@ -504,80 +427,67 @@ export default function Page06() {
           flex
           items-center
           justify-between
-
-          border-t
-          border-white/[0.07]
-
-          pt-[12px]
         "
       >
         <p
           className="
             text-[9px]
-            text-white/20
+
+            text-white/22
           "
         >
-          Examples are indicative — adapt placement
-          to content, format and legibility.
+          Examples are indicative — adapt placement to content, format and legibility.
         </p>
 
         <p
           className="
             text-[9px]
-            text-white/20
+
+            text-white/22
           "
         >
           Safe area · Hierarchy · Contrast · Motion · Clear space
         </p>
-      </footer>
+      </div>
     </GuidelinePage>
   );
 }
 
-/* ------------------------------------------------ */
-/* APPLICATION CARD                                 */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* CARD                                              */
+/* ================================================= */
 
 function ApplicationCard({
-  application,
-  model,
-  hierarchy,
-  imageId,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
+  number,
+  title,
+  description,
+  children,
 }: {
-  application: ApplicationSpec;
+  number:
+    string;
 
-  model: PartnershipModelId;
-  hierarchy: HierarchyConfig;
+  title:
+    string;
 
-  imageId: number;
+  description:
+    string;
 
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  children:
+    ReactNode;
 }) {
   return (
     <article
       className="
         grid
+
         min-h-0
 
         grid-cols-[112px_minmax(0,1fr)]
 
-        gap-[18px]
+        gap-[14px]
       "
     >
-      {/* ------------------------------------------ */}
-      {/* LABEL                                      */}
-      {/* ------------------------------------------ */}
-
       <div
         className="
           flex
@@ -589,37 +499,38 @@ function ApplicationCard({
           className="
             text-[8px]
             uppercase
-            tracking-[0.15em]
+            tracking-[0.14em]
 
-            text-white/23
+            text-white/20
           "
         >
-          {application.id}
+          {number}
         </p>
 
-        <h2
+        <h3
           className="
-            mt-[6px]
+            mt-[8px]
 
-            text-[17px]
-            leading-[1.02]
+            text-[16px]
+            leading-[1.05]
+            tracking-[-0.025em]
 
-            text-white/80
+            text-white/72
 
             oook-medium
           "
         >
-          {application.title}
-        </h2>
+          {title}
+        </h3>
 
         <div
           className="
-            mt-[9px]
+            mt-[10px]
 
             h-px
-            w-[52px]
+            w-[42px]
 
-            bg-white/14
+            bg-white/[0.14]
           "
         />
 
@@ -627,310 +538,65 @@ function ApplicationCard({
           className="
             mt-[9px]
 
-            max-w-[95px]
+            max-w-[92px]
 
-            text-[10px]
-            leading-[1.35]
+            text-[9px]
+            leading-[1.38]
 
-            text-white/33
+            text-white/31
           "
         >
-          {application.description}
+          {description}
         </p>
       </div>
-
-      {/* ------------------------------------------ */}
-      {/* VIDEO FRAME                                */}
-      {/* ------------------------------------------ */}
 
       <div
         className="
           relative
 
-          aspect-video
-          w-full
+          min-h-0
 
           overflow-hidden
 
-          rounded-[18px]
+          rounded-[22px]
 
           border
-          border-white/[0.10]
+          border-white/[0.08]
 
-          bg-[#080808]
+          bg-[#050506]
         "
       >
-        <FrameBackground
-          imageId={imageId}
-        />
-
-        <FrameEffects />
-
-        <ApplicationContent
-          variant={application.variant}
-          model={model}
-          hierarchy={hierarchy}
-          brandAName={brandAName}
-          brandBName={brandBName}
-          brandALogo={brandALogo}
-          brandBLogo={brandBLogo}
-        />
+        {children}
       </div>
     </article>
   );
 }
 
-/* ------------------------------------------------ */
-/* APPLICATION CONTENT                              */
-/* ------------------------------------------------ */
 
-function ApplicationContent({
-  variant,
-  model,
-  hierarchy,
+/* ================================================= */
+/* BACKGROUND                                        */
+/* ================================================= */
 
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
+function FrameBackground({
+  image,
 }: {
-  variant: ApplicationVariant;
-
-  model: PartnershipModelId;
-  hierarchy: HierarchyConfig;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  image:
+    number;
 }) {
-  if (
-    variant === "hero"
-  ) {
-    return (
-      <HeroApplication
-        model={model}
-        hierarchy={hierarchy}
-        brandAName={brandAName}
-        brandBName={brandBName}
-        brandALogo={brandALogo}
-        brandBLogo={brandBLogo}
-      />
-    );
-  }
+  const [
+    extension,
+    setExtension,
+  ] =
+    useState(0);
 
-  if (
-    variant === "lowerThird"
-  ) {
-    return (
-      <LowerThirdApplication
-        model={model}
-        hierarchy={hierarchy}
-        brandAName={brandAName}
-        brandBName={brandBName}
-        brandALogo={brandALogo}
-        brandBLogo={brandBLogo}
-      />
-    );
-  }
-
-  if (
-    variant === "overlay"
-  ) {
-    return (
-      <OverlayApplication
-        model={model}
-        hierarchy={hierarchy}
-        brandAName={brandAName}
-        brandBName={brandBName}
-        brandALogo={brandALogo}
-        brandBLogo={brandBLogo}
-      />
-    );
-  }
-
-  return (
-    <TransitionApplication
-      model={model}
-      hierarchy={hierarchy}
-      brandAName={brandAName}
-      brandBName={brandBName}
-      brandALogo={brandALogo}
-      brandBLogo={brandBLogo}
-    />
+  useEffect(
+    () => {
+      setExtension(
+        0
+      );
+    },
+    [image]
   );
-}
-
-/* ------------------------------------------------ */
-/* HERO APPLICATION                                 */
-/* ------------------------------------------------ */
-
-function HeroApplication({
-  model,
-  hierarchy,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-  hierarchy: HierarchyConfig;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  /* A × B */
-
-  if (
-    model === "axb"
-  ) {
-    return (
-      <div
-        className="
-          absolute
-
-          inset-x-[12%]
-          top-1/2
-
-          flex
-          -translate-y-1/2
-
-          items-center
-          justify-center
-
-          gap-[6%]
-        "
-      >
-        <FloatingLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          scale={hierarchy.brandA}
-          mode="equal"
-        />
-
-        <div
-          className="
-            h-[42px]
-            w-px
-
-            bg-white/28
-          "
-        />
-
-        <FloatingLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          scale={hierarchy.brandB}
-          mode="equal"
-        />
-      </div>
-    );
-  }
-
-  /* A WITH B */
-
-  if (
-    model === "aandb"
-  ) {
-    return (
-      <div
-        className="
-          absolute
-          inset-0
-
-          flex
-          flex-col
-          items-center
-          justify-center
-        "
-      >
-        <FloatingLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          scale={hierarchy.brandA}
-          mode="lead"
-        />
-
-        <p
-          className="
-            my-[2%]
-
-            text-[7px]
-            uppercase
-            tracking-[0.14em]
-
-            text-white/52
-          "
-        >
-          with
-        </p>
-
-        <FloatingLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          scale={hierarchy.brandB}
-          mode="support"
-        />
-      </div>
-    );
-  }
-
-  /* B POWERED BY A */
-
-  if (
-    model === "poweredByA"
-  ) {
-    return (
-      <div
-        className="
-          absolute
-          inset-0
-
-          flex
-          flex-col
-          items-center
-          justify-center
-        "
-      >
-        <FloatingLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          scale={hierarchy.brandB}
-          mode="lead"
-        />
-
-        <p
-          className="
-            my-[2%]
-
-            text-[6px]
-            uppercase
-            tracking-[0.2em]
-
-            text-white/50
-          "
-        >
-          Powered by
-        </p>
-
-        <FloatingLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          scale={hierarchy.brandA}
-          mode="endorsement"
-        />
-      </div>
-    );
-  }
-
-  /* A PRESENTS B */
 
   return (
     <div
@@ -938,668 +604,818 @@ function HeroApplication({
         absolute
         inset-0
 
-        flex
-        flex-col
-        items-center
-        justify-center
+        overflow-hidden
       "
+      style={{
+        filter:
+          "grayscale(0.95) contrast(1.03)",
+      }}
     >
-      <FloatingLogo
-        logoUrl={brandALogo}
-        fallback={brandAName}
-        scale={hierarchy.brandA}
-        mode="endorsement"
-      />
-
-      <p
+      <img
+        src={`/images/image${image}.${IMAGE_EXTENSIONS[extension]}`}
+        alt=""
+        draggable={
+          false
+        }
+        onError={() => {
+          if (
+            extension <
+            IMAGE_EXTENSIONS.length -
+              1
+          ) {
+            setExtension(
+              (current) =>
+                current + 1
+            );
+          }
+        }}
         className="
-          my-[2%]
+          h-full
+          w-full
 
-          text-[7px]
+          scale-[1.035]
 
-          text-white/55
+          object-cover
         "
-      >
-        presents
-      </p>
-
-      <FloatingLogo
-        logoUrl={brandBLogo}
-        fallback={brandBName}
-        scale={hierarchy.brandB}
-        mode="lead"
       />
     </div>
   );
 }
 
-/* ------------------------------------------------ */
-/* LOWER THIRD                                      */
-/* ------------------------------------------------ */
 
-function LowerThirdApplication({
-  model,
-  hierarchy,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-  hierarchy: HierarchyConfig;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  return (
-    <div
-      className="
-        absolute
-
-        bottom-[6%]
-        left-[5%]
-        right-[5%]
-      "
-    >
-      <VideoGlass>
-        <div
-          className="
-            flex
-            min-h-[27px]
-
-            items-center
-
-            gap-[10px]
-          "
-        >
-          {/* LEFT IDENTITY */}
-
-          <LowerThirdIdentity
-            model={model}
-            side="left"
-            hierarchy={hierarchy}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandALogo}
-            brandBLogo={brandBLogo}
-          />
-
-          {/* CONTENT */}
-
-          <div
-            className="
-              h-[23px]
-              w-px
-
-              bg-white/14
-            "
-          />
-
-          <div
-            className="
-              min-w-0
-              flex-1
-            "
-          >
-            <p
-              className="
-                truncate
-
-                text-[8px]
-                text-white/65
-              "
-            >
-              Headline or key message
-            </p>
-          </div>
-
-          <div
-            className="
-              h-[23px]
-              w-px
-
-              bg-white/14
-            "
-          />
-
-          {/* RIGHT IDENTITY */}
-
-          <LowerThirdIdentity
-            model={model}
-            side="right"
-            hierarchy={hierarchy}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandALogo}
-            brandBLogo={brandBLogo}
-          />
-        </div>
-      </VideoGlass>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* LOWER THIRD IDENTITY                             */
-/* ------------------------------------------------ */
-
-function LowerThirdIdentity({
-  model,
-  side,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-  side: "left" | "right";
-
-  hierarchy: HierarchyConfig;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  if (
-    model === "axb"
-  ) {
-    return side === "left" ? (
-      <MiniLogo
-        logoUrl={brandALogo}
-        fallback={brandAName}
-        width="66px"
-      />
-    ) : (
-      <MiniLogo
-        logoUrl={brandBLogo}
-        fallback={brandBName}
-        width="66px"
-      />
-    );
-  }
-
-  if (
-    model === "aandb"
-  ) {
-    return side === "left" ? (
-      <MiniLogo
-        logoUrl={brandALogo}
-        fallback={brandAName}
-        width="78px"
-      />
-    ) : (
-      <div
-        className="
-          flex
-          items-center
-          gap-[5px]
-        "
-      >
-        <span
-          className="
-            text-[5px]
-            text-white/25
-          "
-        >
-          with
-        </span>
-
-        <MiniLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="42px"
-        />
-      </div>
-    );
-  }
-
-  if (
-    model === "poweredByA"
-  ) {
-    return side === "left" ? (
-      <MiniLogo
-        logoUrl={brandBLogo}
-        fallback={brandBName}
-        width="84px"
-      />
-    ) : (
-      <div
-        className="
-          flex
-          items-center
-          gap-[5px]
-        "
-      >
-        <span
-          className="
-            text-[5px]
-            uppercase
-            tracking-[0.12em]
-
-            text-white/24
-          "
-        >
-          Powered by
-        </span>
-
-        <MiniLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          width="34px"
-        />
-      </div>
-    );
-  }
-
-  return side === "left" ? (
-    <div
-      className="
-        flex
-        items-center
-        gap-[5px]
-      "
-    >
-      <MiniLogo
-        logoUrl={brandALogo}
-        fallback={brandAName}
-        width="38px"
-      />
-
-      <span
-        className="
-          text-[5px]
-          text-white/25
-        "
-      >
-        presents
-      </span>
-    </div>
-  ) : (
-    <MiniLogo
-      logoUrl={brandBLogo}
-      fallback={brandBName}
-      width="78px"
-    />
-  );
-}
-
-/* ------------------------------------------------ */
-/* OVERLAY                                          */
-/* ------------------------------------------------ */
-
-function OverlayApplication({
-  model,
-  hierarchy,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-  hierarchy: HierarchyConfig;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
+function FrameTreatment() {
   return (
     <>
-      {/* DATA */}
-
       <div
         className="
           absolute
+          inset-0
 
-          left-[6%]
-          top-[11%]
+          bg-gradient-to-b
 
-          w-[46%]
+          from-transparent
+          via-transparent
+          to-black/36
         "
-      >
-        <VideoGlass>
-          <div
-            className="
-              flex
-              items-center
-
-              gap-[10px]
-            "
-          >
-            <div
-              className="
-                relative
-
-                flex
-                h-[44px]
-                w-[44px]
-
-                shrink-0
-
-                items-center
-                justify-center
-
-                rounded-full
-
-                border
-                border-white/18
-              "
-            >
-              <div
-                className="
-                  absolute
-                  inset-[4px]
-
-                  rounded-full
-
-                  border
-                  border-white/[0.06]
-                "
-              />
-
-              <span
-                className="
-                  text-[12px]
-
-                  text-white/82
-
-                  oook-medium
-                "
-              >
-                65%
-              </span>
-            </div>
-
-            <div>
-              <p
-                className="
-                  text-[9px]
-                  text-white/76
-
-                  oook-medium
-                "
-              >
-                Key metric
-              </p>
-
-              <p
-                className="
-                  mt-[2px]
-
-                  text-[6px]
-                  leading-[1.35]
-
-                  text-white/34
-                "
-              >
-                Short supporting information.
-              </p>
-            </div>
-          </div>
-        </VideoGlass>
-      </div>
-
-      {/* BRAND FOOTER */}
-
-      <div
-        className="
-          absolute
-
-          bottom-[6%]
-          left-[5%]
-          right-[5%]
-        "
-      >
-        <VideoGlass>
-          <OverlayFooter
-            model={model}
-            hierarchy={hierarchy}
-            brandAName={brandAName}
-            brandBName={brandBName}
-            brandALogo={brandALogo}
-            brandBLogo={brandBLogo}
-          />
-        </VideoGlass>
-      </div>
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* OVERLAY FOOTER                                   */
-/* ------------------------------------------------ */
-
-function OverlayFooter({
-  model,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-  hierarchy: HierarchyConfig;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  if (
-    model === "axb"
-  ) {
-    return (
-      <div
-        className="
-          flex
-          min-h-[20px]
-
-          items-center
-          justify-between
-
-          gap-[12px]
-        "
-      >
-        <MiniLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          width="62px"
-        />
-
-        <div
-          className="
-            h-px
-            flex-1
-
-            bg-white/[0.10]
-          "
-        />
-
-        <MiniLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="62px"
-        />
-      </div>
-    );
-  }
-
-  if (
-    model === "aandb"
-  ) {
-    return (
-      <div
-        className="
-          flex
-          min-h-[20px]
-
-          items-center
-
-          gap-[9px]
-        "
-      >
-        <MiniLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          width="76px"
-        />
-
-        <div className="flex-1" />
-
-        <span
-          className="
-            text-[5px]
-            text-white/24
-          "
-        >
-          with
-        </span>
-
-        <MiniLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="40px"
-        />
-      </div>
-    );
-  }
-
-  if (
-    model === "poweredByA"
-  ) {
-    return (
-      <div
-        className="
-          flex
-          min-h-[20px]
-
-          items-center
-
-          gap-[9px]
-        "
-      >
-        <MiniLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-          width="82px"
-        />
-
-        <div className="flex-1" />
-
-        <span
-          className="
-            text-[5px]
-            uppercase
-            tracking-[0.12em]
-
-            text-white/24
-          "
-        >
-          Powered by
-        </span>
-
-        <MiniLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-          width="32px"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="
-        flex
-        min-h-[20px]
-
-        items-center
-
-        gap-[7px]
-      "
-    >
-      <MiniLogo
-        logoUrl={brandALogo}
-        fallback={brandAName}
-        width="36px"
       />
-
-      <span
-        className="
-          text-[5px]
-          text-white/24
-        "
-      >
-        presents
-      </span>
-
-      <div className="flex-1" />
-
-      <MiniLogo
-        logoUrl={brandBLogo}
-        fallback={brandBName}
-        width="76px"
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* TRANSITION                                       */
-/* ------------------------------------------------ */
-
-function TransitionApplication({
-  model,
-  hierarchy,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-  hierarchy: HierarchyConfig;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  return (
-    <>
-      {/* DARKEN THE IMAGE A LITTLE MORE */}
 
       <div
         className="
           absolute
           inset-0
 
-          bg-black/20
+          opacity-[0.045]
+
+          mix-blend-screen
         "
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg,rgba(255,255,255,.12) 0px,rgba(255,255,255,.12) 1px,transparent 1px,transparent 3px)",
+        }}
+      />
+    </>
+  );
+}
+
+
+/* ================================================= */
+/* HERO                                              */
+/* ================================================= */
+
+function HeroApplication({
+  model,
+  hierarchy,
+  brandA,
+  brandB,
+  image,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  hierarchy:
+    HierarchyConfig;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <>
+      <FrameBackground
+        image={
+          image
+        }
       />
 
-      <TransitionLines />
+      <FrameTreatment />
 
-      {/* LOCKUP AREA
-          IMPORTANT:
-          explicit width fixes percentage-logo collapse.
-      */}
+      <div
+        className="
+          absolute
+          inset-0
+
+          flex
+          items-center
+          justify-center
+        "
+      >
+        {model ===
+          "axb" && (
+          <div
+            className="
+              flex
+              w-[68%]
+
+              items-center
+              justify-center
+
+              gap-[22px]
+            "
+          >
+            <FloatingLogo
+              brand={
+                brandA
+              }
+              mode="equal"
+              isLight={
+                isLight
+              }
+            />
+
+            <Symbol>
+              ×
+            </Symbol>
+
+            <FloatingLogo
+              brand={
+                brandB
+              }
+              mode="equal"
+              isLight={
+                isLight
+              }
+            />
+          </div>
+        )}
+
+        {model ===
+          "aandb" && (
+          <div
+            className="
+              flex
+              w-[70%]
+
+              items-center
+              justify-center
+
+              gap-[18px]
+            "
+          >
+            <FloatingLogo
+              brand={
+                brandA
+              }
+              mode="lead"
+              isLight={
+                isLight
+              }
+            />
+
+            <Relationship>
+              with
+            </Relationship>
+
+            <FloatingLogo
+              brand={
+                brandB
+              }
+              mode="support"
+              isLight={
+                isLight
+              }
+            />
+          </div>
+        )}
+
+        {model ===
+          "poweredByA" && (
+          <div
+            className="
+              flex
+              w-[72%]
+
+              items-center
+              justify-center
+
+              gap-[16px]
+            "
+          >
+            <FloatingLogo
+              brand={
+                brandB
+              }
+              mode="lead"
+              isLight={
+                isLight
+              }
+            />
+
+            <Relationship>
+              powered by
+            </Relationship>
+
+            <FloatingLogo
+              brand={
+                brandA
+              }
+              mode="endorsement"
+              isLight={
+                isLight
+              }
+            />
+          </div>
+        )}
+
+        {model ===
+          "presentsB" && (
+          <div
+            className="
+              flex
+              w-[72%]
+
+              items-center
+              justify-center
+
+              gap-[16px]
+            "
+          >
+            <FloatingLogo
+              brand={
+                brandA
+              }
+              mode="support"
+              isLight={
+                isLight
+              }
+            />
+
+            <Relationship>
+              presents
+            </Relationship>
+
+            <FloatingLogo
+              brand={
+                brandB
+              }
+              mode="lead"
+              isLight={
+                isLight
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      <div
+        className="
+          absolute
+
+          bottom-[12px]
+          right-[14px]
+
+          text-[7px]
+
+          text-white/20
+        "
+      >
+        A {hierarchy.brandA}% · B {hierarchy.brandB}%
+      </div>
+    </>
+  );
+}
+
+
+/* ================================================= */
+/* LOWER THIRD                                       */
+/* ================================================= */
+
+function LowerThirdApplication({
+  model,
+  brandA,
+  brandB,
+  image,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <>
+      <FrameBackground
+        image={
+          image
+        }
+      />
+
+      <FrameTreatment />
+
+      <div
+        className="
+          absolute
+
+          bottom-[14px]
+          left-[14px]
+          right-[14px]
+
+          flex
+          min-h-[50px]
+
+          items-center
+
+          rounded-[11px]
+
+          border
+          border-white/[0.09]
+
+          bg-black/55
+
+          px-[12px]
+
+          backdrop-blur-[12px]
+        "
+      >
+        <LowerThirdIdentity
+          model={model}
+          brandA={brandA}
+          brandB={brandB}
+          isLight={isLight}
+        />
+
+        <div
+          className="
+            mx-[12px]
+
+            h-[25px]
+            w-px
+
+            bg-white/[0.08]
+          "
+        />
+
+        <div
+          className="
+            min-w-0
+            flex-1
+          "
+        >
+          <p
+            className="
+              truncate
+
+              text-[9px]
+
+              text-white/59
+            "
+          >
+            Headline or key message
+          </p>
+
+          <p
+            className="
+              mt-[2px]
+
+              text-[7px]
+
+              text-white/24
+            "
+          >
+            Persistent identity
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+function LowerThirdIdentity({
+  model,
+  brandA,
+  brandB,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  isLight:
+    boolean;
+}) {
+  if (
+    model ===
+    "axb"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+
+          gap-[7px]
+        "
+      >
+        <MiniLogo
+          brand={brandA}
+          width={66}
+          isLight={isLight}
+        />
+
+        <Symbol>
+          ×
+        </Symbol>
+
+        <MiniLogo
+          brand={brandB}
+          width={66}
+          isLight={isLight}
+        />
+      </div>
+    );
+  }
+
+  if (
+    model ===
+    "aandb"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+
+          gap-[7px]
+        "
+      >
+        <MiniLogo
+          brand={brandA}
+          width={78}
+          isLight={isLight}
+        />
+
+        <Relationship>
+          with
+        </Relationship>
+
+        <MiniLogo
+          brand={brandB}
+          width={42}
+          isLight={isLight}
+        />
+      </div>
+    );
+  }
+
+  if (
+    model ===
+    "poweredByA"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+
+          gap-[7px]
+        "
+      >
+        <MiniLogo
+          brand={brandB}
+          width={84}
+          isLight={isLight}
+        />
+
+        <Relationship>
+          powered by
+        </Relationship>
+
+        <MiniLogo
+          brand={brandA}
+          width={34}
+          isLight={isLight}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="
+        flex
+        items-center
+
+        gap-[7px]
+      "
+    >
+      <MiniLogo
+        brand={brandA}
+        width={38}
+        isLight={isLight}
+      />
+
+      <Relationship>
+        presents
+      </Relationship>
+
+      <MiniLogo
+        brand={brandB}
+        width={78}
+        isLight={isLight}
+      />
+    </div>
+  );
+}
+
+
+/* ================================================= */
+/* OVERLAY                                           */
+/* ================================================= */
+
+function OverlayApplication({
+  model,
+  brandA,
+  brandB,
+  image,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <>
+      <FrameBackground
+        image={
+          image
+        }
+      />
+
+      <FrameTreatment />
+
+      <div
+        className="
+          absolute
+
+          left-[15px]
+          top-[15px]
+
+          flex
+          w-[44%]
+
+          items-center
+
+          rounded-[11px]
+
+          border
+          border-white/[0.08]
+
+          bg-black/55
+
+          px-[11px]
+          py-[10px]
+
+          backdrop-blur-[12px]
+        "
+      >
+        <div
+          className="
+            flex
+            h-[36px]
+            w-[36px]
+
+            shrink-0
+
+            items-center
+            justify-center
+
+            rounded-full
+
+            border
+            border-white/[0.10]
+          "
+        >
+          <span
+            className="
+              text-[11px]
+
+              text-white/55
+            "
+          >
+            65%
+          </span>
+        </div>
+
+        <div
+          className="
+            ml-[10px]
+          "
+        >
+          <p
+            className="
+              text-[9px]
+
+              text-white/57
+            "
+          >
+            Key metric
+          </p>
+
+          <p
+            className="
+              mt-[2px]
+
+              text-[7px]
+
+              text-white/24
+            "
+          >
+            Short supporting information.
+          </p>
+        </div>
+      </div>
+
+      <OverlayFooter
+        model={model}
+        brandA={brandA}
+        brandB={brandB}
+        isLight={isLight}
+      />
+    </>
+  );
+}
+
+
+function OverlayFooter({
+  model,
+  brandA,
+  brandB,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <div
+      className="
+        absolute
+
+        bottom-[12px]
+        left-[12px]
+        right-[12px]
+
+        flex
+        items-center
+        justify-between
+      "
+    >
+      <MiniLogo
+        brand={
+          model ===
+          "poweredByA"
+            ? brandB
+            : brandA
+        }
+        width={
+          model ===
+          "axb"
+            ? 62
+            : model ===
+                "aandb"
+              ? 76
+              : model ===
+                  "poweredByA"
+                ? 82
+                : 36
+        }
+        isLight={
+          isLight
+        }
+      />
+
+      <MiniLogo
+        brand={
+          model ===
+          "poweredByA"
+            ? brandA
+            : brandB
+        }
+        width={
+          model ===
+          "axb"
+            ? 62
+            : model ===
+                "aandb"
+              ? 40
+              : model ===
+                  "poweredByA"
+                ? 32
+                : 76
+        }
+        isLight={
+          isLight
+        }
+      />
+    </div>
+  );
+}
+
+
+/* ================================================= */
+/* TRANSITION                                        */
+/* ================================================= */
+
+function TransitionApplication({
+  model,
+  hierarchy,
+  brandA,
+  brandB,
+  image,
+  isLight,
+}: {
+  model:
+    PartnershipModelId;
+
+  hierarchy:
+    HierarchyConfig;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  image:
+    number;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <>
+      <FrameBackground
+        image={
+          image
+        }
+      />
+
+      <FrameTreatment />
+
+      <TransitionLines />
 
       <div
         className="
@@ -1614,593 +1430,213 @@ function TransitionApplication({
           -translate-y-1/2
         "
       >
-        {model === "axb" && (
+        {model ===
+          "axb" && (
           <div
             className="
               flex
-              w-full
-
               items-center
               justify-center
 
-              gap-[8%]
-            "
-          >
-            <TransitionLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-              width="34%"
-            />
-
-            <span
-              className="
-                shrink-0
-
-                text-[16px]
-
-                text-white/58
-
-                drop-shadow-[0_5px_12px_rgba(0,0,0,0.8)]
-              "
-            >
-              ×
-            </span>
-
-            <TransitionLogo
-              logoUrl={brandBLogo}
-              fallback={brandBName}
-              width="34%"
-            />
-          </div>
-        )}
-
-        {model === "aandb" && (
-          <div
-            className="
-              flex
-              w-full
-
-              items-center
-              justify-center
-
-              gap-[7%]
-            "
-          >
-            <TransitionLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-              width="46%"
-            />
-
-            <span
-              className="
-                shrink-0
-
-                text-[7px]
-                uppercase
-                tracking-[0.12em]
-
-                text-white/42
-              "
-            >
-              with
-            </span>
-
-            <TransitionLogo
-              logoUrl={brandBLogo}
-              fallback={brandBName}
-              width="24%"
-            />
-          </div>
-        )}
-
-        {model === "poweredByA" && (
-          <div
-            className="
-              flex
-              w-full
-
-              flex-col
-              items-center
-              justify-center
-            "
-          >
-            <TransitionLogo
-              logoUrl={brandBLogo}
-              fallback={brandBName}
-              width="56%"
-            />
-
-            <div
-              className="
-                mt-[7px]
-
-                flex
-                items-center
-
-                gap-[6px]
-              "
-            >
-              <span
-                className="
-                  text-[6px]
-                  uppercase
-                  tracking-[0.16em]
-
-                  text-white/38
-                "
-              >
-                Powered by
-              </span>
-
-              <div className="w-[52px]">
-                <TransitionLogo
-                  logoUrl={brandALogo}
-                  fallback={brandAName}
-                  width="100%"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {model === "presentsB" && (
-          <div
-            className="
-              flex
-              w-full
-
-              flex-col
-              items-center
-              justify-center
+              gap-[18px]
             "
           >
             <div
               className="
-                flex
-                items-center
-
-                gap-[6px]
+                w-[39%]
               "
             >
-              <div className="w-[62px]">
-                <TransitionLogo
-                  logoUrl={brandALogo}
-                  fallback={brandAName}
-                  width="100%"
-                />
-              </div>
-
-              <span
-                className="
-                  text-[7px]
-
-                  text-white/40
-                "
-              >
-                presents
-              </span>
-            </div>
-
-            <div className="mt-[8px] w-[54%]">
               <TransitionLogo
-                logoUrl={brandBLogo}
-                fallback={brandBName}
-                width="100%"
+                brand={
+                  brandA
+                }
+                isLight={
+                  isLight
+                }
+              />
+            </div>
+
+            <Symbol>
+              ×
+            </Symbol>
+
+            <div
+              className="
+                w-[39%]
+              "
+            >
+              <TransitionLogo
+                brand={
+                  brandB
+                }
+                isLight={
+                  isLight
+                }
+              />
+            </div>
+          </div>
+        )}
+
+        {model ===
+          "aandb" && (
+          <div
+            className="
+              flex
+              items-center
+              justify-center
+
+              gap-[16px]
+            "
+          >
+            <div
+              className="
+                w-[46%]
+              "
+            >
+              <TransitionLogo
+                brand={
+                  brandA
+                }
+                isLight={
+                  isLight
+                }
+              />
+            </div>
+
+            <Relationship>
+              with
+            </Relationship>
+
+            <div
+              className="
+                w-[24%]
+              "
+            >
+              <TransitionLogo
+                brand={
+                  brandB
+                }
+                isLight={
+                  isLight
+                }
+              />
+            </div>
+          </div>
+        )}
+
+        {model ===
+          "poweredByA" && (
+          <div
+            className="
+              flex
+              items-center
+              justify-center
+
+              gap-[14px]
+            "
+          >
+            <div
+              className="
+                w-[52%]
+              "
+            >
+              <TransitionLogo
+                brand={
+                  brandB
+                }
+                isLight={
+                  isLight
+                }
+              />
+            </div>
+
+            <Relationship>
+              powered by
+            </Relationship>
+
+            <div
+              className="
+                w-[18%]
+              "
+            >
+              <TransitionLogo
+                brand={
+                  brandA
+                }
+                isLight={
+                  isLight
+                }
+              />
+            </div>
+          </div>
+        )}
+
+        {model ===
+          "presentsB" && (
+          <div
+            className="
+              flex
+              items-center
+              justify-center
+
+              gap-[14px]
+            "
+          >
+            <div
+              className="
+                w-[23%]
+              "
+            >
+              <TransitionLogo
+                brand={
+                  brandA
+                }
+                isLight={
+                  isLight
+                }
+              />
+            </div>
+
+            <Relationship>
+              presents
+            </Relationship>
+
+            <div
+              className="
+                w-[46%]
+              "
+            >
+              <TransitionLogo
+                brand={
+                  brandB
+                }
+                isLight={
+                  isLight
+                }
               />
             </div>
           </div>
         )}
       </div>
 
-      {/* HIERARCHY NOTE */}
-
       <div
         className="
           absolute
 
-          bottom-[5%]
-          right-[5%]
+          bottom-[12px]
+          right-[13px]
+
+          text-[7px]
+
+          text-white/19
         "
       >
-        <p
-          className="
-            text-[5px]
-            uppercase
-            tracking-[0.14em]
-
-            text-white/18
-          "
-        >
-          A {hierarchy.brandA}% · B {hierarchy.brandB}%
-        </p>
+        A {hierarchy.brandA}% · B {hierarchy.brandB}%
       </div>
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* TRANSITION LOGO                                  */
-/* ------------------------------------------------ */
-
-function TransitionLogo({
-  logoUrl,
-  fallback,
-  width,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-  width: string;
-}) {
-  return (
-    <div
-      style={{
-        width,
-        aspectRatio: "3 / 1",
-        flexShrink: 0,
-
-        filter: `
-          drop-shadow(
-            0 10px 22px
-            rgba(0,0,0,0.72)
-          )
-          drop-shadow(
-            0 2px 6px
-            rgba(0,0,0,0.82)
-          )
-        `,
-      }}
-    >
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* FLOATING LOGO                                    */
-/* ------------------------------------------------ */
-
-function FloatingLogo({
-  logoUrl,
-  fallback,
-  scale,
-  mode,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-
-  scale: number;
-
-  mode:
-    | "equal"
-    | "lead"
-    | "support"
-    | "endorsement";
-}) {
-  /*
-    Translate conceptual hierarchy into
-    useful frame dimensions.
-
-    We do NOT literally use 85% frame width.
-    The percentage controls the relative visual
-    relationship between the two identities.
-  */
-
-  let width = "28%";
-
-  if (mode === "equal") {
-    width = "29%";
-  }
-
-  if (mode === "lead") {
-    if (scale >= 80) {
-      width = "39%";
-    } else if (scale >= 60) {
-      width = "34%";
-    } else {
-      width = "30%";
-    }
-  }
-
-  if (mode === "support") {
-    width =
-      scale >= 30
-        ? "20%"
-        : "16%";
-  }
-
-  if (mode === "endorsement") {
-    width =
-      scale <= 20
-        ? "12%"
-        : "15%";
-  }
-
-  return (
-    <div
-      style={{
-        width,
-        aspectRatio: "3 / 1",
-        flexShrink: 0,
-
-        filter: `
-          drop-shadow(
-            0 10px 22px
-            rgba(0,0,0,0.68)
-          )
-          drop-shadow(
-            0 2px 6px
-            rgba(0,0,0,0.76)
-          )
-        `,
-      }}
-    >
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* MINI LOGO                                        */
-/* ------------------------------------------------ */
-
-function MiniLogo({
-  logoUrl,
-  fallback,
-  width,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-  width: string;
-}) {
-  return (
-    <div
-      style={{
-        width,
-        aspectRatio: "3 / 1",
-        flexShrink: 0,
-      }}
-    >
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* BACKGROUND                                       */
-/* ------------------------------------------------ */
-
-function FrameBackground({
-  imageId,
-}: {
-  imageId: number;
-}) {
-  const [
-    extensionIndex,
-    setExtensionIndex,
-  ] = useState(0);
-
-  const [
-    failed,
-    setFailed,
-  ] = useState(false);
-
-  useEffect(() => {
-    setExtensionIndex(0);
-    setFailed(false);
-  }, [imageId]);
-
-  const src =
-    `/images/image${imageId}.${IMAGE_EXTENSIONS[extensionIndex]}`;
-
-  return (
-    <>
-      {!failed && (
-        <img
-          src={src}
-          alt=""
-          draggable={false}
-          onError={() => {
-            if (
-              extensionIndex <
-              IMAGE_EXTENSIONS.length - 1
-            ) {
-              setExtensionIndex(
-                (current) =>
-                  current + 1
-              );
-            } else {
-              setFailed(true);
-            }
-          }}
-          className="
-            absolute
-            inset-0
-
-            h-full
-            w-full
-
-            scale-[1.03]
-
-            object-cover
-
-            grayscale
-            saturate-0
-
-            opacity-[0.92]
-          "
-        />
-      )}
-
-      {failed && (
-        <div
-          className="
-            absolute
-            inset-0
-
-            bg-[radial-gradient(circle_at_72%_15%,rgba(255,255,255,0.08),transparent_34%),linear-gradient(180deg,#111_0%,#050505_100%)]
-          "
-        />
-      )}
-
-      <div
-        className="
-          absolute
-          inset-0
-
-          bg-[linear-gradient(180deg,rgba(0,0,0,0.02)_0%,rgba(0,0,0,0.08)_45%,rgba(0,0,0,0.48)_100%)]
-        "
-      />
-
-      <div
-        className="
-          absolute
-
-          -right-[20%]
-          -top-[30%]
-
-          h-[80%]
-          w-[70%]
-
-          rounded-full
-
-          bg-white/[0.05]
-
-          blur-[68px]
-        "
-      />
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* FRAME EFFECTS                                    */
-/* ------------------------------------------------ */
-
-function FrameEffects() {
-  return (
-    <>
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-
-          -left-[18%]
-          top-[3%]
-
-          h-[54%]
-          w-[80%]
-
-          rotate-[-13deg]
-
-          bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,0.045)_48%,transparent_72%)]
-
-          blur-[8px]
-        "
-      />
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-
-          opacity-[0.08]
-
-          mix-blend-screen
-
-          [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_3px),repeating-linear-gradient(90deg,rgba(255,255,255,0.018)_0px,rgba(255,255,255,0.018)_1px,transparent_1px,transparent_4px)]
-        "
-      />
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-
-          rounded-[18px]
-
-          shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
-        "
-      />
-    </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* GLASS                                            */
-/* ------------------------------------------------ */
-
-function VideoGlass({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className="
-        relative
-
-        overflow-hidden
-
-        rounded-[9px]
-
-        border
-        border-white/[0.10]
-
-        bg-black/40
-
-        px-[9px]
-        py-[6px]
-
-        backdrop-blur-[14px]
-
-        shadow-[0_8px_24px_rgba(0,0,0,0.22)]
-      "
-    >
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-
-          left-[8%]
-          right-[8%]
-          top-0
-
-          h-px
-
-          bg-gradient-to-r
-
-          from-transparent
-          via-white/24
-          to-transparent
-        "
-      />
-
-      <div className="relative">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* TRANSITION LINES                                 */
-/* ------------------------------------------------ */
 
 function TransitionLines() {
   return (
@@ -2209,11 +1645,28 @@ function TransitionLines() {
         className="
           absolute
 
-          -left-[5%]
-          top-[14%]
+          -left-[65px]
+          top-[15%]
 
-          h-[72%]
-          w-[27%]
+          h-[70%]
+          w-[150px]
+
+          rounded-[50%]
+
+          border
+          border-white/[0.13]
+        "
+      />
+
+      <div
+        className="
+          absolute
+
+          -left-[45px]
+          top-[24%]
+
+          h-[52%]
+          w-[105px]
 
           rounded-[50%]
 
@@ -2226,16 +1679,16 @@ function TransitionLines() {
         className="
           absolute
 
-          left-[0%]
-          top-[20%]
+          -right-[65px]
+          top-[15%]
 
-          h-[60%]
-          w-[20%]
+          h-[70%]
+          w-[150px]
 
           rounded-[50%]
 
           border
-          border-white/[0.045]
+          border-white/[0.13]
         "
       />
 
@@ -2243,292 +1696,309 @@ function TransitionLines() {
         className="
           absolute
 
-          -right-[5%]
-          top-[14%]
+          -right-[45px]
+          top-[24%]
 
-          h-[72%]
-          w-[27%]
+          h-[52%]
+          w-[105px]
 
           rounded-[50%]
 
           border
           border-white/[0.07]
-        "
-      />
-
-      <div
-        className="
-          absolute
-
-          right-[0%]
-          top-[20%]
-
-          h-[60%]
-          w-[20%]
-
-          rounded-[50%]
-
-          border
-          border-white/[0.045]
         "
       />
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* TOP RIGHT PARTNERSHIP LOCKUP                     */
-/* ------------------------------------------------ */
 
-function PartnershipLockup({
-  model,
+/* ================================================= */
+/* LOGOS                                             */
+/* ================================================= */
 
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
+function FloatingLogo({
+  brand,
+  mode,
+  isLight,
 }: {
-  model: PartnershipModelId;
+  brand:
+    BrandView;
 
-  brandAName: string;
-  brandBName: string;
+  mode:
+    | "equal"
+    | "lead"
+    | "support"
+    | "endorsement";
 
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  isLight:
+    boolean;
 }) {
-  if (
-    model === "axb"
-  ) {
-    return (
-      <div
-        className="
-          flex
-          items-center
-
-          gap-[14px]
-        "
-      >
-        <TopLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-        />
-
-        <span
-          className="
-            text-[20px]
-            text-white/18
-          "
-        >
-          ×
-        </span>
-
-        <TopLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-        />
-      </div>
-    );
-  }
-
-  if (
-    model === "aandb"
-  ) {
-    return (
-      <div
-        className="
-          flex
-          items-end
-
-          gap-[20px]
-        "
-      >
-        <TopLabeledLogo
-          label="Immersive experience by"
-          logoUrl={brandALogo}
-          fallback={brandAName}
-        />
-
-        <TopLabeledLogo
-          label="In collaboration with"
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-        />
-      </div>
-    );
-  }
-
-  if (
-    model === "poweredByA"
-  ) {
-    return (
-      <div
-        className="
-          flex
-          flex-col
-          items-end
-        "
-      >
-        <div
-          className="
-            h-[37px]
-            w-[140px]
-          "
-        >
-          <BrandLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-          />
-        </div>
-
-        <div
-          className="
-            mt-[5px]
-
-            flex
-            items-center
-
-            gap-[7px]
-          "
-        >
-          <span
-            className="
-              text-[6px]
-              uppercase
-              tracking-[0.14em]
-
-              text-white/18
-            "
-          >
-            Powered by
-          </span>
-
-          <div
-            className="
-              h-[20px]
-              w-[78px]
-            "
-          >
-            <BrandLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const width =
+    mode ===
+    "equal"
+      ? 150
+      : mode ===
+          "lead"
+        ? 190
+        : mode ===
+            "support"
+          ? 105
+          : 70;
 
   return (
     <div
       className="
         flex
-        flex-col
-        items-end
+        shrink-0
+
+        items-center
+        justify-center
       "
-    >
-      <div
-        className="
-          h-[24px]
-          w-[96px]
-        "
-      >
-        <BrandLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-        />
-      </div>
+      style={{
+        width,
 
-      <p
-        className="
-          my-[3px]
+        height:
+          Math.max(
+            26,
+            width / 3
+          ),
 
-          text-[6px]
-          uppercase
-          tracking-[0.15em]
-
-          text-white/18
-        "
-      >
-        Presents
-      </p>
-
-      <div
-        className="
-          h-[34px]
-          w-[128px]
-        "
-      >
-        <BrandLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* TOP LOGOS                                        */
-/* ------------------------------------------------ */
-
-function TopLogo({
-  logoUrl,
-  fallback,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-}) {
-  return (
-    <div
-      className="
-        h-[36px]
-        w-[118px]
-      "
+        filter:
+          getLogoShadow(
+            isLight,
+            true
+          ),
+      }}
     >
       <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
+        logoUrl={
+          brand.logoUrl
+        }
+        fallback={
+          brand.name
+        }
       />
     </div>
   );
 }
 
-function TopLabeledLogo({
-  label,
 
-  logoUrl,
-  fallback,
+function MiniLogo({
+  brand,
+  width,
+  isLight,
 }: {
-  label: string;
+  brand:
+    BrandView;
 
-  logoUrl: string | null;
-  fallback: string;
+  width:
+    number;
+
+  isLight:
+    boolean;
 }) {
   return (
-    <div>
-      <p
-        className="
-          mb-[4px]
+    <div
+      className="
+        flex
+        shrink-0
 
-          text-[6px]
-          text-white/16
-        "
-      >
-        {label}
-      </p>
+        items-center
+        justify-center
+      "
+      style={{
+        width,
 
-      <div
-        className="
-          h-[30px]
-          w-[116px]
-        "
-      >
-        <BrandLogo
-          logoUrl={logoUrl}
-          fallback={fallback}
-        />
-      </div>
+        height:
+          Math.max(
+            15,
+            width / 3
+          ),
+
+        filter:
+          getLogoShadow(
+            isLight,
+            false
+          ),
+      }}
+    >
+      <BrandLogo
+        logoUrl={
+          brand.logoUrl
+        }
+        fallback={
+          brand.name
+        }
+      />
     </div>
   );
+}
+
+
+function TransitionLogo({
+  brand,
+  isLight,
+}: {
+  brand:
+    BrandView;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <div
+      className="
+        flex
+
+        h-[48px]
+        w-full
+
+        items-center
+        justify-center
+      "
+      style={{
+        filter:
+          getLogoShadow(
+            isLight,
+            true
+          ),
+      }}
+    >
+      <BrandLogo
+        logoUrl={
+          brand.logoUrl
+        }
+        fallback={
+          brand.name
+        }
+      />
+    </div>
+  );
+}
+
+
+function getLogoShadow(
+  isLight:
+    boolean,
+
+  strong:
+    boolean
+) {
+  if (
+    isLight
+  ) {
+    return strong
+      ? `
+        drop-shadow(
+          0 8px 22px
+          rgba(255,255,255,.90)
+        )
+        drop-shadow(
+          0 0 7px
+          rgba(255,255,255,.58)
+        )
+      `
+      : `
+        drop-shadow(
+          0 3px 10px
+          rgba(255,255,255,.62)
+        )
+      `;
+  }
+
+  return strong
+    ? `
+      drop-shadow(
+        0 8px 22px
+        rgba(0,0,0,.62)
+      )
+      drop-shadow(
+        0 2px 5px
+        rgba(0,0,0,.65)
+      )
+    `
+    : `
+      drop-shadow(
+        0 3px 10px
+        rgba(0,0,0,.38)
+      )
+    `;
+}
+
+
+/* ================================================= */
+/* SMALL ELEMENTS                                    */
+/* ================================================= */
+
+function Symbol({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  return (
+    <span
+      className="
+        shrink-0
+
+        text-[15px]
+
+        text-white/38
+      "
+    >
+      {children}
+    </span>
+  );
+}
+
+
+function Relationship({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  return (
+    <span
+      className="
+        shrink-0
+
+        whitespace-nowrap
+
+        text-[7px]
+        uppercase
+        tracking-[0.11em]
+
+        text-white/29
+      "
+    >
+      {children}
+    </span>
+  );
+}
+
+
+/* ================================================= */
+/* DESCRIPTION                                      */
+/* ================================================= */
+
+function getTransitionDescription(
+  model:
+    PartnershipModelId
+) {
+  switch (model) {
+    case "axb":
+      return "Brand A × Brand B";
+
+    case "aandb":
+      return "Brand A leads the transition";
+
+    case "poweredByA":
+      return "Brand B with Brand A endorsement";
+
+    case "presentsB":
+    default:
+      return "Brand A introduces Brand B";
+  }
 }
