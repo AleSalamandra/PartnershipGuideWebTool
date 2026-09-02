@@ -6,35 +6,58 @@ import type {
 
 import GuidelinePage from "./GuidelinePage";
 import PartnershipLockup from "./PartnershipLockup";
+import RasterGlow from "./RasterGlow";
+import RasterGradient from "./RasterGradient";
 
 import {
   brandCharacterTraits,
   BrandCharacterTraitId,
 } from "@/data/brandCharacterTraits";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 interface GraphicProfile {
-  roundness: number;
-  energy: number;
-  grid: number;
-  particles: number;
-  glow: number;
-  texture: number;
-  organic: number;
-  precision: number;
+  roundness:
+    number;
 
-  expressiveTilt: number;
+  energy:
+    number;
+
+  grid:
+    number;
+
+  particles:
+    number;
+
+  glow:
+    number;
+
+  texture:
+    number;
+
+  organic:
+    number;
+
+  precision:
+    number;
+
+  expressiveTilt:
+    number;
 }
 
-/* ------------------------------------------------ */
-/* HELPERS                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 function clamp(
   value: number
@@ -52,8 +75,13 @@ function safeColour(
   value: unknown,
   fallback: string
 ) {
-  return typeof value === "string" &&
-    /^#[0-9A-Fa-f]{6}$/.test(value)
+  return (
+    typeof value ===
+      "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(
+      value
+    )
+  )
     ? value
     : fallback;
 }
@@ -79,19 +107,25 @@ function hexToRgb(
 ) {
   const value =
     parseInt(
-      colour.replace("#", ""),
+      colour.replace(
+        "#",
+        ""
+      ),
       16
     );
 
   return {
     r:
-      (value >> 16) & 255,
+      (value >> 16) &
+      255,
 
     g:
-      (value >> 8) & 255,
+      (value >> 8) &
+      255,
 
     b:
-      value & 255,
+      value &
+      255,
   };
 }
 
@@ -103,14 +137,17 @@ function alpha(
     r,
     g,
     b,
-  } = hexToRgb(colour);
+  } =
+    hexToRgb(
+      colour
+    );
 
   return `rgba(${r},${g},${b},${opacity})`;
 }
 
-/* ------------------------------------------------ */
-/* CHARACTER PROFILE                                */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* CHARACTER PROFILE                                 */
+/* ================================================= */
 
 function buildProfile(
   traits:
@@ -118,135 +155,203 @@ function buildProfile(
 ): GraphicProfile {
   const p:
     GraphicProfile = {
-    roundness: 0.42,
-    energy: 0.3,
-    grid: 0.45,
-    particles: 0.24,
-    glow: 0.2,
-    texture: 0.14,
-    organic: 0.18,
-    precision: 0.58,
+    roundness:
+      0.42,
 
-    expressiveTilt: 0,
+    energy:
+      0.3,
+
+    grid:
+      0.45,
+
+    particles:
+      0.24,
+
+    glow:
+      0.2,
+
+    texture:
+      0.14,
+
+    organic:
+      0.18,
+
+    precision:
+      0.58,
+
+    expressiveTilt:
+      0,
   };
 
   traits.forEach(
     (trait) => {
       switch (trait) {
         case "classic":
-          p.precision += 0.2;
-          p.grid += 0.1;
-          p.energy -= 0.08;
+          p.precision +=
+            0.2;
+          p.grid +=
+            0.1;
+          p.energy -=
+            0.08;
           break;
 
         case "elegant":
-          p.roundness += 0.05;
-          p.energy -= 0.1;
-          p.glow += 0.04;
+          p.roundness +=
+            0.05;
+          p.energy -=
+            0.1;
+          p.glow +=
+            0.04;
           break;
 
         case "premium":
-          p.glow += 0.1;
-          p.texture += 0.08;
-          p.energy -= 0.08;
+          p.glow +=
+            0.1;
+          p.texture +=
+            0.08;
+          p.energy -=
+            0.08;
           break;
 
         case "minimal":
-          p.particles -= 0.2;
-          p.texture -= 0.12;
-          p.energy -= 0.1;
+          p.particles -=
+            0.2;
+          p.texture -=
+            0.12;
+          p.energy -=
+            0.1;
           break;
 
         case "editorial":
-          p.grid += 0.28;
-          p.precision += 0.15;
+          p.grid +=
+            0.28;
+          p.precision +=
+            0.15;
           break;
 
         case "technical":
-          p.grid += 0.3;
-          p.precision += 0.28;
-          p.glow += 0.06;
+          p.grid +=
+            0.3;
+          p.precision +=
+            0.28;
+          p.glow +=
+            0.06;
           break;
 
         case "precise":
-          p.precision += 0.34;
-          p.organic -= 0.16;
+          p.precision +=
+            0.34;
+          p.organic -=
+            0.16;
           break;
 
         case "futuristic":
-          p.glow += 0.32;
-          p.grid += 0.12;
-          p.particles += 0.12;
+          p.glow +=
+            0.32;
+          p.grid +=
+            0.12;
+          p.particles +=
+            0.12;
           break;
 
         case "bold":
-          p.energy += 0.18;
+          p.energy +=
+            0.18;
           break;
 
         case "dynamic":
-          p.energy += 0.3;
-          p.particles += 0.08;
+          p.energy +=
+            0.3;
+          p.particles +=
+            0.08;
           break;
 
         case "energetic":
-          p.energy += 0.4;
-          p.particles += 0.25;
+          p.energy +=
+            0.4;
+          p.particles +=
+            0.25;
           break;
 
         case "sporty":
-          p.energy += 0.38;
-          p.grid += 0.1;
+          p.energy +=
+            0.38;
+          p.grid +=
+            0.1;
           break;
 
         case "friendly":
-          p.roundness += 0.3;
-          p.organic += 0.12;
+          p.roundness +=
+            0.3;
+          p.organic +=
+            0.12;
           break;
 
         case "organic":
-          p.organic += 0.5;
-          p.roundness += 0.18;
-          p.texture += 0.18;
-          p.grid -= 0.14;
+          p.organic +=
+            0.5;
+          p.roundness +=
+            0.18;
+          p.texture +=
+            0.18;
+          p.grid -=
+            0.14;
           break;
 
         case "immersive":
-          p.glow += 0.16;
-          p.particles += 0.12;
+          p.glow +=
+            0.16;
+          p.particles +=
+            0.12;
           break;
 
         case "cinematic":
-          p.glow += 0.12;
-          p.texture += 0.18;
+          p.glow +=
+            0.12;
+          p.texture +=
+            0.18;
           break;
 
         case "youthful":
-          p.energy += 0.2;
-          p.roundness += 0.1;
+          p.energy +=
+            0.2;
+          p.roundness +=
+            0.1;
           break;
 
         case "playful":
-          p.energy += 0.15;
-          p.roundness += 0.3;
-          p.organic += 0.2;
-          p.expressiveTilt += 0.8;
+          p.energy +=
+            0.15;
+          p.roundness +=
+            0.3;
+          p.organic +=
+            0.2;
+          p.expressiveTilt +=
+            0.8;
           break;
 
         case "experimental":
-          p.energy += 0.14;
-          p.organic += 0.2;
-          p.expressiveTilt += 0.7;
+          p.energy +=
+            0.14;
+          p.organic +=
+            0.2;
+          p.expressiveTilt +=
+            0.7;
           break;
 
         case "disruptive":
-          p.energy += 0.28;
-          p.expressiveTilt += 0.55;
+          p.energy +=
+            0.28;
+          p.expressiveTilt +=
+            0.55;
           break;
       }
     }
   );
 
-  Object.keys(p).forEach(
+  Object.keys(
+    p
+  ).forEach(
     (key) => {
       const k =
         key as keyof GraphicProfile;
@@ -267,51 +372,75 @@ function blend(
   weight: number
 ): GraphicProfile {
   const inverse =
-    1 - weight;
+    1 -
+    weight;
 
   return {
     roundness:
-      a.roundness * weight +
-      b.roundness * inverse,
+      a.roundness *
+        weight +
+      b.roundness *
+        inverse,
 
     energy:
-      a.energy * weight +
-      b.energy * inverse,
+      a.energy *
+        weight +
+      b.energy *
+        inverse,
 
     grid:
-      a.grid * weight +
-      b.grid * inverse,
+      a.grid *
+        weight +
+      b.grid *
+        inverse,
 
     particles:
-      a.particles * weight +
-      b.particles * inverse,
+      a.particles *
+        weight +
+      b.particles *
+        inverse,
 
     glow:
-      a.glow * weight +
-      b.glow * inverse,
+      a.glow *
+        weight +
+      b.glow *
+        inverse,
 
     texture:
-      a.texture * weight +
-      b.texture * inverse,
+      a.texture *
+        weight +
+      b.texture *
+        inverse,
 
     organic:
-      a.organic * weight +
-      b.organic * inverse,
+      a.organic *
+        weight +
+      b.organic *
+        inverse,
 
     precision:
-      a.precision * weight +
-      b.precision * inverse,
+      a.precision *
+        weight +
+      b.precision *
+        inverse,
 
     expressiveTilt:
-      a.expressiveTilt * weight +
-      b.expressiveTilt * inverse,
+      a.expressiveTilt *
+        weight +
+      b.expressiveTilt *
+        inverse,
   };
 }
 
 function getSharedProfile(
-  model: PartnershipModelId,
-  a: GraphicProfile,
-  b: GraphicProfile
+  model:
+    PartnershipModelId,
+
+  a:
+    GraphicProfile,
+
+  b:
+    GraphicProfile
 ) {
   switch (model) {
     case "axb":
@@ -341,9 +470,9 @@ function getSharedProfile(
   }
 }
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page10() {
   const {
@@ -357,16 +486,24 @@ export default function Page10() {
     partnershipModel as PartnershipModelId;
 
   const aTraits =
-    getTraits(brandA);
+    getTraits(
+      brandA
+    );
 
   const bTraits =
-    getTraits(brandB);
+    getTraits(
+      brandB
+    );
 
   const aProfile =
-    buildProfile(aTraits);
+    buildProfile(
+      aTraits
+    );
 
   const bProfile =
-    buildProfile(bTraits);
+    buildProfile(
+      bTraits
+    );
 
   const profile =
     getSharedProfile(
@@ -400,22 +537,26 @@ export default function Page10() {
     );
 
   const leadPrimary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? bPrimary
       : aPrimary;
 
   const leadSecondary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? bSecondary
       : aSecondary;
 
   const supportPrimary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? aPrimary
       : bPrimary;
 
   const supportSecondary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? aSecondary
       : bSecondary;
 
@@ -455,16 +596,28 @@ export default function Page10() {
 
           <CharacterGroup
             label="Brand A"
-            traits={aTraits}
-            primary={aPrimary}
-            secondary={aSecondary}
+            traits={
+              aTraits
+            }
+            primary={
+              aPrimary
+            }
+            secondary={
+              aSecondary
+            }
           />
 
           <CharacterGroup
             label="Brand B"
-            traits={bTraits}
-            primary={bPrimary}
-            secondary={bSecondary}
+            traits={
+              bTraits
+            }
+            primary={
+              bPrimary
+            }
+            secondary={
+              bSecondary
+            }
           />
         </Card>
 
@@ -476,42 +629,54 @@ export default function Page10() {
           <div className="mt-[13px] grid grid-cols-2 gap-x-[14px] gap-y-[11px]">
             <Metric
               label="Geometry"
-              value={profile.organic}
+              value={
+                profile.organic
+              }
               left="Rigid"
               right="Organic"
             />
 
             <Metric
               label="Energy"
-              value={profile.energy}
+              value={
+                profile.energy
+              }
               left="Calm"
               right="Active"
             />
 
             <Metric
               label="Grid"
-              value={profile.grid}
+              value={
+                profile.grid
+              }
               left="Free"
               right="Strict"
             />
 
             <Metric
               label="Glow"
-              value={profile.glow}
+              value={
+                profile.glow
+              }
               left="Flat"
               right="Luminous"
             />
 
             <Metric
               label="Texture"
-              value={profile.texture}
+              value={
+                profile.texture
+              }
               left="Clean"
               right="Rich"
             />
 
             <Metric
               label="Particles"
-              value={profile.particles}
+              value={
+                profile.particles
+              }
               left="Quiet"
               right="Dense"
             />
@@ -521,31 +686,28 @@ export default function Page10() {
 
       {/* DO / DON'T */}
 
-      <section
-        className="
-          absolute
-
-          left-[395px]
-          right-[70px]
-          top-[190px]
-
-          grid
-          grid-cols-2
-
-          gap-[12px]
-        "
-      >
+      <section className="absolute left-[395px] right-[70px] top-[190px] grid grid-cols-2 gap-[12px]">
         <Comparison
           good
           title="DO"
           description="Create one visual grammar from both personalities and the partnership hierarchy."
         >
           <GeneratedSystem
-            profile={profile}
-            primary={leadPrimary}
-            secondary={leadSecondary}
-            support={supportPrimary}
-            supportSecondary={supportSecondary}
+            profile={
+              profile
+            }
+            primary={
+              leadPrimary
+            }
+            secondary={
+              leadSecondary
+            }
+            support={
+              supportPrimary
+            }
+            supportSecondary={
+              supportSecondary
+            }
           />
         </Comparison>
 
@@ -554,42 +716,49 @@ export default function Page10() {
           description="Do not place two independent branded visual systems side by side."
         >
           <SplitSystem
-            aPrimary={aPrimary}
-            aSecondary={aSecondary}
-            bPrimary={bPrimary}
-            bSecondary={bSecondary}
+            aPrimary={
+              aPrimary
+            }
+            aSecondary={
+              aSecondary
+            }
+            bPrimary={
+              bPrimary
+            }
+            bSecondary={
+              bSecondary
+            }
           />
         </Comparison>
       </section>
 
-      {/* TRAIT IMPLICATIONS */}
+      {/* CHARACTER IMPLICATIONS */}
 
-      <section
-        className="
-          absolute
-
-          left-[395px]
-          right-[70px]
-          top-[610px]
-
-          grid
-          grid-cols-2
-
-          gap-[12px]
-        "
-      >
+      <section className="absolute left-[395px] right-[70px] top-[610px] grid grid-cols-2 gap-[12px]">
         <TraitCard
           label="Brand A character"
-          traits={aTraits}
-          primary={aPrimary}
-          secondary={aSecondary}
+          traits={
+            aTraits
+          }
+          primary={
+            aPrimary
+          }
+          secondary={
+            aSecondary
+          }
         />
 
         <TraitCard
           label="Brand B character"
-          traits={bTraits}
-          primary={bPrimary}
-          secondary={bSecondary}
+          traits={
+            bTraits
+          }
+          primary={
+            bPrimary
+          }
+          secondary={
+            bSecondary
+          }
         />
       </section>
 
@@ -628,18 +797,31 @@ export default function Page10() {
             "Visualizers",
             "Data",
           ].map(
-            (label, index) => (
+            (
+              label,
+              index
+            ) => (
               <ToolkitItem
-                key={label}
-                label={label}
-                index={index}
+                key={
+                  label
+                }
+                label={
+                  label
+                }
+                index={
+                  index
+                }
                 primary={
-                  index % 4 === 0
+                  index %
+                    4 ===
+                  0
                     ? supportPrimary
                     : leadPrimary
                 }
                 secondary={
-                  index % 3 === 0
+                  index %
+                    3 ===
+                  0
                     ? supportSecondary
                     : leadSecondary
                 }
@@ -652,16 +834,19 @@ export default function Page10() {
   );
 }
 
-/* ------------------------------------------------ */
-/* COMPONENTS                                       */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* UI                                                */
+/* ================================================= */
 
 function Card({
   children,
   className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+  children:
+    ReactNode;
+
+  className?:
+    string;
 }) {
   return (
     <div
@@ -681,7 +866,8 @@ function Card({
 function SectionLabel({
   children,
 }: {
-  children: ReactNode;
+  children:
+    ReactNode;
 }) {
   return (
     <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
@@ -696,11 +882,17 @@ function CharacterGroup({
   primary,
   secondary,
 }: {
-  label: string;
+  label:
+    string;
+
   traits:
     BrandCharacterTraitId[];
-  primary: string;
-  secondary: string;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
     <div className="mt-[13px]">
@@ -727,18 +919,24 @@ function CharacterGroup({
       </div>
 
       <div className="mt-[7px] flex flex-wrap gap-[4px]">
-        {traits.length > 0 ? (
+        {traits.length >
+        0 ? (
           traits.map(
             (id) => {
               const trait =
                 brandCharacterTraits.find(
-                  (item) =>
-                    item.id === id
+                  (
+                    item
+                  ) =>
+                    item.id ===
+                    id
                 );
 
               return (
                 <span
-                  key={id}
+                  key={
+                    id
+                  }
                   className="rounded-full border border-white/[0.07] px-[6px] py-[3px] text-[8px] text-white/38"
                 >
                   {trait?.label ??
@@ -763,10 +961,17 @@ function Metric({
   left,
   right,
 }: {
-  label: string;
-  value: number;
-  left: string;
-  right: string;
+  label:
+    string;
+
+  value:
+    number;
+
+  left:
+    string;
+
+  right:
+    string;
 }) {
   return (
     <div>
@@ -780,15 +985,21 @@ function Metric({
           style={{
             width:
               `${Math.round(
-                value * 100
+                value *
+                  100
               )}%`,
           }}
         />
       </div>
 
       <div className="mt-[4px] flex justify-between text-[7px] text-white/18">
-        <span>{left}</span>
-        <span>{right}</span>
+        <span>
+          {left}
+        </span>
+
+        <span>
+          {right}
+        </span>
       </div>
     </div>
   );
@@ -800,10 +1011,17 @@ function Comparison({
   description,
   children,
 }: {
-  good?: boolean;
-  title: string;
-  description: string;
-  children: ReactNode;
+  good?:
+    boolean;
+
+  title:
+    string;
+
+  description:
+    string;
+
+  children:
+    ReactNode;
 }) {
   return (
     <Card className="p-[13px]">
@@ -848,6 +1066,89 @@ function Comparison({
   );
 }
 
+/* ================================================= */
+/* GRID                                              */
+/* ================================================= */
+
+function GridField({
+  density,
+}: {
+  density:
+    number;
+}) {
+  const columns =
+    Math.round(
+      7 +
+        density *
+          8
+    );
+
+  const rows =
+    Math.round(
+      5 +
+        density *
+          6
+    );
+
+  return (
+    <div className="pointer-events-none absolute inset-0 opacity-30">
+      {Array.from({
+        length:
+          columns,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <div
+            key={`v-${index}`}
+            className="absolute bottom-0 top-0 w-px bg-white/[0.08]"
+            style={{
+              left:
+                `${
+                  (index +
+                    1) /
+                  (columns +
+                    1) *
+                  100
+                }%`,
+            }}
+          />
+        )
+      )}
+
+      {Array.from({
+        length:
+          rows,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <div
+            key={`h-${index}`}
+            className="absolute left-0 right-0 h-px bg-white/[0.08]"
+            style={{
+              top:
+                `${
+                  (index +
+                    1) /
+                  (rows +
+                    1) *
+                  100
+                }%`,
+            }}
+          />
+        )
+      )}
+    </div>
+  );
+}
+
+/* ================================================= */
+/* GENERATED SYSTEM                                  */
+/* ================================================= */
+
 function GeneratedSystem({
   profile,
   primary,
@@ -855,11 +1156,20 @@ function GeneratedSystem({
   support,
   supportSecondary,
 }: {
-  profile: GraphicProfile;
-  primary: string;
-  secondary: string;
-  support: string;
-  supportSecondary: string;
+  profile:
+    GraphicProfile;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  support:
+    string;
+
+  supportSecondary:
+    string;
 }) {
   const radius =
     10 +
@@ -872,36 +1182,27 @@ function GeneratedSystem({
       ? (
           profile.expressiveTilt -
           0.45
-        ) * 8
+        ) *
+        8
       : 0;
 
   const particleCount =
     Math.round(
       4 +
-      profile.particles * 14
+        profile.particles *
+          14
     );
 
   return (
     <>
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px)",
-
-          backgroundSize:
-            `${60 -
-            profile.grid *
-              35}px ${
-              60 -
-              profile.grid *
-                35
-            }px`,
-        }}
+      <GridField
+        density={
+          profile.grid
+        }
       />
 
       <div
-        className="absolute left-[16%] top-[14%] h-[170px] w-[195px] border"
+        className="absolute left-[16%] top-[14%] h-[170px] w-[195px] overflow-hidden border"
         style={{
           borderRadius:
             radius,
@@ -916,48 +1217,87 @@ function GeneratedSystem({
             rotate
               ? `rotate(${rotate}deg)`
               : undefined,
-
-          background:
-            `radial-gradient(circle at 30% 25%,${alpha(
-              secondary,
-              0.28
-            )},transparent 65%)`,
-
-          boxShadow:
-            profile.glow > 0.4
-              ? `0 0 65px ${alpha(
-                  secondary,
-                  0.2
-                )}`
-              : undefined,
         }}
-      />
+      >
+        <RasterGlow
+          color={
+            secondary
+          }
+          secondaryColor={
+            primary
+          }
+          opacity={
+            0.12 +
+            profile.glow *
+              0.24
+          }
+          secondaryOpacity={
+            0.04 +
+            profile.glow *
+              0.08
+          }
+          centerX={28}
+          centerY={24}
+          className="absolute inset-0 h-full w-full"
+        />
+      </div>
 
       <div
-        className="absolute right-[17%] top-[27%] h-[105px] w-[125px] border"
+        className="absolute right-[17%] top-[27%] h-[105px] w-[125px] overflow-hidden border"
         style={{
           borderRadius:
-            radius * 0.7,
+            radius *
+            0.7,
 
           borderColor:
             alpha(
               support,
               0.45
             ),
-
-          background:
-            `linear-gradient(135deg,${alpha(
-              supportSecondary,
-              0.15
-            )},transparent)`,
         }}
-      />
+      >
+        <RasterGradient
+          direction="diagonal"
+          className="absolute inset-0 h-full w-full"
+          stops={[
+            {
+              color:
+                supportSecondary,
+              offset: 0,
+              opacity: 0.18,
+            },
+            {
+              color:
+                supportSecondary,
+              offset: 55,
+              opacity: 0.05,
+            },
+            {
+              color:
+                supportSecondary,
+              offset:
+                100,
+              opacity: 0,
+            },
+          ]}
+        />
+      </div>
 
       <div className="absolute right-[8%] top-[16%] flex w-[38%] flex-col gap-[10px]">
-        {[80, 55, 95, 42].map(
-          (width, index) => (
+        {[
+          80,
+          55,
+          95,
+          42,
+        ].map(
+          (
+            width,
+            index
+          ) => (
             <div
-              key={index}
+              key={
+                index
+              }
               className="h-[2px] rounded-full"
               style={{
                 width:
@@ -967,7 +1307,8 @@ function GeneratedSystem({
                   "auto",
 
                 backgroundColor:
-                  index % 2
+                  index %
+                    2
                     ? alpha(
                         secondary,
                         0.55
@@ -986,35 +1327,46 @@ function GeneratedSystem({
         length:
           particleCount,
       }).map(
-        (_, index) => (
+        (
+          _,
+          index
+        ) => (
           <div
-            key={index}
+            key={
+              index
+            }
             className="absolute rounded-full"
             style={{
               left:
                 `${
                   8 +
-                  ((index * 37) %
+                  ((index *
+                    37) %
                     85)
                 }%`,
 
               top:
                 `${
                   10 +
-                  ((index * 29) %
+                  ((index *
+                    29) %
                     72)
                 }%`,
 
               width:
                 2 +
-                (index % 3),
+                (index %
+                  3),
 
               height:
                 2 +
-                (index % 3),
+                (index %
+                  3),
 
               backgroundColor:
-                index % 3 === 0
+                index %
+                  3 ===
+                0
                   ? supportSecondary
                   : primary,
 
@@ -1036,46 +1388,73 @@ function GeneratedSystem({
   );
 }
 
+/* ================================================= */
+/* DON'T                                             */
+/* ================================================= */
+
 function SplitSystem({
   aPrimary,
   aSecondary,
   bPrimary,
   bSecondary,
 }: {
-  aPrimary: string;
-  aSecondary: string;
-  bPrimary: string;
-  bSecondary: string;
+  aPrimary:
+    string;
+
+  aSecondary:
+    string;
+
+  bPrimary:
+    string;
+
+  bSecondary:
+    string;
 }) {
   return (
     <>
-      <div
-        className="absolute inset-y-0 left-0 w-1/2"
-        style={{
-          background:
-            `linear-gradient(135deg,${alpha(
-              aPrimary,
-              0.34
-            )},${alpha(
-              aSecondary,
-              0.12
-            )})`,
-        }}
-      />
+      <div className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">
+        <RasterGradient
+          direction="diagonal"
+          className="h-full w-full"
+          stops={[
+            {
+              color:
+                aPrimary,
+              offset: 0,
+              opacity: 0.34,
+            },
+            {
+              color:
+                aSecondary,
+              offset:
+                100,
+              opacity: 0.12,
+            },
+          ]}
+        />
+      </div>
 
-      <div
-        className="absolute inset-y-0 right-0 w-1/2"
-        style={{
-          background:
-            `linear-gradient(135deg,${alpha(
-              bPrimary,
-              0.34
-            )},${alpha(
-              bSecondary,
-              0.12
-            )})`,
-        }}
-      />
+      <div className="absolute inset-y-0 right-0 w-1/2 overflow-hidden">
+        <RasterGradient
+          direction="diagonal"
+          className="h-full w-full"
+          stops={[
+            {
+              color:
+                bPrimary,
+              offset: 0,
+              opacity: 0.34,
+            },
+            {
+              color:
+                bSecondary,
+              offset:
+                100,
+              opacity: 0.12,
+            },
+          ]}
+        />
+      </div>
 
       <div className="absolute left-[12%] top-[24%] h-[145px] w-[145px] rounded-[30px] border border-white/35" />
 
@@ -1090,17 +1469,27 @@ function SplitSystem({
   );
 }
 
+/* ================================================= */
+/* TRAIT CARD                                        */
+/* ================================================= */
+
 function TraitCard({
   label,
   traits,
   primary,
   secondary,
 }: {
-  label: string;
+  label:
+    string;
+
   traits:
     BrandCharacterTraitId[];
-  primary: string;
-  secondary: string;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
     <Card className="min-h-[122px] p-[13px]">
@@ -1128,18 +1517,26 @@ function TraitCard({
 
       <div className="mt-[10px] grid grid-cols-2 gap-[6px]">
         {traits
-          .slice(0, 4)
+          .slice(
+            0,
+            4
+          )
           .map(
             (id) => {
               const trait =
                 brandCharacterTraits.find(
-                  (item) =>
-                    item.id === id
+                  (
+                    item
+                  ) =>
+                    item.id ===
+                    id
                 );
 
               return (
                 <div
-                  key={id}
+                  key={
+                    id
+                  }
                   className="rounded-[8px] border border-white/[0.05] px-[8px] py-[6px]"
                 >
                   <p className="text-[9px] text-white/55">
@@ -1159,35 +1556,67 @@ function TraitCard({
   );
 }
 
+/* ================================================= */
+/* TOOLKIT                                           */
+/* ================================================= */
+
 function ToolkitItem({
   label,
   index,
   primary,
   secondary,
 }: {
-  label: string;
-  index: number;
-  primary: string;
-  secondary: string;
+  label:
+    string;
+
+  index:
+    number;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
     <div className="rounded-[9px] border border-white/[0.06] bg-white/[0.015] p-[6px]">
-      <div className="flex h-[28px] items-center justify-center">
-        {index % 3 === 0 ? (
+      <div className="relative flex h-[28px] items-center justify-center overflow-hidden">
+        {index %
+          3 ===
+        0 ? (
           <div
-            className="h-[18px] w-[28px] rounded-[7px] border"
+            className="relative h-[18px] w-[28px] overflow-hidden rounded-[7px] border"
             style={{
               borderColor:
                 primary,
-
-              background:
-                `linear-gradient(135deg,${alpha(
-                  secondary,
-                  0.25
-                )},transparent)`,
             }}
-          />
-        ) : index % 3 === 1 ? (
+          >
+            <RasterGradient
+              direction="diagonal"
+              className="absolute inset-0 h-full w-full"
+              stops={[
+                {
+                  color:
+                    secondary,
+                  offset:
+                    0,
+                  opacity:
+                    0.25,
+                },
+                {
+                  color:
+                    secondary,
+                  offset:
+                    100,
+                  opacity:
+                    0,
+                },
+              ]}
+            />
+          </div>
+        ) : index %
+            3 ===
+          1 ? (
           <div className="flex w-full flex-col gap-[4px]">
             <div
               className="h-[2px] w-full"
@@ -1206,16 +1635,27 @@ function ToolkitItem({
             />
           </div>
         ) : (
-          <div
-            className="h-[10px] w-[10px] rounded-full"
-            style={{
-              backgroundColor:
-                primary,
+          <div className="relative h-[24px] w-[24px]">
+            <RasterGlow
+              color={
+                primary
+              }
+              secondaryColor={
+                secondary
+              }
+              opacity={0.48}
+              secondaryOpacity={0.12}
+              className="absolute inset-0 h-full w-full"
+            />
 
-              boxShadow:
-                `0 0 14px ${secondary}`,
-            }}
-          />
+            <div
+              className="absolute left-1/2 top-1/2 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                backgroundColor:
+                  primary,
+              }}
+            />
+          </div>
         )}
       </div>
 

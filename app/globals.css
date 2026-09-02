@@ -139,13 +139,11 @@ svg {
 }
 
 ::-webkit-scrollbar-track {
-  background:
-    transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius:
-    999px;
+  border-radius: 999px;
 
   background:
     rgba(255, 255, 255, 0.11);
@@ -162,20 +160,14 @@ svg {
 /* ================================================= */
 
 .guideline-page {
-  position:
-    relative;
+  position: relative;
 
-  width:
-    1600px;
+  width: 1600px;
+  height: 900px;
 
-  height:
-    900px;
+  flex-shrink: 0;
 
-  flex-shrink:
-    0;
-
-  overflow:
-    hidden;
+  overflow: hidden;
 }
 
 
@@ -184,14 +176,10 @@ svg {
 /* ================================================= */
 
 .guideline-theme-dark {
-  color-scheme:
-    dark;
+  color-scheme: dark;
 
-  background-color:
-    #000000;
-
-  color:
-    #ffffff;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 
@@ -200,8 +188,7 @@ svg {
 /* ================================================= */
 
 .guideline-theme-light {
-  color-scheme:
-    light;
+  color-scheme: light;
 
   background-color:
     #f5f5f3 !important;
@@ -215,23 +202,11 @@ svg {
 /* LIGHT — SOLID NEUTRAL BACKGROUNDS                 */
 /* ================================================= */
 
-/*
-  Inline colours are excluded wherever possible.
-
-  This protects:
-
-  Brand A Primary
-  Brand A Secondary
-  Brand B Primary
-  Brand B Secondary
-*/
-
 .guideline-theme-light
 [class~="bg-black"]:not([style*="background"]) {
   background-color:
     #f5f5f3 !important;
 }
-
 
 .guideline-theme-light
 [class~="bg-white"]:not([style*="background"]) {
@@ -274,14 +249,6 @@ svg {
 /* LIGHT — SUBTLE WHITE SURFACES                     */
 /* ================================================= */
 
-/*
-  Dark mode:
-  translucent white over black.
-
-  Light mode:
-  translucent black over white.
-*/
-
 .guideline-theme-light
 :is(
   [class~="bg-white/[0.015]"],
@@ -296,7 +263,6 @@ svg {
   background-color:
     rgba(10, 10, 10, 0.025) !important;
 }
-
 
 .guideline-theme-light
 :is(
@@ -324,13 +290,11 @@ svg {
     rgba(10, 10, 10, 0.05) !important;
 }
 
-
 .guideline-theme-light
 [class~="bg-white/10"]:not([style*="background"]) {
   background-color:
     rgba(10, 10, 10, 0.10) !important;
 }
-
 
 .guideline-theme-light
 [class~="bg-white/20"]:not([style*="background"]) {
@@ -338,20 +302,17 @@ svg {
     rgba(10, 10, 10, 0.20) !important;
 }
 
-
 .guideline-theme-light
 [class~="bg-white/30"]:not([style*="background"]) {
   background-color:
     rgba(10, 10, 10, 0.30) !important;
 }
 
-
 .guideline-theme-light
 [class~="bg-white/40"]:not([style*="background"]) {
   background-color:
     rgba(10, 10, 10, 0.40) !important;
 }
-
 
 .guideline-theme-light
 [class~="bg-white/50"]:not([style*="background"]) {
@@ -363,10 +324,6 @@ svg {
 /* ================================================= */
 /* LIGHT — DARK GLASS                                */
 /* ================================================= */
-
-/*
-  Dark translucent panels become light glass.
-*/
 
 .guideline-theme-light
 :is(
@@ -382,7 +339,6 @@ svg {
   background-color:
     rgba(255, 255, 255, 0.50) !important;
 }
-
 
 .guideline-theme-light
 :is(
@@ -407,10 +363,6 @@ svg {
 /* LIGHT — TEXT                                      */
 /* ================================================= */
 
-/* ------------------------------------------------- */
-/* FULL WHITE                                        */
-/* ------------------------------------------------- */
-
 .guideline-theme-light
 [class~="text-white"]:not([style*="color"]) {
   color:
@@ -418,14 +370,14 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* HIGH EMPHASIS                                     */
-/* ------------------------------------------------- */
+/* HIGH EMPHASIS */
 
 .guideline-theme-light
 :is(
+  [class~="text-white/95"],
   [class~="text-white/92"],
   [class~="text-white/90"],
+  [class~="text-white/88"],
   [class~="text-white/86"],
   [class~="text-white/85"],
   [class~="text-white/84"],
@@ -437,17 +389,17 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* STRONG SECONDARY                                  */
-/* ------------------------------------------------- */
+/* STRONG SECONDARY */
 
 .guideline-theme-light
 :is(
   [class~="text-white/78"],
+  [class~="text-white/76"],
   [class~="text-white/75"],
   [class~="text-white/74"],
   [class~="text-white/72"],
   [class~="text-white/70"],
+  [class~="text-white/69"],
   [class~="text-white/68"],
   [class~="text-white/67"],
   [class~="text-white/65"],
@@ -459,13 +411,13 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* MEDIUM SECONDARY                                  */
-/* ------------------------------------------------- */
+/* MEDIUM SECONDARY */
 
 .guideline-theme-light
 :is(
+  [class~="text-white/59"],
   [class~="text-white/58"],
+  [class~="text-white/57"],
   [class~="text-white/55"],
   [class~="text-white/54"],
   [class~="text-white/53"],
@@ -482,9 +434,7 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* LOW EMPHASIS                                      */
-/* ------------------------------------------------- */
+/* LOW EMPHASIS */
 
 .guideline-theme-light
 :is(
@@ -494,8 +444,10 @@ svg {
   [class~="text-white/32"],
   [class~="text-white/31"],
   [class~="text-white/30"],
+  [class~="text-white/29"],
   [class~="text-white/28"],
   [class~="text-white/27"],
+  [class~="text-white/26"],
   [class~="text-white/25"],
   [class~="text-white/24"],
   [class~="text-white/23"],
@@ -508,12 +460,11 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* VERY LOW EMPHASIS                                 */
-/* ------------------------------------------------- */
+/* VERY LOW EMPHASIS */
 
 .guideline-theme-light
 :is(
+  [class~="text-white/19"],
   [class~="text-white/18"],
   [class~="text-white/15"],
   [class~="text-white/14"],
@@ -530,19 +481,11 @@ svg {
 /* LIGHT — BLACK TEXT                                */
 /* ================================================= */
 
-/*
-  Used mainly on white UI controls in Dark Mode.
-
-  Since those controls become black in Light,
-  their text becomes white.
-*/
-
 .guideline-theme-light
 [class~="text-black"]:not([style*="color"]) {
   color:
     #ffffff !important;
 }
-
 
 .guideline-theme-light
 [class~="text-black/80"]:not([style*="color"]) {
@@ -550,6 +493,11 @@ svg {
     rgba(255, 255, 255, 0.80) !important;
 }
 
+.guideline-theme-light
+[class~="text-black/65"]:not([style*="color"]) {
+  color:
+    rgba(255, 255, 255, 0.65) !important;
+}
 
 .guideline-theme-light
 [class~="text-black/42"]:not([style*="color"]) {
@@ -562,20 +510,11 @@ svg {
 /* LIGHT — BORDERS                                   */
 /* ================================================= */
 
-/* ------------------------------------------------- */
-/* FALLBACK                                          */
-/* ------------------------------------------------- */
-
 .guideline-theme-light
 [class*="border-white"]:not([style*="border-color"]) {
   border-color:
     rgba(10, 10, 10, 0.10) !important;
 }
-
-
-/* ------------------------------------------------- */
-/* SOLID                                             */
-/* ------------------------------------------------- */
 
 .guideline-theme-light
 [class~="border-white"]:not([style*="border-color"]) {
@@ -584,9 +523,7 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* STRONG                                            */
-/* ------------------------------------------------- */
+/* STRONG */
 
 .guideline-theme-light
 :is(
@@ -598,6 +535,7 @@ svg {
   [class~="border-white/14"],
   [class~="border-white/13"],
   [class~="border-white/12"],
+  [class~="border-white/11"],
   [class~="border-white/10"]
 ):not([style*="border-color"]) {
   border-color:
@@ -605,12 +543,11 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* SUBTLE                                            */
-/* ------------------------------------------------- */
+/* SUBTLE */
 
 .guideline-theme-light
 :is(
+  [class~="border-white/[0.10]"],
   [class~="border-white/[0.09]"],
   [class~="border-white/[0.08]"],
   [class~="border-white/[0.075]"],
@@ -635,7 +572,6 @@ svg {
     #0a0a0a !important;
 }
 
-
 .guideline-theme-light
 [class*="fill-black"]:not([style*="fill"]) {
   fill:
@@ -652,7 +588,6 @@ svg {
   stroke:
     #0a0a0a !important;
 }
-
 
 .guideline-theme-light
 [class*="stroke-black"]:not([style*="stroke"]) {
@@ -676,10 +611,6 @@ svg {
 /* LIGHT — BLACK GRADIENTS                           */
 /* ================================================= */
 
-/* ------------------------------------------------- */
-/* FROM                                              */
-/* ------------------------------------------------- */
-
 .guideline-theme-light
 [class~="from-black"] {
   --tw-gradient-from:
@@ -691,14 +622,12 @@ svg {
     var(--tw-gradient-to-position) !important;
 }
 
-
 .guideline-theme-light
 [class~="from-black/80"] {
   --tw-gradient-from:
     rgba(255, 255, 255, 0.80)
     var(--tw-gradient-from-position) !important;
 }
-
 
 .guideline-theme-light
 :is(
@@ -711,7 +640,6 @@ svg {
     var(--tw-gradient-from-position) !important;
 }
 
-
 .guideline-theme-light
 [class~="from-black/55"] {
   --tw-gradient-from:
@@ -720,9 +648,7 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* VIA                                               */
-/* ------------------------------------------------- */
+/* VIA */
 
 .guideline-theme-light
 [class~="via-black/30"] {
@@ -730,7 +656,6 @@ svg {
     rgba(255, 255, 255, 0.30)
     var(--tw-gradient-via-position) !important;
 }
-
 
 .guideline-theme-light
 [class~="via-black/20"] {
@@ -740,9 +665,7 @@ svg {
 }
 
 
-/* ------------------------------------------------- */
-/* TO                                                */
-/* ------------------------------------------------- */
+/* TO */
 
 .guideline-theme-light
 [class~="to-black"] {
@@ -750,7 +673,6 @@ svg {
     #ffffff
     var(--tw-gradient-to-position) !important;
 }
-
 
 .guideline-theme-light
 [class~="to-black/20"] {
@@ -775,7 +697,6 @@ svg {
     var(--tw-gradient-to-position) !important;
 }
 
-
 .guideline-theme-light
 [class~="from-white/[0.08]"] {
   --tw-gradient-from:
@@ -785,19 +706,21 @@ svg {
 
 
 /* ================================================= */
-/* IMAGES — BASE                                     */
+/* IMAGES                                            */
 /* ================================================= */
 
 /*
-  By default NO image is altered.
+  IMPORTANT:
 
-  This is crucial for uploaded logos.
+  No generic filter is applied to logos.
+
+  Page-specific components may still add their own
+  intentional drop-shadow when needed.
 */
 
 .guideline-theme-dark img,
 .guideline-theme-light img {
-  filter:
-    none;
+  filter: none;
 }
 
 
@@ -806,19 +729,7 @@ svg {
 /* ================================================= */
 
 /*
-  Only imagery from the guideline asset library:
-
-  /public/images/image1...
-  /public/images/image2...
-  ...
-
-  receives inversion.
-
-  Examples:
-
-  /images/image1.jpg
-  /images/image4.webp
-  /images/image10.png
+  Only guideline photography is inverted.
 */
 
 .guideline-theme-light
@@ -829,155 +740,26 @@ img[src*="/images/image"] {
 
 
 /* ================================================= */
-/* UPLOADED BRAND LOGOS                              */
+/* UPLOADED BRAND ASSETS                             */
 /* ================================================= */
 
 /*
-  Sidebar uploads generate:
+  Explicitly protect uploaded assets.
 
-  data:image/...
-
-  or, if the uploader changes in the future:
-
-  blob:...
-
-  These are always treated as brand assets.
-  Their actual pixels are NEVER inverted.
+  NO automatic drop-shadow.
+  NO invert.
 */
-
-
-/* ------------------------------------------------- */
-/* DARK — LOGO SHADOW                                */
-/* ------------------------------------------------- */
 
 .guideline-theme-dark
 img[src^="data:image/"],
 .guideline-theme-dark
-img[src^="blob:"] {
-  filter:
-    drop-shadow(
-      0 5px 22px
-      rgba(0, 0, 0, 0.48)
-    ) !important;
-}
-
-
-/* ------------------------------------------------- */
-/* LIGHT — LOGO HALO                                */
-/* ------------------------------------------------- */
-
+img[src^="blob:"],
 .guideline-theme-light
 img[src^="data:image/"],
 .guideline-theme-light
 img[src^="blob:"] {
   filter:
-    drop-shadow(
-      0 5px 22px
-      rgba(255, 255, 255, 0.86)
-    )
-    drop-shadow(
-      0 0 8px
-      rgba(255, 255, 255, 0.55)
-    ) !important;
-}
-
-
-/* ================================================= */
-/* TAILWIND DROP SHADOWS — DARK                      */
-/* ================================================= */
-
-/*
-  Some guideline pages apply a Tailwind arbitrary
-  drop-shadow directly to the image or to its
-  wrapper:
-
-  drop-shadow-[0_4px_20px_rgba(0,0,0,0.42)]
-
-  Therefore controlling only data:image is not
-  enough.
-
-  In Dark Mode these remain neutral/dark.
-*/
-
-.guideline-theme-dark
-[class*="drop-shadow"] {
-  filter:
-    drop-shadow(
-      0 5px 22px
-      rgba(0, 0, 0, 0.48)
-    ) !important;
-}
-
-
-/* ================================================= */
-/* TAILWIND DROP SHADOWS — LIGHT                     */
-/* ================================================= */
-
-/*
-  Every neutral Tailwind drop shadow inside the
-  document becomes a light halo.
-
-  This removes dark logo shadows that were still
-  visible in Page05 / Page06 / Page07 etc.
-*/
-
-.guideline-theme-light
-[class*="drop-shadow"] {
-  filter:
-    drop-shadow(
-      0 5px 22px
-      rgba(255, 255, 255, 0.86)
-    )
-    drop-shadow(
-      0 0 8px
-      rgba(255, 255, 255, 0.55)
-    ) !important;
-}
-
-
-/* ================================================= */
-/* EXTRA LOGO PROTECTION                             */
-/* ================================================= */
-
-/*
-  These rules intentionally appear AFTER the
-  generic drop-shadow rules.
-
-  If a logo carries both:
-
-  src="data:image/..."
-  +
-  class="drop-shadow-[...]"
-
-  this guarantees the Light version still gets
-  the correct white halo and never invert().
-*/
-
-.guideline-theme-light
-img[src^="data:image/"][class*="drop-shadow"],
-.guideline-theme-light
-img[src^="blob:"][class*="drop-shadow"] {
-  filter:
-    drop-shadow(
-      0 5px 22px
-      rgba(255, 255, 255, 0.90)
-    )
-    drop-shadow(
-      0 0 8px
-      rgba(255, 255, 255, 0.60)
-    ) !important;
-}
-
-
-.guideline-theme-dark
-img[src^="data:image/"][class*="drop-shadow"],
-.guideline-theme-dark
-img[src^="blob:"][class*="drop-shadow"] {
-  filter:
-    drop-shadow(
-      0 5px 22px
-      rgba(0, 0, 0, 0.48)
-    ) !important;
+    none !important;
 }
 
 
@@ -998,13 +780,6 @@ img[src^="blob:"][class*="drop-shadow"] {
 /* LIGHT — BOX SHADOWS                               */
 /* ================================================= */
 
-/*
-  Normal box shadows stay neutral.
-
-  This section does NOT control drop-shadow();
-  logo shadows are handled above.
-*/
-
 .guideline-theme-light
 [class*="shadow-"] {
   --tw-shadow-color:
@@ -1013,7 +788,7 @@ img[src^="blob:"][class*="drop-shadow"] {
 
 
 /* ================================================= */
-/* THEME TRANSITIONS                                 */
+/* TRANSITIONS                                       */
 /* ================================================= */
 
 .guideline-page,
@@ -1031,33 +806,16 @@ img[src^="blob:"][class*="drop-shadow"] {
 .guideline-page h4,
 .guideline-page button {
   transition:
-    background-color
-      180ms ease-out,
-    border-color
-      180ms ease-out,
-    color
-      180ms ease-out,
-    outline-color
-      180ms ease-out;
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    color 180ms ease-out,
+    outline-color 180ms ease-out;
 }
 
-
-/* ================================================= */
-/* IMAGE TRANSITION                                  */
-/* ================================================= */
-
-.guideline-page img,
-.guideline-page
-[class*="drop-shadow"] {
+.guideline-page img {
   transition:
-    filter
-      220ms ease-out;
+    filter 220ms ease-out;
 }
-
-
-/* ================================================= */
-/* VIDEO / CANVAS TRANSITION                         */
-/* ================================================= */
 
 .guideline-page video,
 .guideline-page canvas {

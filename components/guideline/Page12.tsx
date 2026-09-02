@@ -6,42 +6,74 @@ import {
   type ReactNode,
 } from "react";
 
-import GuidelinePage from "./GuidelinePage";
+import GuidelinePage, {
+  useGuidelineThemeStore,
+} from "./GuidelinePage";
+
 import PartnershipLockup from "./PartnershipLockup";
+import RasterGlow from "./RasterGlow";
+import RasterGradient from "./RasterGradient";
 
 import {
   BrandCharacterTraitId,
   brandCharacterTraits,
 } from "@/data/brandCharacterTraits";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 interface ImageProfile {
-  contrast: number;
-  saturation: number;
-  warmth: number;
-  grain: number;
-  softness: number;
-  depth: number;
-  crop: number;
+  contrast:
+    number;
+
+  saturation:
+    number;
+
+  warmth:
+    number;
+
+  grain:
+    number;
+
+  softness:
+    number;
+
+  depth:
+    number;
+
+  crop:
+    number;
 }
 
 interface TreatmentRecipe {
-  label: string;
-  contrast: string;
-  colour: string;
-  texture: string;
-  framing: string;
+  label:
+    string;
+
+  contrast:
+    string;
+
+  colour:
+    string;
+
+  texture:
+    string;
+
+  framing:
+    string;
 }
 
-/* ------------------------------------------------ */
-/* HELPERS                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 function clamp(
   value: number
@@ -59,8 +91,13 @@ function safeColour(
   value: unknown,
   fallback: string
 ) {
-  return typeof value === "string" &&
-    /^#[0-9A-Fa-f]{6}$/.test(value)
+  return (
+    typeof value ===
+      "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(
+      value
+    )
+  )
     ? value
     : fallback;
 }
@@ -87,131 +124,195 @@ function buildProfile(
 ): ImageProfile {
   const p:
     ImageProfile = {
-    contrast: 0.5,
-    saturation: 0.45,
-    warmth: 0.5,
-    grain: 0.12,
-    softness: 0.25,
-    depth: 0.45,
-    crop: 0.3,
+    contrast:
+      0.5,
+
+    saturation:
+      0.45,
+
+    warmth:
+      0.5,
+
+    grain:
+      0.12,
+
+    softness:
+      0.25,
+
+    depth:
+      0.45,
+
+    crop:
+      0.3,
   };
 
   traits.forEach(
     (trait) => {
       switch (trait) {
         case "classic":
-          p.saturation -= 0.05;
-          p.crop -= 0.1;
+          p.saturation -=
+            0.05;
+          p.crop -=
+            0.1;
           break;
 
         case "elegant":
-          p.saturation -= 0.1;
-          p.softness += 0.15;
+          p.saturation -=
+            0.1;
+          p.softness +=
+            0.15;
           break;
 
         case "premium":
-          p.contrast += 0.18;
-          p.grain += 0.08;
-          p.depth += 0.12;
+          p.contrast +=
+            0.18;
+          p.grain +=
+            0.08;
+          p.depth +=
+            0.12;
           break;
 
         case "minimal":
-          p.saturation -= 0.08;
-          p.grain -= 0.1;
-          p.crop -= 0.12;
+          p.saturation -=
+            0.08;
+          p.grain -=
+            0.1;
+          p.crop -=
+            0.12;
           break;
 
         case "editorial":
-          p.contrast += 0.12;
-          p.crop += 0.18;
+          p.contrast +=
+            0.12;
+          p.crop +=
+            0.18;
           break;
 
         case "technical":
-          p.warmth -= 0.18;
-          p.contrast += 0.08;
-          p.softness -= 0.12;
+          p.warmth -=
+            0.18;
+          p.contrast +=
+            0.08;
+          p.softness -=
+            0.12;
           break;
 
         case "precise":
-          p.softness -= 0.15;
-          p.crop -= 0.08;
+          p.softness -=
+            0.15;
+          p.crop -=
+            0.08;
           break;
 
         case "futuristic":
-          p.warmth -= 0.2;
-          p.contrast += 0.14;
-          p.depth += 0.2;
+          p.warmth -=
+            0.2;
+          p.contrast +=
+            0.14;
+          p.depth +=
+            0.2;
           break;
 
         case "experimental":
-          p.crop += 0.3;
-          p.softness += 0.12;
+          p.crop +=
+            0.3;
+          p.softness +=
+            0.12;
           break;
 
         case "disruptive":
-          p.contrast += 0.3;
-          p.crop += 0.34;
+          p.contrast +=
+            0.3;
+          p.crop +=
+            0.34;
           break;
 
         case "bold":
-          p.contrast += 0.26;
-          p.saturation += 0.1;
+          p.contrast +=
+            0.26;
+          p.saturation +=
+            0.1;
           break;
 
         case "dynamic":
-          p.crop += 0.3;
+          p.crop +=
+            0.3;
           break;
 
         case "energetic":
-          p.saturation += 0.28;
-          p.contrast += 0.15;
-          p.crop += 0.2;
+          p.saturation +=
+            0.28;
+          p.contrast +=
+            0.15;
+          p.crop +=
+            0.2;
           break;
 
         case "playful":
-          p.saturation += 0.2;
-          p.warmth += 0.08;
-          p.softness += 0.08;
+          p.saturation +=
+            0.2;
+          p.warmth +=
+            0.08;
+          p.softness +=
+            0.08;
           break;
 
         case "youthful":
-          p.saturation += 0.2;
-          p.crop += 0.15;
+          p.saturation +=
+            0.2;
+          p.crop +=
+            0.15;
           break;
 
         case "friendly":
-          p.warmth += 0.2;
-          p.softness += 0.14;
-          p.contrast -= 0.08;
+          p.warmth +=
+            0.2;
+          p.softness +=
+            0.14;
+          p.contrast -=
+            0.08;
           break;
 
         case "organic":
-          p.warmth += 0.22;
-          p.grain += 0.14;
-          p.softness += 0.12;
+          p.warmth +=
+            0.22;
+          p.grain +=
+            0.14;
+          p.softness +=
+            0.12;
           break;
 
         case "immersive":
-          p.depth += 0.38;
-          p.crop += 0.1;
+          p.depth +=
+            0.38;
+          p.crop +=
+            0.1;
           break;
 
         case "cinematic":
-          p.contrast += 0.24;
-          p.grain += 0.18;
-          p.depth += 0.22;
+          p.contrast +=
+            0.24;
+          p.grain +=
+            0.18;
+          p.depth +=
+            0.22;
           break;
 
         case "sporty":
-          p.contrast += 0.24;
-          p.crop += 0.32;
-          p.saturation += 0.08;
+          p.contrast +=
+            0.24;
+          p.crop +=
+            0.32;
+          p.saturation +=
+            0.08;
           break;
       }
     }
   );
 
-  Object.keys(p).forEach(
+  Object.keys(
+    p
+  ).forEach(
     (key) => {
       const k =
         key as keyof ImageProfile;
@@ -227,48 +328,73 @@ function buildProfile(
 }
 
 function blend(
-  a: ImageProfile,
-  b: ImageProfile,
-  weight: number
+  a:
+    ImageProfile,
+
+  b:
+    ImageProfile,
+
+  weight:
+    number
 ): ImageProfile {
   const inverse =
-    1 - weight;
+    1 -
+    weight;
 
   return {
     contrast:
-      a.contrast * weight +
-      b.contrast * inverse,
+      a.contrast *
+        weight +
+      b.contrast *
+        inverse,
 
     saturation:
-      a.saturation * weight +
-      b.saturation * inverse,
+      a.saturation *
+        weight +
+      b.saturation *
+        inverse,
 
     warmth:
-      a.warmth * weight +
-      b.warmth * inverse,
+      a.warmth *
+        weight +
+      b.warmth *
+        inverse,
 
     grain:
-      a.grain * weight +
-      b.grain * inverse,
+      a.grain *
+        weight +
+      b.grain *
+        inverse,
 
     softness:
-      a.softness * weight +
-      b.softness * inverse,
+      a.softness *
+        weight +
+      b.softness *
+        inverse,
 
     depth:
-      a.depth * weight +
-      b.depth * inverse,
+      a.depth *
+        weight +
+      b.depth *
+        inverse,
 
     crop:
-      a.crop * weight +
-      b.crop * inverse,
+      a.crop *
+        weight +
+      b.crop *
+        inverse,
   };
 }
 
 function getProfile(
-  model: PartnershipModelId,
-  a: ImageProfile,
-  b: ImageProfile
+  model:
+    PartnershipModelId,
+
+  a:
+    ImageProfile,
+
+  b:
+    ImageProfile
 ) {
   switch (model) {
     case "axb":
@@ -298,16 +424,19 @@ function getProfile(
   }
 }
 
-/* ------------------------------------------------ */
-/* IMAGE                                            */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* IMAGE                                             */
+/* ================================================= */
 
 function SmartImage({
   number,
   profile,
 }: {
-  number: number;
-  profile: ImageProfile;
+  number:
+    number;
+
+  profile:
+    ImageProfile;
 }) {
   const extensions = [
     "jpg",
@@ -319,11 +448,14 @@ function SmartImage({
   const [
     extensionIndex,
     setExtensionIndex,
-  ] = useState(0);
+  ] =
+    useState(0);
 
   useEffect(
     () => {
-      setExtensionIndex(0);
+      setExtensionIndex(
+        0
+      );
     },
     [number]
   );
@@ -336,11 +468,13 @@ function SmartImage({
       onError={() => {
         if (
           extensionIndex <
-          extensions.length - 1
+          extensions.length -
+            1
         ) {
           setExtensionIndex(
             (current) =>
-              current + 1
+              current +
+              1
           );
         }
       }}
@@ -348,20 +482,16 @@ function SmartImage({
       style={{
         filter:
           `contrast(${
-            0.8 +
+            0.84 +
             profile.contrast *
-              0.6
+              0.5
           })
           saturate(${
-            0.45 +
+            0.55 +
             profile.saturation *
-              1.25
+              1.1
           })
-          brightness(.84)
-          blur(${
-            profile.softness *
-            1.2
-          }px)`,
+          brightness(.86)`,
 
         transform:
           `scale(${
@@ -374,9 +504,9 @@ function SmartImage({
   );
 }
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page12() {
   const {
@@ -386,20 +516,38 @@ export default function Page12() {
   } =
     useGuidelineStore();
 
+  const theme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.theme
+    );
+
+  const isLight =
+    theme ===
+    "light";
+
   const model =
     partnershipModel as PartnershipModelId;
 
   const aTraits =
-    getTraits(brandA);
+    getTraits(
+      brandA
+    );
 
   const bTraits =
-    getTraits(brandB);
+    getTraits(
+      brandB
+    );
 
   const aProfile =
-    buildProfile(aTraits);
+    buildProfile(
+      aTraits
+    );
 
   const bProfile =
-    buildProfile(bTraits);
+    buildProfile(
+      bTraits
+    );
 
   const profile =
     getProfile(
@@ -433,22 +581,26 @@ export default function Page12() {
     );
 
   const leadPrimary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? bPrimary
       : aPrimary;
 
   const leadSecondary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? bSecondary
       : aSecondary;
 
   const supportPrimary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? aPrimary
       : bPrimary;
 
   const supportSecondary =
-    model === "poweredByA"
+    model ===
+    "poweredByA"
       ? aSecondary
       : bSecondary;
 
@@ -459,22 +611,26 @@ export default function Page12() {
         "Hero footage",
 
       contrast:
-        profile.contrast > 0.65
+        profile.contrast >
+        0.65
           ? "Defined"
           : "Balanced",
 
       colour:
-        profile.saturation > 0.62
+        profile.saturation >
+        0.62
           ? "Rich"
           : "Controlled",
 
       texture:
-        profile.grain > 0.5
+        profile.grain >
+        0.5
           ? "Fine grain"
           : "Clean",
 
       framing:
-        profile.crop > 0.62
+        profile.crop >
+        0.62
           ? "Kinetic"
           : "Stable",
     },
@@ -484,24 +640,29 @@ export default function Page12() {
         "Photography",
 
       contrast:
-        profile.contrast > 0.65
+        profile.contrast >
+        0.65
           ? "Strong"
           : "Natural",
 
       colour:
-        profile.warmth > 0.6
+        profile.warmth >
+        0.6
           ? "Warm"
-          : profile.warmth < 0.4
+          : profile.warmth <
+              0.4
             ? "Cool"
             : "Neutral",
 
       texture:
-        profile.grain > 0.45
+        profile.grain >
+        0.45
           ? "Textured"
           : "Clean",
 
       framing:
-        profile.crop > 0.55
+        profile.crop >
+        0.55
           ? "Editorial"
           : "Controlled",
     },
@@ -557,17 +718,21 @@ export default function Page12() {
           </SectionLabel>
 
           <h3 className="mt-[10px] text-[21px] tracking-[-0.03em] text-white/82 oook-medium">
-            {profile.contrast > 0.7
+            {profile.contrast >
+            0.7
               ? "Punchy"
-              : profile.softness > 0.55
+              : profile.softness >
+                  0.55
                 ? "Soft"
                 : "Balanced"}
             {" · "}
-            {profile.saturation > 0.65
+            {profile.saturation >
+            0.65
               ? "Vivid"
               : "Restrained"}
             {" · "}
-            {profile.depth > 0.65
+            {profile.depth >
+            0.65
               ? "Immersive"
               : "Controlled"}
           </h3>
@@ -575,42 +740,54 @@ export default function Page12() {
           <div className="mt-[15px] grid grid-cols-2 gap-x-[14px] gap-y-[11px]">
             <Metric
               label="Contrast"
-              value={profile.contrast}
+              value={
+                profile.contrast
+              }
               left="Soft"
               right="Punchy"
             />
 
             <Metric
               label="Colour"
-              value={profile.saturation}
+              value={
+                profile.saturation
+              }
               left="Quiet"
               right="Vivid"
             />
 
             <Metric
               label="Temperature"
-              value={profile.warmth}
+              value={
+                profile.warmth
+              }
               left="Cool"
               right="Warm"
             />
 
             <Metric
               label="Texture"
-              value={profile.grain}
+              value={
+                profile.grain
+              }
               left="Clean"
               right="Grain"
             />
 
             <Metric
               label="Framing"
-              value={profile.crop}
+              value={
+                profile.crop
+              }
               left="Stable"
               right="Kinetic"
             />
 
             <Metric
               label="Depth"
-              value={profile.depth}
+              value={
+                profile.depth
+              }
               left="Flat"
               right="Immersive"
             />
@@ -669,10 +846,18 @@ export default function Page12() {
                 ? bProfile
                 : profile
             }
-
-            primary={leadPrimary}
-            secondary={leadSecondary}
-            support={supportSecondary}
+            primary={
+              leadPrimary
+            }
+            secondary={
+              leadSecondary
+            }
+            support={
+              supportSecondary
+            }
+            isLight={
+              isLight
+            }
           />
         </Comparison>
 
@@ -681,10 +866,18 @@ export default function Page12() {
           description="Do not apply two aggressive competing brand grades to the same content."
         >
           <BadTreatment
-            aProfile={aProfile}
-            bProfile={bProfile}
-            aPrimary={aPrimary}
-            bPrimary={bPrimary}
+            aProfile={
+              aProfile
+            }
+            bProfile={
+              bProfile
+            }
+            aPrimary={
+              aPrimary
+            }
+            bPrimary={
+              bPrimary
+            }
           />
         </Comparison>
       </section>
@@ -698,17 +891,26 @@ export default function Page12() {
 
         <div className="mt-[8px] grid grid-cols-3 gap-[10px]">
           {recipes.map(
-            (recipe, index) => (
+            (
+              recipe,
+              index
+            ) => (
               <RecipeCard
-                key={recipe.label}
-                recipe={recipe}
+                key={
+                  recipe.label
+                }
+                recipe={
+                  recipe
+                }
                 primary={
-                  index === 2
+                  index ===
+                  2
                     ? supportPrimary
                     : leadPrimary
                 }
                 secondary={
-                  index === 2
+                  index ===
+                  2
                     ? supportSecondary
                     : leadSecondary
                 }
@@ -723,16 +925,28 @@ export default function Page12() {
       <section className="absolute left-[395px] right-[70px] top-[730px] grid grid-cols-2 gap-[10px]">
         <CharacterSummary
           label="Brand A image character"
-          traits={aTraits}
-          primary={aPrimary}
-          secondary={aSecondary}
+          traits={
+            aTraits
+          }
+          primary={
+            aPrimary
+          }
+          secondary={
+            aSecondary
+          }
         />
 
         <CharacterSummary
           label="Brand B image character"
-          traits={bTraits}
-          primary={bPrimary}
-          secondary={bSecondary}
+          traits={
+            bTraits
+          }
+          primary={
+            bPrimary
+          }
+          secondary={
+            bSecondary
+          }
         />
       </section>
 
@@ -749,16 +963,19 @@ export default function Page12() {
   );
 }
 
-/* ------------------------------------------------ */
-/* COMPONENTS                                       */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* UI                                                */
+/* ================================================= */
 
 function Card({
   children,
   className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+  children:
+    ReactNode;
+
+  className?:
+    string;
 }) {
   return (
     <div
@@ -778,7 +995,8 @@ function Card({
 function SectionLabel({
   children,
 }: {
-  children: ReactNode;
+  children:
+    ReactNode;
 }) {
   return (
     <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
@@ -793,10 +1011,17 @@ function Metric({
   left,
   right,
 }: {
-  label: string;
-  value: number;
-  left: string;
-  right: string;
+  label:
+    string;
+
+  value:
+    number;
+
+  left:
+    string;
+
+  right:
+    string;
 }) {
   return (
     <div>
@@ -810,15 +1035,21 @@ function Metric({
           style={{
             width:
               `${Math.round(
-                value * 100
+                value *
+                  100
               )}%`,
           }}
         />
       </div>
 
       <div className="mt-[4px] flex justify-between text-[7px] text-white/18">
-        <span>{left}</span>
-        <span>{right}</span>
+        <span>
+          {left}
+        </span>
+
+        <span>
+          {right}
+        </span>
       </div>
     </div>
   );
@@ -830,10 +1061,17 @@ function Comparison({
   description,
   children,
 }: {
-  good?: boolean;
-  title: string;
-  description: string;
-  children: ReactNode;
+  good?:
+    boolean;
+
+  title:
+    string;
+
+  description:
+    string;
+
+  children:
+    ReactNode;
 }) {
   return (
     <Card className="p-[13px]">
@@ -841,9 +1079,13 @@ function Comparison({
         <div className="flex items-center gap-[8px]">
           <span
             className={`
-              flex h-[24px] w-[24px]
-              items-center justify-center
-              rounded-full text-[11px]
+              flex
+              h-[24px]
+              w-[24px]
+              items-center
+              justify-center
+              rounded-full
+              text-[11px]
 
               ${
                 good
@@ -874,40 +1116,117 @@ function Comparison({
   );
 }
 
+/* ================================================= */
+/* GOOD TREATMENT                                    */
+/* ================================================= */
+
 function TreatmentExample({
   profile,
   primary,
   secondary,
   support,
+  isLight,
 }: {
-  profile: ImageProfile;
-  primary: string;
-  secondary: string;
-  support: string;
+  profile:
+    ImageProfile;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  support:
+    string;
+
+  isLight:
+    boolean;
 }) {
   return (
     <>
       <SmartImage
         number={4}
-        profile={profile}
+        profile={
+          profile
+        }
       />
 
-      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-transparent to-black/20" />
-
-      <div
-        className="absolute -right-[80px] -top-[80px] h-[250px] w-[250px] rounded-full blur-[80px]"
-        style={{
-          backgroundColor:
-            `${secondary}38`,
-        }}
+      <RasterGradient
+        direction="horizontal"
+        className="absolute inset-0 h-full w-full"
+        stops={
+          isLight
+            ? [
+                {
+                  color:
+                    "#FFFFFF",
+                  offset: 0,
+                  opacity: 0.48,
+                },
+                {
+                  color:
+                    "#FFFFFF",
+                  offset: 52,
+                  opacity: 0.04,
+                },
+                {
+                  color:
+                    "#FFFFFF",
+                  offset:
+                    100,
+                  opacity: 0.18,
+                },
+              ]
+            : [
+                {
+                  color:
+                    "#000000",
+                  offset: 0,
+                  opacity: 0.55,
+                },
+                {
+                  color:
+                    "#000000",
+                  offset: 52,
+                  opacity: 0,
+                },
+                {
+                  color:
+                    "#000000",
+                  offset:
+                    100,
+                  opacity: 0.2,
+                },
+              ]
+        }
       />
 
-      <div
-        className="absolute -bottom-[60px] left-[10%] h-[170px] w-[300px] rounded-full blur-[70px]"
-        style={{
-          backgroundColor:
-            `${support}18`,
-        }}
+      <RasterGlow
+        color={
+          secondary
+        }
+        secondaryColor={
+          primary
+        }
+        opacity={0.28}
+        secondaryOpacity={0.07}
+        centerX={78}
+        centerY={18}
+        className="absolute -right-[80px] -top-[80px] h-[280px] w-[280px]"
+      />
+
+      <RasterGlow
+        color={
+          support
+        }
+        secondaryColor={
+          primary
+        }
+        opacity={0.12}
+        secondaryOpacity={0.035}
+        centerX={40}
+        centerY={60}
+        className="absolute -bottom-[80px] left-[5%] h-[240px] w-[380px]"
       />
 
       <div className="absolute bottom-[18px] left-[18px] right-[18px] flex items-center rounded-[10px] border border-white/[0.08] bg-black/50 px-[11px] py-[9px]">
@@ -935,23 +1254,36 @@ function TreatmentExample({
   );
 }
 
+/* ================================================= */
+/* BAD TREATMENT                                     */
+/* ================================================= */
+
 function BadTreatment({
   aProfile,
   bProfile,
   aPrimary,
   bPrimary,
 }: {
-  aProfile: ImageProfile;
-  bProfile: ImageProfile;
-  aPrimary: string;
-  bPrimary: string;
+  aProfile:
+    ImageProfile;
+
+  bProfile:
+    ImageProfile;
+
+  aPrimary:
+    string;
+
+  bPrimary:
+    string;
 }) {
   return (
     <>
       <div className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">
         <SmartImage
           number={4}
-          profile={aProfile}
+          profile={
+            aProfile
+          }
         />
 
         <div
@@ -966,7 +1298,9 @@ function BadTreatment({
       <div className="absolute inset-y-0 right-0 w-1/2 overflow-hidden">
         <SmartImage
           number={4}
-          profile={bProfile}
+          profile={
+            bProfile
+          }
         />
 
         <div
@@ -987,14 +1321,23 @@ function BadTreatment({
   );
 }
 
+/* ================================================= */
+/* RECIPES                                           */
+/* ================================================= */
+
 function RecipeCard({
   recipe,
   primary,
   secondary,
 }: {
-  recipe: TreatmentRecipe;
-  primary: string;
-  secondary: string;
+  recipe:
+    TreatmentRecipe;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
     <Card className="p-[12px]">
@@ -1025,22 +1368,30 @@ function RecipeCard({
       <div className="mt-[11px] grid grid-cols-4 gap-[5px]">
         <RecipeValue
           label="Contrast"
-          value={recipe.contrast}
+          value={
+            recipe.contrast
+          }
         />
 
         <RecipeValue
           label="Colour"
-          value={recipe.colour}
+          value={
+            recipe.colour
+          }
         />
 
         <RecipeValue
           label="Texture"
-          value={recipe.texture}
+          value={
+            recipe.texture
+          }
         />
 
         <RecipeValue
           label="Frame"
-          value={recipe.framing}
+          value={
+            recipe.framing
+          }
         />
       </div>
     </Card>
@@ -1051,8 +1402,11 @@ function RecipeValue({
   label,
   value,
 }: {
-  label: string;
-  value: string;
+  label:
+    string;
+
+  value:
+    string;
 }) {
   return (
     <div className="rounded-[7px] border border-white/[0.05] p-[6px]">
@@ -1073,11 +1427,17 @@ function CharacterSummary({
   primary,
   secondary,
 }: {
-  label: string;
+  label:
+    string;
+
   traits:
     BrandCharacterTraitId[];
-  primary: string;
-  secondary: string;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
     <Card className="min-h-[94px] p-[12px]">
@@ -1109,12 +1469,19 @@ function CharacterSummary({
               .map(
                 (id) =>
                   brandCharacterTraits.find(
-                    (item) =>
-                      item.id === id
+                    (
+                      item
+                    ) =>
+                      item.id ===
+                      id
                   )?.label
               )
-              .filter(Boolean)
-              .join(" · ")
+              .filter(
+                Boolean
+              )
+              .join(
+                " · "
+              )
           : "Neutral natural treatment"}
       </p>
     </Card>

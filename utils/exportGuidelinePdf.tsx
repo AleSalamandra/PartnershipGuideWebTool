@@ -1,40 +1,47 @@
 "use client";
 
-import { createRoot } from "react-dom/client";
+import {
+  createRoot,
+} from "react-dom/client";
 
 import html2canvas from "html2canvas-pro";
-import { jsPDF } from "jspdf";
+
+import {
+  jsPDF,
+} from "jspdf";
 
 import GuidelineDocument, {
   GUIDELINE_PAGES,
 } from "@/components/guideline/GuidelineDocument";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* CONSTANTS                                        */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* CONSTANTS                                         */
+/* ================================================= */
 
-const PAGE_WIDTH = 1600;
-const PAGE_HEIGHT = 900;
+const PAGE_WIDTH =
+  1600;
 
-const EXPORT_SCALE = 1;
+const PAGE_HEIGHT =
+  900;
 
-/*
-  Uploaded logos are rasterised internally at 2×
-  so they remain sharp in the PDF.
+const EXPORT_SCALE =
+  1;
 
-  Their CSS dimensions stay unchanged.
-*/
+const LOGO_RASTER_SCALE =
+  2;
 
-const LOGO_RASTER_SCALE = 2;
 
-/* ------------------------------------------------ */
-/* WAIT HELPERS                                     */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* WAIT                                              */
+/* ================================================= */
 
 function wait(
-  milliseconds: number
+  milliseconds:
+    number
 ) {
   return new Promise<void>(
     (resolve) => {
@@ -45,6 +52,7 @@ function wait(
     }
   );
 }
+
 
 function waitForFrame() {
   return new Promise<void>(
@@ -62,12 +70,14 @@ function waitForFrame() {
   );
 }
 
-/* ------------------------------------------------ */
-/* IMAGE LOADING                                    */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* IMAGES                                            */
+/* ================================================= */
 
 async function waitForSingleImage(
-  image: HTMLImageElement
+  image:
+    HTMLImageElement
 ) {
   if (
     image.complete &&
@@ -76,7 +86,7 @@ async function waitForSingleImage(
     try {
       await image.decode();
     } catch {
-      // Image is already usable.
+      // Already usable.
     }
 
     return;
@@ -124,8 +134,10 @@ async function waitForSingleImage(
   );
 }
 
+
 async function waitForImages(
-  container: HTMLElement
+  container:
+    HTMLElement
 ) {
   const images =
     Array.from(
@@ -144,44 +156,41 @@ async function waitForImages(
   );
 }
 
-/* ------------------------------------------------ */
-/* IDENTIFY UPLOADED ASSETS                         */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* UPLOADED LOGOS                                    */
+/* ================================================= */
 
 function isUploadedImage(
-  image: HTMLImageElement
+  image:
+    HTMLImageElement
 ) {
-  const src =
+  const source =
     image.currentSrc ||
     image.src ||
     "";
 
-  /*
-    LogoUploader / FileReader generates
-    data:image/... URLs.
-
-    blob: is included as a future-safe option.
-  */
-
   return (
-    src.startsWith(
+    source.startsWith(
       "data:image/"
     ) ||
-    src.startsWith(
+    source.startsWith(
       "blob:"
     )
   );
 }
 
-/* ------------------------------------------------ */
-/* OBJECT POSITION                                  */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* OBJECT POSITION                                   */
+/* ================================================= */
 
 function getPositionFactor(
-  value: string,
+  value:
+    string,
+
   axis:
-    | "x"
-    | "y"
+    "x" | "y"
 ) {
   const normalized =
     value
@@ -244,17 +253,13 @@ function getPositionFactor(
     }
   }
 
-  /*
-    CSS default:
-    object-position: 50% 50%
-  */
-
   return 0.5;
 }
 
-/* ------------------------------------------------ */
-/* DRAW IMAGE USING CSS OBJECT-FIT                  */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* OBJECT FIT                                        */
+/* ================================================= */
 
 function drawImageWithObjectFit(
   context:
@@ -300,19 +305,18 @@ function drawImageWithObjectFit(
       "y"
     );
 
-  /* ---------------------------------------------- */
-  /* FILL                                           */
-  /* ---------------------------------------------- */
+  /* ------------------------------------------------ */
+  /* FILL                                             */
+  /* ------------------------------------------------ */
 
   if (
-    objectFit === "fill"
+    objectFit ===
+    "fill"
   ) {
     context.drawImage(
       image,
-
       0,
       0,
-
       destinationWidth,
       destinationHeight
     );
@@ -320,12 +324,13 @@ function drawImageWithObjectFit(
     return;
   }
 
-  /* ---------------------------------------------- */
-  /* NONE                                           */
-  /* ---------------------------------------------- */
+  /* ------------------------------------------------ */
+  /* NONE                                             */
+  /* ------------------------------------------------ */
 
   if (
-    objectFit === "none"
+    objectFit ===
+    "none"
   ) {
     const x =
       (
@@ -352,9 +357,9 @@ function drawImageWithObjectFit(
     return;
   }
 
-  /* ---------------------------------------------- */
-  /* CONTAIN / COVER / SCALE-DOWN                    */
-  /* ---------------------------------------------- */
+  /* ------------------------------------------------ */
+  /* CONTAIN / COVER / SCALE DOWN                     */
+  /* ------------------------------------------------ */
 
   const containScale =
     Math.min(
@@ -378,7 +383,8 @@ function drawImageWithObjectFit(
     containScale;
 
   if (
-    objectFit === "cover"
+    objectFit ===
+    "cover"
   ) {
     scale =
       coverScale;
@@ -419,35 +425,32 @@ function drawImageWithObjectFit(
 
   context.drawImage(
     image,
-
     x,
     y,
-
     renderWidth,
     renderHeight
   );
 }
 
-/* ------------------------------------------------ */
-/* RASTERISE ONE UPLOADED LOGO                      */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* RASTERISE UPLOADED LOGO                           */
+/* ================================================= */
 
 async function rasterizeUploadedImage(
-  image: HTMLImageElement
+  image:
+    HTMLImageElement
 ) {
   await waitForSingleImage(
     image
   );
 
   /*
-    offsetWidth / offsetHeight are intentional.
+    offsetWidth / offsetHeight intentionally
+    ignore transform: scale().
 
-    Unlike getBoundingClientRect(), these values
-    do NOT include transform: scale(...).
-
-    This means Page13 can keep its 1.08 / 1.10
-    optical logo scaling without us applying
-    that scale twice.
+    That prevents Page13 etc. from applying
+    visual transforms twice during export.
   */
 
   const width =
@@ -464,10 +467,8 @@ async function rasterizeUploadedImage(
   }
 
   if (
-    image.naturalWidth <=
-      0 ||
-    image.naturalHeight <=
-      0
+    image.naturalWidth <= 0 ||
+    image.naturalHeight <= 0
   ) {
     return;
   }
@@ -479,15 +480,11 @@ async function rasterizeUploadedImage(
 
   const objectFit =
     computed.objectFit ||
-    "fill";
+    "contain";
 
   const objectPosition =
     computed.objectPosition ||
     "50% 50%";
-
-  /* ---------------------------------------------- */
-  /* CREATE HIGH RES PNG                            */
-  /* ---------------------------------------------- */
 
   const canvas =
     document.createElement(
@@ -541,12 +538,9 @@ async function rasterizeUploadedImage(
 
   drawImageWithObjectFit(
     context,
-
     image,
-
     width,
     height,
-
     objectFit,
     objectPosition
   );
@@ -556,17 +550,9 @@ async function rasterizeUploadedImage(
       "image/png"
     );
 
-  /* ---------------------------------------------- */
-  /* FREEZE THE EXACT BROWSER SIZE                  */
-  /* ---------------------------------------------- */
-
-  /*
-    This is the important part.
-
-    Once converted to PNG, html2canvas no longer
-    gets a chance to reinterpret the SVG viewport
-    or intrinsic dimensions.
-  */
+  /* ------------------------------------------------ */
+  /* FREEZE SIZE                                      */
+  /* ------------------------------------------------ */
 
   image.style.width =
     `${width}px`;
@@ -587,10 +573,7 @@ async function rasterizeUploadedImage(
     "none";
 
   /*
-    The content is ALREADY fitted into the PNG.
-
-    We therefore make the replacement image fill
-    its frozen box exactly.
+    The raster already contains the fitted image.
   */
 
   image.style.objectFit =
@@ -600,8 +583,14 @@ async function rasterizeUploadedImage(
     "50% 50%";
 
   /*
-    Avoid srcset overriding our raster source.
+    NO exporter-added shadow.
+
+    If Page05 / 06 / 07 wants a shadow,
+    it belongs to the wrapper around the logo.
   */
+
+  image.style.filter =
+    "none";
 
   image.removeAttribute(
     "srcset"
@@ -614,29 +603,27 @@ async function rasterizeUploadedImage(
   image.src =
     rasterUrl;
 
-  /*
-    Keep CSS transform untouched.
-
-    This preserves any intentional Page13 scale()
-    or other optical adjustment.
-  */
-
   try {
     await image.decode();
   } catch {
     // Continue.
   }
 
-  canvas.width = 1;
-  canvas.height = 1;
+  canvas.width =
+    1;
+
+  canvas.height =
+    1;
 }
 
-/* ------------------------------------------------ */
-/* STABILISE ALL UPLOADED LOGOS                     */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* STABILISE UPLOADED LOGOS                          */
+/* ================================================= */
 
 async function stabilizeUploadedImages(
-  container: HTMLElement
+  container:
+    HTMLElement
 ) {
   const images =
     Array.from(
@@ -650,35 +637,43 @@ async function stabilizeUploadedImages(
       isUploadedImage
     );
 
-  await Promise.all(
-    uploadedImages.map(
-      (image) =>
-        rasterizeUploadedImage(
-          image
-        )
-    )
-  );
+  for (
+    const image of
+    uploadedImages
+  ) {
+    await rasterizeUploadedImage(
+      image
+    );
+  }
 }
 
-/* ------------------------------------------------ */
-/* WAIT FOR COMPLETE PAGE                           */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* PAGE READY                                        */
+/* ================================================= */
 
 async function waitForPage(
-  container: HTMLElement
+  container:
+    HTMLElement
 ) {
-  /* React commit */
+  /*
+    React commit.
+  */
 
   await waitForFrame();
 
   /*
-    Pages with random image selection,
-    extension fallback, etc.
+    Page05–07 may update random image state
+    immediately after mount.
   */
 
-  await wait(120);
+  await wait(
+    150
+  );
 
-  /* Fonts */
+  /*
+    Fonts.
+  */
 
   try {
     await document.fonts.ready;
@@ -686,42 +681,363 @@ async function waitForPage(
     // Continue.
   }
 
-  /* Original images */
+  /*
+    Images.
+  */
 
   await waitForImages(
     container
   );
 
   /*
-    IMPORTANT:
-
-    Convert user-uploaded logos into exact-size
-    raster images BEFORE html2canvas sees them.
+    Uploaded logos are converted to exact-size
+    transparent PNGs before html2canvas sees them.
   */
 
   await stabilizeUploadedImages(
     container
   );
 
-  /* Raster replacements */
-
   await waitForImages(
     container
   );
 
-  /* Final browser paint */
-
   await waitForFrame();
 
-  await wait(80);
+  await wait(
+    80
+  );
 }
 
-/* ------------------------------------------------ */
-/* FILE NAME                                        */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* FREEZE COMPUTED COLOURS                           */
+/* ================================================= */
+
+/*
+  Chrome already displays the correct colours.
+
+  html2canvas should not have to reinterpret
+  Tailwind Light Mode classes a second time.
+
+  We therefore copy the final browser-computed
+  colours from the live export DOM into the clone.
+*/
+
+function freezeComputedColours(
+  sourcePage:
+    HTMLElement,
+
+  clonedPage:
+    HTMLElement
+) {
+  const sourceElements:
+    Element[] = [
+    sourcePage,
+    ...Array.from(
+      sourcePage.querySelectorAll(
+        "*"
+      )
+    ),
+  ];
+
+  const clonedElements:
+    Element[] = [
+    clonedPage,
+    ...Array.from(
+      clonedPage.querySelectorAll(
+        "*"
+      )
+    ),
+  ];
+
+  const count =
+    Math.min(
+      sourceElements.length,
+      clonedElements.length
+    );
+
+  for (
+    let index =
+      0;
+
+    index <
+    count;
+
+    index +=
+      1
+  ) {
+    const source =
+      sourceElements[
+        index
+      ];
+
+    const clone =
+      clonedElements[
+        index
+      ];
+
+    const computed =
+      window.getComputedStyle(
+        source
+      );
+
+    /* ------------------------------------------------ */
+    /* HTML                                             */
+    /* ------------------------------------------------ */
+
+    if (
+      clone instanceof
+      HTMLElement
+    ) {
+      clone.style.setProperty(
+        "color",
+        computed.color,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "background-color",
+        computed.backgroundColor,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "border-top-color",
+        computed.borderTopColor,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "border-right-color",
+        computed.borderRightColor,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "border-bottom-color",
+        computed.borderBottomColor,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "border-left-color",
+        computed.borderLeftColor,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "outline-color",
+        computed.outlineColor,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "text-decoration-color",
+        computed.textDecorationColor,
+        "important"
+      );
+    }
+
+    /* ------------------------------------------------ */
+    /* SVG                                              */
+    /* ------------------------------------------------ */
+
+    if (
+      clone instanceof
+      SVGElement
+    ) {
+      clone.style.setProperty(
+        "color",
+        computed.color,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "fill",
+        computed.fill,
+        "important"
+      );
+
+      clone.style.setProperty(
+        "stroke",
+        computed.stroke,
+        "important"
+      );
+    }
+  }
+}
+
+
+/* ================================================= */
+/* PROTECT LOGOS IN CLONE                            */
+/* ================================================= */
+
+function protectLogosInClone(
+  clonedPage:
+    HTMLElement
+) {
+  const images =
+    clonedPage.querySelectorAll(
+      "img"
+    );
+
+  images.forEach(
+    (image) => {
+      const src =
+        image.getAttribute(
+          "src"
+        ) ||
+        "";
+
+      /*
+        Uploaded assets are already rasterised
+        by the time html2canvas clones the page.
+
+        Do not add a filter to them.
+      */
+
+      if (
+        src.startsWith(
+          "data:image/"
+        ) ||
+        src.startsWith(
+          "blob:"
+        )
+      ) {
+        image.style.setProperty(
+          "filter",
+          "none",
+          "important"
+        );
+      }
+    }
+  );
+}
+
+
+/* ================================================= */
+/* PREPARE CLONE                                     */
+/* ================================================= */
+
+function prepareCloneForExport(
+  sourcePage:
+    HTMLElement,
+
+  clonedDocument:
+    Document
+) {
+  const clonedPage =
+    clonedDocument.querySelector(
+      '[data-guideline-export-page="true"]'
+    ) as HTMLElement | null;
+
+  if (!clonedPage) {
+    return;
+  }
+
+  /* ------------------------------------------------ */
+  /* EXACT PAGE                                       */
+  /* ------------------------------------------------ */
+
+  Object.assign(
+    clonedPage.style,
+    {
+      width:
+        `${PAGE_WIDTH}px`,
+
+      height:
+        `${PAGE_HEIGHT}px`,
+
+      minWidth:
+        `${PAGE_WIDTH}px`,
+
+      minHeight:
+        `${PAGE_HEIGHT}px`,
+
+      maxWidth:
+        `${PAGE_WIDTH}px`,
+
+      maxHeight:
+        `${PAGE_HEIGHT}px`,
+
+      margin:
+        "0",
+
+      padding:
+        "0",
+
+      transform:
+        "none",
+
+      transformOrigin:
+        "top left",
+
+      overflow:
+        "hidden",
+
+      boxSizing:
+        "border-box",
+    }
+  );
+
+  /* ------------------------------------------------ */
+  /* FINAL BROWSER COLOURS                            */
+  /* ------------------------------------------------ */
+
+  freezeComputedColours(
+    sourcePage,
+    clonedPage
+  );
+
+  /* ------------------------------------------------ */
+  /* LOGOS                                            */
+  /* ------------------------------------------------ */
+
+  protectLogosInClone(
+    clonedPage
+  );
+
+  /* ------------------------------------------------ */
+  /* STATIC EXPORT                                    */
+  /* ------------------------------------------------ */
+
+  const elements =
+    clonedPage.querySelectorAll(
+      "*"
+    );
+
+  elements.forEach(
+    (node) => {
+      if (
+        !(
+          node instanceof
+          HTMLElement
+        )
+      ) {
+        return;
+      }
+
+      node.style.animation =
+        "none";
+
+      node.style.transition =
+        "none";
+
+      node.style.caretColor =
+        "transparent";
+    }
+  );
+}
+
+
+/* ================================================= */
+/* FILE NAME                                         */
+/* ================================================= */
 
 function sanitizeFileName(
-  value: string
+  value:
+    string
 ) {
   return value
     .trim()
@@ -738,6 +1054,7 @@ function sanitizeFileName(
       ""
     );
 }
+
 
 function buildFileName() {
   const {
@@ -761,9 +1078,10 @@ function buildFileName() {
   return `Partnership-Guide-${brandAName}-${brandBName}.pdf`;
 }
 
-/* ------------------------------------------------ */
-/* EXPORT HOST                                      */
-/* ------------------------------------------------ */
+
+/* ================================================= */
+/* EXPORT HOST                                       */
+/* ================================================= */
 
 function createExportHost() {
   const host =
@@ -813,7 +1131,7 @@ function createExportHost() {
         "none",
 
       backgroundColor:
-        "#000000",
+        "transparent",
 
       boxSizing:
         "border-box",
@@ -827,113 +1145,18 @@ function createExportHost() {
   return host;
 }
 
-/* ------------------------------------------------ */
-/* PREPARE HTML2CANVAS CLONE                        */
-/* ------------------------------------------------ */
 
-function prepareCloneForExport(
-  clonedDocument: Document
-) {
-  const page =
-    clonedDocument.querySelector(
-      '[data-guideline-export-page="true"]'
-    ) as HTMLElement | null;
-
-  if (!page) {
-    return;
-  }
-
-  /* ---------------------------------------------- */
-  /* EXACT PAGE SIZE                                */
-  /* ---------------------------------------------- */
-
-  Object.assign(
-    page.style,
-    {
-      width:
-        `${PAGE_WIDTH}px`,
-
-      height:
-        `${PAGE_HEIGHT}px`,
-
-      minWidth:
-        `${PAGE_WIDTH}px`,
-
-      minHeight:
-        `${PAGE_HEIGHT}px`,
-
-      maxWidth:
-        `${PAGE_WIDTH}px`,
-
-      maxHeight:
-        `${PAGE_HEIGHT}px`,
-
-      margin:
-        "0",
-
-      padding:
-        "0",
-
-      transform:
-        "none",
-
-      transformOrigin:
-        "top left",
-
-      overflow:
-        "hidden",
-
-      backgroundColor:
-        "#000000",
-
-      boxSizing:
-        "border-box",
-    }
-  );
-
-  /* ---------------------------------------------- */
-  /* REMOVE SHADOW ARTEFACTS                        */
-  /* ---------------------------------------------- */
-
-  /*
-    Keep the fix that already solved the
-    giant border / halo problem.
-
-    Only the export clone is modified.
-  */
-
-  const elements =
-    page.querySelectorAll(
-      "*"
-    );
-
-  elements.forEach(
-    (node) => {
-      if (
-        !(
-          node instanceof
-          HTMLElement
-        )
-      ) {
-        return;
-      }
-
-      node.style.boxShadow =
-        "none";
-    }
-  );
-}
-
-/* ------------------------------------------------ */
-/* EXPORT                                           */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* EXPORT                                            */
+/* ================================================= */
 
 export async function exportGuidelinePdf() {
   const pageCount =
     GUIDELINE_PAGES.length;
 
   if (
-    pageCount === 0
+    pageCount ===
+    0
   ) {
     throw new Error(
       "No guideline pages found."
@@ -958,10 +1181,14 @@ export async function exportGuidelinePdf() {
     /* ============================================ */
 
     for (
-      let pageIndex = 0;
+      let pageIndex =
+        0;
+
       pageIndex <
       pageCount;
-      pageIndex += 1
+
+      pageIndex +=
+        1
     ) {
       /* ------------------------------------------ */
       /* RENDER                                     */
@@ -1003,7 +1230,7 @@ export async function exportGuidelinePdf() {
               "border-box",
 
             backgroundColor:
-              "#000000",
+              "transparent",
           }}
         >
           <GuidelineDocument
@@ -1015,7 +1242,7 @@ export async function exportGuidelinePdf() {
       );
 
       /* ------------------------------------------ */
-      /* WAIT + STABILISE LOGOS                     */
+      /* WAIT                                       */
       /* ------------------------------------------ */
 
       await waitForPage(
@@ -1032,7 +1259,8 @@ export async function exportGuidelinePdf() {
       ) {
         throw new Error(
           `Unable to render guideline page ${
-            pageIndex + 1
+            pageIndex +
+            1
           }.`
         );
       }
@@ -1041,58 +1269,115 @@ export async function exportGuidelinePdf() {
       /* HTML → CANVAS                              */
       /* ------------------------------------------ */
 
-      const canvas =
-        await html2canvas(
-          pageNode,
-          {
-            width:
-              PAGE_WIDTH,
+      let canvas:
+        HTMLCanvasElement;
 
-            height:
-              PAGE_HEIGHT,
+      try {
+        canvas =
+          await html2canvas(
+            pageNode,
+            {
+              width:
+                PAGE_WIDTH,
 
-            scale:
-              EXPORT_SCALE,
+              height:
+                PAGE_HEIGHT,
 
-            windowWidth:
-              PAGE_WIDTH,
+              scale:
+                EXPORT_SCALE,
 
-            windowHeight:
-              PAGE_HEIGHT,
+              windowWidth:
+                PAGE_WIDTH,
 
-            foreignObjectRendering:
-              false,
+              windowHeight:
+                PAGE_HEIGHT,
 
-            useCORS:
-              true,
+              /*
+                MUST remain false.
 
-            allowTaint:
-              false,
+                true produced completely blank
+                pages in this project.
+              */
 
-            imageTimeout:
-              20000,
+              foreignObjectRendering:
+                false,
 
-            backgroundColor:
-              "#000000",
+              useCORS:
+                true,
 
-            scrollX: 0,
-            scrollY: 0,
+              allowTaint:
+                false,
 
-            logging:
-              false,
+              imageTimeout:
+                20000,
 
-            removeContainer:
-              true,
+              backgroundColor:
+                null,
 
-            onclone: (
-              clonedDocument
-            ) => {
-              prepareCloneForExport(
+              scrollX:
+                0,
+
+              scrollY:
+                0,
+
+              logging:
+                false,
+
+              removeContainer:
+                true,
+
+              onclone: (
                 clonedDocument
-              );
-            },
-          }
+              ) => {
+                prepareCloneForExport(
+                  pageNode,
+                  clonedDocument
+                );
+              },
+            }
+          );
+      } catch (
+        error
+      ) {
+        console.error(
+          `html2canvas failed on page ${
+            pageIndex +
+            1
+          }:`,
+          error
         );
+
+        const message =
+          error instanceof
+          Error
+            ? error.message
+            : String(
+                error
+              );
+
+        throw new Error(
+          `PDF export failed on page ${
+            pageIndex +
+            1
+          }: ${message}`
+        );
+      }
+
+      /* ------------------------------------------ */
+      /* CANVAS VALIDATION                          */
+      /* ------------------------------------------ */
+
+      if (
+        canvas.width <= 1 ||
+        canvas.height <= 1
+      ) {
+        throw new Error(
+          `PDF export generated an invalid canvas on page ${
+            pageIndex +
+            1
+          }.`
+        );
+      }
 
       /* ------------------------------------------ */
       /* CANVAS → PNG                               */
@@ -1104,11 +1389,12 @@ export async function exportGuidelinePdf() {
         );
 
       /* ------------------------------------------ */
-      /* PDF                                        */
+      /* CREATE PDF                                 */
       /* ------------------------------------------ */
 
       if (
-        pageIndex === 0
+        pageIndex ===
+        0
       ) {
         pdf =
           new jsPDF({
@@ -1142,15 +1428,19 @@ export async function exportGuidelinePdf() {
 
       if (!pdf) {
         throw new Error(
-          "Unable to create PDF."
+          "Unable to initialise PDF."
         );
       }
 
       const pdfWidth =
-        pdf.internal.pageSize.getWidth();
+        pdf.internal
+          .pageSize
+          .getWidth();
 
       const pdfHeight =
-        pdf.internal.pageSize.getHeight();
+        pdf.internal
+          .pageSize
+          .getHeight();
 
       pdf.addImage(
         imageData,
@@ -1172,10 +1462,15 @@ export async function exportGuidelinePdf() {
       /* MEMORY                                     */
       /* ------------------------------------------ */
 
-      canvas.width = 1;
-      canvas.height = 1;
+      canvas.width =
+        1;
 
-      await wait(20);
+      canvas.height =
+        1;
+
+      await wait(
+        20
+      );
     }
 
     /* ============================================ */
@@ -1191,6 +1486,15 @@ export async function exportGuidelinePdf() {
     pdf.save(
       buildFileName()
     );
+  } catch (
+    error
+  ) {
+    console.error(
+      "GUIDELINE PDF EXPORT ERROR:",
+      error
+    );
+
+    throw error;
   } finally {
     root.unmount();
 

@@ -4,45 +4,70 @@ import type {
   ReactNode,
 } from "react";
 
-import GuidelinePage from "./GuidelinePage";
+import GuidelinePage, {
+  useGuidelineThemeStore,
+} from "./GuidelinePage";
+
 import PartnershipLockup from "./PartnershipLockup";
+import RasterGlow from "./RasterGlow";
+import RasterGradient from "./RasterGradient";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 interface PaletteConfig {
-  collaboration: string;
-  collaborationSecondary: string;
+  collaboration:
+    string;
 
-  accent: string;
-  accentSecondary: string;
+  collaborationSecondary:
+    string;
 
-  collaborationLabel: string;
-  accentLabel: string;
+  accent:
+    string;
 
-  description: string;
+  accentSecondary:
+    string;
+
+  collaborationLabel:
+    string;
+
+  accentLabel:
+    string;
+
+  description:
+    string;
 
   rules: [
     string,
     string,
-    string
+    string,
   ];
 }
 
-/* ------------------------------------------------ */
-/* HELPERS                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 function safeColour(
   value: unknown,
   fallback: string
 ) {
-  return typeof value === "string" &&
-    /^#[0-9A-Fa-f]{6}$/.test(value)
+  return (
+    typeof value ===
+      "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(
+      value
+    )
+  )
     ? value
     : fallback;
 }
@@ -52,19 +77,25 @@ function hexToRgb(
 ) {
   const value =
     parseInt(
-      colour.replace("#", ""),
+      colour.replace(
+        "#",
+        ""
+      ),
       16
     );
 
   return {
     r:
-      (value >> 16) & 255,
+      (value >> 16) &
+      255,
 
     g:
-      (value >> 8) & 255,
+      (value >> 8) &
+      255,
 
     b:
-      value & 255,
+      value &
+      255,
   };
 }
 
@@ -76,7 +107,10 @@ function alpha(
     r,
     g,
     b,
-  } = hexToRgb(colour);
+  } =
+    hexToRgb(
+      colour
+    );
 
   return `rgba(${r},${g},${b},${opacity})`;
 }
@@ -98,33 +132,58 @@ function mixHex(
   ) =>
     Math.round(
       x * ratio +
-      y * (1 - ratio)
+        y *
+          (1 - ratio)
     );
 
   return (
     "#" +
-    [mix(ca.r, cb.r), mix(ca.g, cb.g), mix(ca.b, cb.b)]
-      .map((v) =>
-        v
-          .toString(16)
-          .padStart(2, "0")
+    [
+      mix(
+        ca.r,
+        cb.r
+      ),
+      mix(
+        ca.g,
+        cb.g
+      ),
+      mix(
+        ca.b,
+        cb.b
+      ),
+    ]
+      .map(
+        (value) =>
+          value
+            .toString(16)
+            .padStart(
+              2,
+              "0"
+            )
       )
       .join("")
   );
 }
 
-/* ------------------------------------------------ */
-/* MODEL CONFIG                                     */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* MODEL CONFIG                                      */
+/* ================================================= */
 
 function getPaletteConfig(
-  model: PartnershipModelId,
+  model:
+    PartnershipModelId,
 
-  aPrimary: string,
-  aSecondary: string,
+  aPrimary:
+    string,
 
-  bPrimary: string,
-  bSecondary: string
+  aSecondary:
+    string,
+
+  bPrimary:
+    string,
+
+  bSecondary:
+    string
 ): PaletteConfig {
   switch (model) {
     case "axb":
@@ -256,16 +315,26 @@ function getPaletteConfig(
   }
 }
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page08() {
   const {
     partnershipModel,
     brandA,
     brandB,
-  } = useGuidelineStore();
+  } =
+    useGuidelineStore();
+
+  const theme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.theme
+    );
+
+  const isLight =
+    theme === "light";
 
   const model =
     partnershipModel as PartnershipModelId;
@@ -297,10 +366,8 @@ export default function Page08() {
   const config =
     getPaletteConfig(
       model,
-
       aPrimary,
       aSecondary,
-
       bPrimary,
       bSecondary
     );
@@ -309,18 +376,7 @@ export default function Page08() {
     <GuidelinePage>
       {/* HEADER */}
 
-      <header
-        className="
-          absolute
-          left-[70px]
-          right-[70px]
-          top-[46px]
-
-          flex
-          items-start
-          justify-between
-        "
-      >
+      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
         <div>
           <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
             08 / Shared visual territory
@@ -344,15 +400,7 @@ export default function Page08() {
 
       {/* LEFT */}
 
-      <aside
-        className="
-          absolute
-          left-[70px]
-          top-[190px]
-
-          w-[310px]
-        "
-      >
+      <aside className="absolute left-[70px] top-[190px] w-[310px]">
         <Card className="p-[16px]">
           <SectionLabel>
             Core collaboration palette
@@ -367,7 +415,6 @@ export default function Page08() {
             <Swatch
               colour="#FFFFFF"
               label="White"
-              dark
             />
 
             <Swatch
@@ -384,14 +431,22 @@ export default function Page08() {
 
           <BrandPalette
             label="Brand A"
-            primary={aPrimary}
-            secondary={aSecondary}
+            primary={
+              aPrimary
+            }
+            secondary={
+              aSecondary
+            }
           />
 
           <BrandPalette
             label="Brand B"
-            primary={bPrimary}
-            secondary={bSecondary}
+            primary={
+              bPrimary
+            }
+            secondary={
+              bSecondary
+            }
           />
         </Card>
 
@@ -400,7 +455,7 @@ export default function Page08() {
             Recommended ratio
           </SectionLabel>
 
-          <div className="mt-[13px] overflow-hidden rounded-full h-[10px] flex">
+          <div className="mt-[13px] flex h-[10px] overflow-hidden rounded-full">
             <div className="w-[70%] bg-[#777]" />
 
             <div
@@ -421,9 +476,17 @@ export default function Page08() {
           </div>
 
           <div className="mt-[9px] grid grid-cols-3 text-[9px] text-white/38">
-            <span>70% neutral</span>
-            <span>20% primary</span>
-            <span>10% accent</span>
+            <span>
+              70% neutral
+            </span>
+
+            <span>
+              20% primary
+            </span>
+
+            <span>
+              10% accent
+            </span>
           </div>
         </Card>
 
@@ -438,13 +501,20 @@ export default function Page08() {
 
           <div className="mt-[12px] space-y-[7px]">
             {config.rules.map(
-              (rule, index) => (
+              (
+                rule,
+                index
+              ) => (
                 <div
-                  key={rule}
+                  key={
+                    rule
+                  }
                   className="grid grid-cols-[22px_1fr] gap-[6px]"
                 >
                   <span className="text-[9px] text-white/20">
-                    0{index + 1}
+                    0
+                    {index +
+                      1}
                   </span>
 
                   <span className="text-[10px] text-white/52">
@@ -459,26 +529,15 @@ export default function Page08() {
 
       {/* EXAMPLES */}
 
-      <section
-        className="
-          absolute
-
-          left-[405px]
-          right-[70px]
-          top-[190px]
-
-          grid
-          grid-cols-4
-
-          gap-[10px]
-        "
-      >
+      <section className="absolute left-[405px] right-[70px] top-[190px] grid grid-cols-4 gap-[10px]">
         <ExampleCard
           number="01"
           title="Background"
         >
           <BackgroundExample
-            config={config}
+            config={
+              config
+            }
           />
         </ExampleCard>
 
@@ -487,7 +546,9 @@ export default function Page08() {
           title="Headlines"
         >
           <HeadlineExample
-            config={config}
+            config={
+              config
+            }
           />
         </ExampleCard>
 
@@ -496,7 +557,9 @@ export default function Page08() {
           title="Overlay"
         >
           <OverlayExample
-            config={config}
+            config={
+              config
+            }
           />
         </ExampleCard>
 
@@ -505,32 +568,23 @@ export default function Page08() {
           title="CTA"
         >
           <CTAExample
-            config={config}
+            config={
+              config
+            }
           />
         </ExampleCard>
       </section>
 
-      <section
-        className="
-          absolute
-
-          left-[405px]
-          right-[70px]
-          top-[505px]
-
-          grid
-          grid-cols-3
-
-          gap-[10px]
-        "
-      >
+      <section className="absolute left-[405px] right-[70px] top-[505px] grid grid-cols-3 gap-[10px]">
         <ExampleCard
           number="05"
           title="Graphics"
           large
         >
           <GraphicsExample
-            config={config}
+            config={
+              config
+            }
           />
         </ExampleCard>
 
@@ -540,7 +594,12 @@ export default function Page08() {
           large
         >
           <VideoExample
-            config={config}
+            config={
+              config
+            }
+            isLight={
+              isLight
+            }
           />
         </ExampleCard>
 
@@ -551,31 +610,17 @@ export default function Page08() {
           danger
         >
           <ForbiddenExample
-            aPrimary={aPrimary}
-            bPrimary={bPrimary}
+            aPrimary={
+              aPrimary
+            }
+            bPrimary={
+              bPrimary
+            }
           />
         </ExampleCard>
       </section>
 
-      <div
-        className="
-          absolute
-          bottom-[25px]
-          left-[70px]
-          right-[70px]
-
-          flex
-          justify-between
-
-          border-t
-          border-white/[0.06]
-
-          pt-[10px]
-
-          text-[9px]
-          text-white/25
-        "
-      >
+      <div className="absolute bottom-[25px] left-[70px] right-[70px] flex justify-between border-t border-white/[0.06] pt-[10px] text-[9px] text-white/25">
         <span>
           Never use both brands’ primary colours simultaneously across large surfaces.
         </span>
@@ -588,16 +633,19 @@ export default function Page08() {
   );
 }
 
-/* ------------------------------------------------ */
-/* UI                                               */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* UI                                                */
+/* ================================================= */
 
 function Card({
   children,
   className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+  children:
+    ReactNode;
+
+  className?:
+    string;
 }) {
   return (
     <div
@@ -617,7 +665,8 @@ function Card({
 function SectionLabel({
   children,
 }: {
-  children: ReactNode;
+  children:
+    ReactNode;
 }) {
   return (
     <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
@@ -629,11 +678,12 @@ function SectionLabel({
 function Swatch({
   colour,
   label,
-  dark = false,
 }: {
-  colour: string;
-  label: string;
-  dark?: boolean;
+  colour:
+    string;
+
+  label:
+    string;
 }) {
   return (
     <div>
@@ -645,18 +695,7 @@ function Swatch({
         }}
       />
 
-      <p
-        className={`
-          mt-[5px]
-          text-[8px]
-
-          ${
-            dark
-              ? "text-white/35"
-              : "text-white/30"
-          }
-        `}
-      >
+      <p className="mt-[5px] text-[8px] text-white/30">
         {label}
       </p>
     </div>
@@ -668,9 +707,14 @@ function BrandPalette({
   primary,
   secondary,
 }: {
-  label: string;
-  primary: string;
-  secondary: string;
+  label:
+    string;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
     <div className="mt-[12px]">
@@ -680,12 +724,16 @@ function BrandPalette({
 
       <div className="mt-[6px] flex gap-[6px]">
         <ColourChip
-          colour={primary}
+          colour={
+            primary
+          }
           label="Primary"
         />
 
         <ColourChip
-          colour={secondary}
+          colour={
+            secondary
+          }
           label="Secondary"
         />
       </div>
@@ -697,8 +745,11 @@ function ColourChip({
   colour,
   label,
 }: {
-  colour: string;
-  label: string;
+  colour:
+    string;
+
+  label:
+    string;
 }) {
   return (
     <div className="flex flex-1 items-center gap-[7px] rounded-[9px] border border-white/[0.06] px-[8px] py-[7px]">
@@ -723,9 +774,9 @@ function ColourChip({
   );
 }
 
-/* ------------------------------------------------ */
-/* EXAMPLES                                         */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* EXAMPLES                                          */
+/* ================================================= */
 
 function ExampleCard({
   number,
@@ -734,11 +785,20 @@ function ExampleCard({
   large = false,
   danger = false,
 }: {
-  number: string;
-  title: string;
-  children: ReactNode;
-  large?: boolean;
-  danger?: boolean;
+  number:
+    string;
+
+  title:
+    string;
+
+  children:
+    ReactNode;
+
+  large?:
+    boolean;
+
+  danger?:
+    boolean;
 }) {
   return (
     <Card className="overflow-hidden p-[10px]">
@@ -751,7 +811,6 @@ function ExampleCard({
           className={`
             text-[11px]
             oook-medium
-
             ${
               danger
                 ? "text-white/55"
@@ -766,16 +825,11 @@ function ExampleCard({
       <div
         className="
           relative
-
           mt-[8px]
-
           overflow-hidden
-
           rounded-[11px]
-
           border
           border-white/[0.06]
-
           bg-[#050506]
         "
         style={{
@@ -794,22 +848,32 @@ function ExampleCard({
 function BackgroundExample({
   config,
 }: {
-  config: PaletteConfig;
+  config:
+    PaletteConfig;
 }) {
   return (
     <>
       <div className="absolute inset-0 bg-[#09090A]" />
 
-      <div
-        className="absolute left-[14px] right-[14px] top-[15px] h-[52px] rounded-[10px]"
-        style={{
-          background:
-            `linear-gradient(90deg,
-              ${config.collaboration},
-              ${config.collaborationSecondary}
-            )`,
-        }}
-      />
+      <div className="absolute left-[14px] right-[14px] top-[15px] h-[52px] overflow-hidden rounded-[10px]">
+        <RasterGradient
+          direction="horizontal"
+          className="h-full w-full"
+          stops={[
+            {
+              color:
+                config.collaboration,
+              offset: 0,
+            },
+            {
+              color:
+                config.collaborationSecondary,
+              offset:
+                100,
+            },
+          ]}
+        />
+      </div>
 
       <div className="absolute bottom-[15px] left-[14px] right-[14px] h-[118px] rounded-[10px] bg-white/[0.035]">
         <div
@@ -835,7 +899,8 @@ function BackgroundExample({
 function HeadlineExample({
   config,
 }: {
-  config: PaletteConfig;
+  config:
+    PaletteConfig;
 }) {
   return (
     <div className="absolute inset-[18px]">
@@ -849,16 +914,24 @@ function HeadlineExample({
         to the moment.
       </h3>
 
-      <div
-        className="mt-[15px] h-[4px] w-[78px] rounded-full"
-        style={{
-          background:
-            `linear-gradient(90deg,
-              ${config.collaboration},
-              ${config.collaborationSecondary}
-            )`,
-        }}
-      />
+      <div className="mt-[15px] h-[4px] w-[78px] overflow-hidden rounded-full">
+        <RasterGradient
+          className="h-full w-full"
+          stops={[
+            {
+              color:
+                config.collaboration,
+              offset: 0,
+            },
+            {
+              color:
+                config.collaborationSecondary,
+              offset:
+                100,
+            },
+          ]}
+        />
+      </div>
 
       <p className="mt-[13px] text-[9px] leading-[1.4] text-white/31">
         Accent colour supports emphasis, never entire paragraphs.
@@ -870,25 +943,27 @@ function HeadlineExample({
 function OverlayExample({
   config,
 }: {
-  config: PaletteConfig;
+  config:
+    PaletteConfig;
 }) {
   return (
     <>
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            `radial-gradient(circle at 80% 20%,
-              ${alpha(
-                config.collaborationSecondary,
-                0.28
-              )},
-              transparent 45%
-            )`,
-        }}
+      <RasterGlow
+        color={
+          config.collaborationSecondary
+        }
+        secondaryColor={
+          config.collaboration
+        }
+        opacity={0.28}
+        secondaryOpacity={0.08}
+        centerX={78}
+        centerY={18}
+        radius={68}
+        className="absolute inset-0 h-full w-full"
       />
 
-      <div className="absolute bottom-[15px] left-[15px] right-[15px] rounded-[11px] border border-white/[0.09] bg-black/60 p-[12px] backdrop-blur-[12px]">
+      <div className="absolute bottom-[15px] left-[15px] right-[15px] rounded-[11px] border border-white/[0.09] bg-black/60 p-[12px]">
         <div
           className="h-[4px] w-[38px] rounded-full"
           style={{
@@ -912,7 +987,8 @@ function OverlayExample({
 function CTAExample({
   config,
 }: {
-  config: PaletteConfig;
+  config:
+    PaletteConfig;
 }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
@@ -927,7 +1003,9 @@ function CTAExample({
           Explore experience
         </span>
 
-        <span>→</span>
+        <span>
+          →
+        </span>
       </div>
 
       <div
@@ -944,7 +1022,8 @@ function CTAExample({
 function GraphicsExample({
   config,
 }: {
-  config: PaletteConfig;
+  config:
+    PaletteConfig;
 }) {
   return (
     <div className="absolute inset-0">
@@ -971,19 +1050,36 @@ function GraphicsExample({
       />
 
       <div className="absolute bottom-[28px] left-[15%] right-[15%] flex gap-[4px]">
-        {[30, 56, 38, 78, 45, 90, 52].map(
-          (height, index) => (
+        {[
+          30,
+          56,
+          38,
+          78,
+          45,
+          90,
+          52,
+        ].map(
+          (
+            height,
+            index
+          ) => (
             <div
-              key={index}
+              key={
+                index
+              }
               className="flex-1 rounded-full"
               style={{
                 height:
                   `${height}px`,
 
                 backgroundColor:
-                  index % 3 === 0
+                  index %
+                    3 ===
+                  0
                     ? config.accent
-                    : index % 2 === 0
+                    : index %
+                          2 ===
+                        0
                       ? alpha(
                           config.collaborationSecondary,
                           0.55
@@ -1000,22 +1096,76 @@ function GraphicsExample({
 
 function VideoExample({
   config,
+  isLight,
 }: {
-  config: PaletteConfig;
+  config:
+    PaletteConfig;
+
+  isLight:
+    boolean;
 }) {
   return (
     <>
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] to-black" />
-
       <div
-        className="absolute -right-[40px] top-[10px] h-[150px] w-[150px] rounded-full blur-[60px]"
+        className="absolute inset-0"
         style={{
           backgroundColor:
-            alpha(
-              config.collaborationSecondary,
-              0.35
-            ),
+            isLight
+              ? "#F2F2EF"
+              : "#080809",
         }}
+      />
+
+      <RasterGradient
+        direction="vertical"
+        className="absolute inset-0 h-full w-full"
+        stops={
+          isLight
+            ? [
+                {
+                  color:
+                    "#FFFFFF",
+                  offset: 0,
+                  opacity: 0.58,
+                },
+                {
+                  color:
+                    "#E8E8E4",
+                  offset:
+                    100,
+                  opacity: 0.92,
+                },
+              ]
+            : [
+                {
+                  color:
+                    "#FFFFFF",
+                  offset: 0,
+                  opacity: 0.08,
+                },
+                {
+                  color:
+                    "#000000",
+                  offset:
+                    100,
+                  opacity: 1,
+                },
+              ]
+        }
+      />
+
+      <RasterGlow
+        color={
+          config.collaborationSecondary
+        }
+        secondaryColor={
+          config.collaboration
+        }
+        opacity={0.32}
+        secondaryOpacity={0.08}
+        centerX={84}
+        centerY={22}
+        className="absolute -right-[40px] -top-[25px] h-[220px] w-[220px]"
       />
 
       <div className="absolute bottom-[18px] left-[18px] right-[18px]">
@@ -1049,8 +1199,11 @@ function ForbiddenExample({
   aPrimary,
   bPrimary,
 }: {
-  aPrimary: string;
-  bPrimary: string;
+  aPrimary:
+    string;
+
+  bPrimary:
+    string;
 }) {
   return (
     <>

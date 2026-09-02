@@ -2,15 +2,24 @@
 
 import React from "react";
 
-import GuidelinePage from "./GuidelinePage";
+import GuidelinePage, {
+  useGuidelineThemeStore,
+} from "./GuidelinePage";
+
 import BrandLogo from "./BrandLogo";
+import PartnershipLockup from "./PartnershipLockup";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 type VariantTemplate =
   | "equal-horizontal"
@@ -33,121 +42,167 @@ interface VariantSpec {
   scale: string;
 }
 
-/* ------------------------------------------------ */
-/* VARIANTS                                         */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* VARIANTS                                          */
+/* ================================================= */
 
-const MODEL_VARIANTS: Record<
-  PartnershipModelId,
-  VariantSpec[]
-> = {
+const MODEL_VARIANTS:
+  Record<
+    PartnershipModelId,
+    VariantSpec[]
+  > = {
   axb: [
     {
       id: "01",
       title: "Balanced",
-      template: "equal-horizontal",
-      scale: "A 100% · B 100%",
+      template:
+        "equal-horizontal",
+      scale:
+        "A 100% · B 100%",
     },
     {
       id: "02",
       title: "Offset",
-      template: "equal-offset",
-      scale: "A 100% · B 100%",
+      template:
+        "equal-offset",
+      scale:
+        "A 100% · B 100%",
     },
     {
       id: "03",
       title: "Stacked",
-      template: "equal-stacked",
-      scale: "A 100% · B 100%",
+      template:
+        "equal-stacked",
+      scale:
+        "A 100% · B 100%",
     },
   ],
 
   aandb: [
     {
       id: "01",
-      title: "Lead + support",
-      template: "with-horizontal",
-      scale: "A 100% · B 78%",
+      title:
+        "Lead + support",
+      template:
+        "with-horizontal",
+      scale:
+        "A 100% · B 78%",
     },
     {
       id: "02",
       title: "Stacked",
-      template: "with-stacked",
-      scale: "A 100% · B 72%",
+      template:
+        "with-stacked",
+      scale:
+        "A 100% · B 72%",
     },
     {
       id: "03",
-      title: "Partner corner",
-      template: "with-corner",
-      scale: "A 100% · B 68%",
+      title:
+        "Partner corner",
+      template:
+        "with-corner",
+      scale:
+        "A 100% · B 68%",
     },
   ],
 
   poweredByA: [
     {
       id: "01",
-      title: "Powered by",
-      template: "powered-stacked",
-      scale: "B 100% · A 62%",
+      title:
+        "Powered by",
+      template:
+        "powered-stacked",
+      scale:
+        "B 100% · A 62%",
     },
     {
       id: "02",
       title: "Inline",
-      template: "powered-inline",
-      scale: "B 100% · A 58%",
+      template:
+        "powered-inline",
+      scale:
+        "B 100% · A 58%",
     },
     {
       id: "03",
-      title: "Endorsement",
-      template: "powered-corner",
-      scale: "B 100% · A 54%",
+      title:
+        "Endorsement",
+      template:
+        "powered-corner",
+      scale:
+        "B 100% · A 54%",
     },
   ],
 
   presentsB: [
     {
       id: "01",
-      title: "Presents",
-      template: "presents-stacked",
-      scale: "A 62% · B 100%",
+      title:
+        "Presents",
+      template:
+        "presents-stacked",
+      scale:
+        "A 62% · B 100%",
     },
     {
       id: "02",
       title: "Inline",
-      template: "presents-inline",
-      scale: "A 58% · B 100%",
+      template:
+        "presents-inline",
+      scale:
+        "A 58% · B 100%",
     },
     {
       id: "03",
-      title: "Presented by",
-      template: "presents-corner",
-      scale: "A 52% · B 100%",
+      title:
+        "Presented by",
+      template:
+        "presents-corner",
+      scale:
+        "A 52% · B 100%",
     },
   ],
 };
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page03() {
   const {
     partnershipModel,
     brandA,
     brandB,
-  } = useGuidelineStore();
+  } =
+    useGuidelineStore();
+
+  const theme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.theme
+    );
+
+  const isLight =
+    theme ===
+    "light";
 
   const model =
     partnershipModel as PartnershipModelId;
 
   const brandAName =
-    brandA.name.trim() || "Brand A";
+    brandA.name.trim() ||
+    "Brand A";
 
   const brandBName =
-    brandB.name.trim() || "Brand B";
+    brandB.name.trim() ||
+    "Brand B";
 
   const variants =
-    MODEL_VARIANTS[model];
+    MODEL_VARIANTS[
+      model
+    ];
 
   return (
     <GuidelinePage>
@@ -194,10 +249,8 @@ export default function Page03() {
 
         <PartnershipLockup
           model={model}
-          brandAName={brandAName}
-          brandBName={brandBName}
-          brandALogo={brandA.logoUrl}
-          brandBLogo={brandB.logoUrl}
+          brandA={brandA}
+          brandB={brandB}
         />
       </header>
 
@@ -220,11 +273,24 @@ export default function Page03() {
           (variant) => (
             <VariantCard
               key={variant.id}
-              variant={variant}
-              brandAName={brandAName}
-              brandBName={brandBName}
-              brandALogo={brandA.logoUrl}
-              brandBLogo={brandB.logoUrl}
+              variant={
+                variant
+              }
+              brandAName={
+                brandAName
+              }
+              brandBName={
+                brandBName
+              }
+              brandALogo={
+                brandA.logoUrl
+              }
+              brandBLogo={
+                brandB.logoUrl
+              }
+              isLight={
+                isLight
+              }
             />
           )
         )}
@@ -233,9 +299,9 @@ export default function Page03() {
   );
 }
 
-/* ------------------------------------------------ */
-/* VARIANT CARD                                     */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* VARIANT CARD                                      */
+/* ================================================= */
 
 function VariantCard({
   variant,
@@ -245,14 +311,26 @@ function VariantCard({
 
   brandALogo,
   brandBLogo,
+
+  isLight,
 }: {
-  variant: VariantSpec;
+  variant:
+    VariantSpec;
 
-  brandAName: string;
-  brandBName: string;
+  brandAName:
+    string;
 
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  brandBName:
+    string;
+
+  brandALogo:
+    string | null;
+
+  brandBLogo:
+    string | null;
+
+  isLight:
+    boolean;
 }) {
   return (
     <article
@@ -266,10 +344,14 @@ function VariantCard({
         border
         border-white/[0.08]
 
-        bg-white/[0.025]
-
         p-[22px]
       "
+      style={{
+        backgroundColor:
+          isLight
+            ? "#FAFAF8"
+            : "rgba(255,255,255,0.025)",
+      }}
     >
       {/* HEADER */}
 
@@ -282,27 +364,11 @@ function VariantCard({
         "
       >
         <div>
-          <p
-            className="
-              text-[10px]
-              uppercase
-              tracking-[0.16em]
-              text-white/25
-            "
-          >
+          <p className="text-[10px] uppercase tracking-[0.16em] text-white/25">
             Variant {variant.id}
           </p>
 
-          <h2
-            className="
-              mt-[7px]
-
-              text-[22px]
-              leading-none
-
-              oook-medium
-            "
-          >
+          <h2 className="mt-[7px] text-[22px] leading-none oook-medium">
             {variant.title}
           </h2>
         </div>
@@ -333,42 +399,33 @@ function VariantCard({
 
       <div className="mt-[22px] min-h-0 flex-1">
         <PositioningSurface
-          template={variant.template}
-          brandAName={brandAName}
-          brandBName={brandBName}
-          brandALogo={brandALogo}
-          brandBLogo={brandBLogo}
+          template={
+            variant.template
+          }
+          brandAName={
+            brandAName
+          }
+          brandBName={
+            brandBName
+          }
+          brandALogo={
+            brandALogo
+          }
+          brandBLogo={
+            brandBLogo
+          }
+          isLight={
+            isLight
+          }
         />
       </div>
 
-      {/* SAFE AREA */}
-
-      <div
-        className="
-          mt-[16px]
-
-          flex
-          items-center
-          justify-between
-        "
-      >
-        <p
-          className="
-            text-[10px]
-            uppercase
-            tracking-[0.14em]
-            text-white/22
-          "
-        >
+      <div className="mt-[16px] flex items-center justify-between">
+        <p className="text-[10px] uppercase tracking-[0.14em] text-white/22">
           Safe area
         </p>
 
-        <p
-          className="
-            text-[12px]
-            text-white/40
-          "
-        >
+        <p className="text-[12px] text-white/40">
           8%
         </p>
       </div>
@@ -376,9 +433,9 @@ function VariantCard({
   );
 }
 
-/* ------------------------------------------------ */
-/* POSITIONING SURFACE                              */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* POSITIONING SURFACE                               */
+/* ================================================= */
 
 function PositioningSurface({
   template,
@@ -388,14 +445,26 @@ function PositioningSurface({
 
   brandALogo,
   brandBLogo,
+
+  isLight,
 }: {
-  template: VariantTemplate;
+  template:
+    VariantTemplate;
 
-  brandAName: string;
-  brandBName: string;
+  brandAName:
+    string;
 
-  brandALogo: string | null;
-  brandBLogo: string | null;
+  brandBName:
+    string;
+
+  brandALogo:
+    string | null;
+
+  brandBLogo:
+    string | null;
+
+  isLight:
+    boolean;
 }) {
   return (
     <div
@@ -411,37 +480,31 @@ function PositioningSurface({
 
         border
         border-white/[0.07]
-
-        bg-black/35
       "
+      style={{
+        backgroundColor:
+          isLight
+            ? "#F1F1EE"
+            : "rgba(0,0,0,0.35)",
+      }}
     >
       <CanvasGuides />
 
-      {/* ================================================= */}
-      {/* A × B                                             */}
-      {/* ================================================= */}
+      {/* A × B */}
 
       {template ===
         "equal-horizontal" && (
-        <div
-          className="
-            absolute
-            left-[10%]
-            right-[10%]
-            top-1/2
-
-            grid
-            -translate-y-1/2
-
-            grid-cols-[1fr_52px_1fr]
-
-            items-center
-            gap-[18px]
-          "
-        >
+        <div className="absolute left-[10%] right-[10%] top-1/2 grid -translate-y-1/2 grid-cols-[1fr_52px_1fr] items-center gap-[18px]">
           <OpticalLogoFrame
-            logoUrl={brandALogo}
-            fallback={brandAName}
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            isLight={
+              isLight
+            }
           />
 
           <RelationshipWord>
@@ -449,8 +512,15 @@ function PositioningSurface({
           </RelationshipWord>
 
           <OpticalLogoFrame
-            logoUrl={brandBLogo}
-            fallback={brandBName}
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            isLight={
+              isLight
+            }
           />
         </div>
       )}
@@ -458,45 +528,37 @@ function PositioningSurface({
       {template ===
         "equal-offset" && (
         <>
-          <div
-            className="
-              absolute
-              left-[10%]
-              top-[22%]
-              w-[34%]
-            "
-          >
+          <div className="absolute left-[10%] top-[22%] w-[34%]">
             <OpticalLogoFrame
-              logoUrl={brandALogo}
-              fallback={brandAName}
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+              isLight={
+                isLight
+              }
             />
           </div>
 
-          <div
-            className="
-              absolute
-              left-1/2
-              top-1/2
-              -translate-x-1/2
-              -translate-y-1/2
-            "
-          >
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <RelationshipWord>
               ×
             </RelationshipWord>
           </div>
 
-          <div
-            className="
-              absolute
-              bottom-[22%]
-              right-[10%]
-              w-[34%]
-            "
-          >
+          <div className="absolute bottom-[22%] right-[10%] w-[34%]">
             <OpticalLogoFrame
-              logoUrl={brandBLogo}
-              fallback={brandBName}
+              logoUrl={
+                brandBLogo
+              }
+              fallback={
+                brandBName
+              }
+              isLight={
+                isLight
+              }
             />
           </div>
         </>
@@ -504,26 +566,17 @@ function PositioningSurface({
 
       {template ===
         "equal-stacked" && (
-        <div
-          className="
-            absolute
-            left-1/2
-            top-1/2
-
-            flex
-            w-[46%]
-
-            -translate-x-1/2
-            -translate-y-1/2
-
-            flex-col
-            items-center
-            gap-[18px]
-          "
-        >
+        <div className="absolute left-1/2 top-1/2 flex w-[46%] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-[18px]">
           <OpticalLogoFrame
-            logoUrl={brandALogo}
-            fallback={brandAName}
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            isLight={
+              isLight
+            }
           />
 
           <RelationshipWord>
@@ -531,79 +584,82 @@ function PositioningSurface({
           </RelationshipWord>
 
           <OpticalLogoFrame
-            logoUrl={brandBLogo}
-            fallback={brandBName}
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            isLight={
+              isLight
+            }
           />
         </div>
       )}
 
-      {/* ================================================= */}
-      {/* A WITH B                                          */}
-      {/* ================================================= */}
+      {/* A WITH B */}
 
       {template ===
         "with-horizontal" && (
-        <div
-          className="
-            absolute
-            left-[9%]
-            right-[9%]
-            top-1/2
-
-            grid
-            -translate-y-1/2
-
-            grid-cols-[1.35fr_0.8fr]
-
-            items-end
-            gap-[54px]
-          "
-        >
+        <div className="absolute left-[9%] right-[9%] top-1/2 grid -translate-y-1/2 grid-cols-[1.35fr_0.8fr] items-end gap-[54px]">
           <LabeledLockupBlock
             label="Immersive experience by"
-            logoUrl={brandALogo}
-            fallback={brandAName}
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            isLight={
+              isLight
+            }
             large
           />
 
           <LabeledLockupBlock
             label="In collaboration with"
-            logoUrl={brandBLogo}
-            fallback={brandBName}
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            isLight={
+              isLight
+            }
           />
         </div>
       )}
 
       {template ===
         "with-stacked" && (
-        <div
-          className="
-            absolute
-            left-1/2
-            top-1/2
-
-            flex
-            w-[52%]
-
-            -translate-x-1/2
-            -translate-y-1/2
-
-            flex-col
-            gap-[34px]
-          "
-        >
+        <div className="absolute left-1/2 top-1/2 flex w-[52%] -translate-x-1/2 -translate-y-1/2 flex-col gap-[34px]">
           <LabeledLockupBlock
             label="Immersive experience by"
-            logoUrl={brandALogo}
-            fallback={brandAName}
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            isLight={
+              isLight
+            }
             large
           />
 
           <div className="ml-[18%] w-[68%]">
             <LabeledLockupBlock
               label="In collaboration with"
-              logoUrl={brandBLogo}
-              fallback={brandBName}
+              logoUrl={
+                brandBLogo
+              }
+              fallback={
+                brandBName
+              }
+              isLight={
+                isLight
+              }
             />
           </div>
         </div>
@@ -612,64 +668,54 @@ function PositioningSurface({
       {template ===
         "with-corner" && (
         <>
-          <div
-            className="
-              absolute
-              left-[10%]
-              top-[30%]
-              w-[48%]
-            "
-          >
+          <div className="absolute left-[10%] top-[30%] w-[48%]">
             <OpticalLogoFrame
-              logoUrl={brandALogo}
-              fallback={brandAName}
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+              isLight={
+                isLight
+              }
               large
             />
           </div>
 
-          <div
-            className="
-              absolute
-              bottom-[11%]
-              right-[11%]
-              w-[27%]
-            "
-          >
+          <div className="absolute bottom-[11%] right-[11%] w-[27%]">
             <LabeledLockupBlock
               label="In collaboration with"
-              logoUrl={brandBLogo}
-              fallback={brandBName}
+              logoUrl={
+                brandBLogo
+              }
+              fallback={
+                brandBName
+              }
+              isLight={
+                isLight
+              }
               compact
             />
           </div>
         </>
       )}
 
-      {/* ================================================= */}
-      {/* B POWERED BY A                                    */}
-      {/* ================================================= */}
+      {/* POWERED */}
 
       {template ===
         "powered-stacked" && (
-        <div
-          className="
-            absolute
-            left-1/2
-            top-1/2
-
-            flex
-            w-[60%]
-
-            -translate-x-1/2
-            -translate-y-1/2
-
-            flex-col
-            items-center
-          "
-        >
+        <div className="absolute left-1/2 top-1/2 flex w-[60%] -translate-x-1/2 -translate-y-1/2 flex-col items-center">
           <OpticalLogoFrame
-            logoUrl={brandBLogo}
-            fallback={brandBName}
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            isLight={
+              isLight
+            }
             large
           />
 
@@ -679,8 +725,15 @@ function PositioningSurface({
 
           <div className="w-[58%]">
             <OpticalLogoFrame
-              logoUrl={brandALogo}
-              fallback={brandAName}
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+              isLight={
+                isLight
+              }
               compact
             />
           </div>
@@ -689,69 +742,35 @@ function PositioningSurface({
 
       {template ===
         "powered-inline" && (
-        <div
-          className="
-            absolute
-            left-[9%]
-            right-[9%]
-            top-1/2
-
-            grid
-            -translate-y-1/2
-
-            grid-cols-[1.5fr_1px_0.82fr]
-
-            items-center
-            gap-[30px]
-          "
-        >
-          {/* MAIN BRAND */}
-
+        <div className="absolute left-[9%] right-[9%] top-1/2 grid -translate-y-1/2 grid-cols-[1.5fr_1px_0.82fr] items-center gap-[30px]">
           <OpticalLogoFrame
-            logoUrl={brandBLogo}
-            fallback={brandBName}
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            isLight={
+              isLight
+            }
             large
           />
 
-          {/* DIVIDER */}
+          <div className="h-[92px] w-px bg-white/[0.1]" />
 
-          <div
-            className="
-              h-[92px]
-              w-px
-              bg-white/[0.1]
-            "
-          />
-
-          {/* ENDORSEMENT */}
-
-          <div
-            className="
-              flex
-              flex-col
-              items-start
-              justify-center
-            "
-          >
-            <p
-              className="
-                mb-[12px]
-
-                text-[10px]
-                uppercase
-                tracking-[0.16em]
-                text-white/32
-              "
-            >
+          <div className="flex flex-col items-start justify-center">
+            <p className="mb-[12px] text-[10px] uppercase tracking-[0.16em] text-white/32">
               Powered by
             </p>
 
-            <div className="w-full">
-              <BareLogo
-                logoUrl={brandALogo}
-                fallback={brandAName}
-              />
-            </div>
+            <BareLogo
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+            />
           </div>
         </div>
       )}
@@ -759,83 +778,54 @@ function PositioningSurface({
       {template ===
         "powered-corner" && (
         <>
-          <div
-            className="
-              absolute
-              left-1/2
-              top-[29%]
-
-              w-[66%]
-
-              -translate-x-1/2
-            "
-          >
+          <div className="absolute left-1/2 top-[29%] w-[66%] -translate-x-1/2">
             <OpticalLogoFrame
-              logoUrl={brandBLogo}
-              fallback={brandBName}
+              logoUrl={
+                brandBLogo
+              }
+              fallback={
+                brandBName
+              }
+              isLight={
+                isLight
+              }
               large
             />
           </div>
 
-          <div
-            className="
-              absolute
-              bottom-[11%]
-              right-[11%]
-
-              flex
-              w-[29%]
-              flex-col
-              items-end
-            "
-          >
-            <p
-              className="
-                mb-[9px]
-
-                text-[10px]
-                uppercase
-                tracking-[0.15em]
-                text-white/30
-              "
-            >
+          <div className="absolute bottom-[11%] right-[11%] flex w-[29%] flex-col items-end">
+            <p className="mb-[9px] text-[10px] uppercase tracking-[0.15em] text-white/30">
               Powered by
             </p>
 
             <BareLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
             />
           </div>
         </>
       )}
 
-      {/* ================================================= */}
-      {/* A PRESENTS B                                      */}
-      {/* ================================================= */}
+      {/* PRESENTS */}
 
       {template ===
         "presents-stacked" && (
-        <div
-          className="
-            absolute
-            left-1/2
-            top-1/2
-
-            flex
-            w-[62%]
-
-            -translate-x-1/2
-            -translate-y-1/2
-
-            flex-col
-            items-center
-          "
-        >
+        <div className="absolute left-1/2 top-1/2 flex w-[62%] -translate-x-1/2 -translate-y-1/2 flex-col items-center">
           <div className="w-[56%]">
             <OpticalLogoFrame
-              logoUrl={brandALogo}
-              fallback={brandAName}
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+              isLight={
+                isLight
+              }
               compact
             />
           </div>
@@ -845,8 +835,15 @@ function PositioningSurface({
           </ConnectorText>
 
           <OpticalLogoFrame
-            logoUrl={brandBLogo}
-            fallback={brandBName}
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            isLight={
+              isLight
+            }
             large
           />
         </div>
@@ -854,68 +851,34 @@ function PositioningSurface({
 
       {template ===
         "presents-inline" && (
-        <div
-          className="
-            absolute
-            left-[9%]
-            right-[9%]
-            top-1/2
+        <div className="absolute left-[9%] right-[9%] top-1/2 grid -translate-y-1/2 grid-cols-[0.75fr_1px_1.45fr] items-center gap-[30px]">
+          <div className="flex flex-col items-end justify-center">
+            <BareLogo
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+            />
 
-            grid
-            -translate-y-1/2
-
-            grid-cols-[0.75fr_1px_1.45fr]
-
-            items-center
-            gap-[30px]
-          "
-        >
-          {/* PRESENTER */}
-
-          <div
-            className="
-              flex
-              flex-col
-              items-end
-              justify-center
-            "
-          >
-            <div className="w-full">
-              <BareLogo
-                logoUrl={brandALogo}
-                fallback={brandAName}
-              />
-            </div>
-
-            <p
-              className="
-                mt-[12px]
-
-                text-[10px]
-                uppercase
-                tracking-[0.16em]
-                text-white/32
-              "
-            >
+            <p className="mt-[12px] text-[10px] uppercase tracking-[0.16em] text-white/32">
               Presents
             </p>
           </div>
 
-          {/* DIVIDER */}
-
-          <div
-            className="
-              h-[92px]
-              w-px
-              bg-white/[0.1]
-            "
-          />
-
-          {/* FEATURED BRAND */}
+          <div className="h-[92px] w-px bg-white/[0.1]" />
 
           <OpticalLogoFrame
-            logoUrl={brandBLogo}
-            fallback={brandBName}
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            isLight={
+              isLight
+            }
             large
           />
         </div>
@@ -924,33 +887,33 @@ function PositioningSurface({
       {template ===
         "presents-corner" && (
         <>
-          <div
-            className="
-              absolute
-              left-[11%]
-              top-[14%]
-              w-[28%]
-            "
-          >
+          <div className="absolute left-[11%] top-[14%] w-[28%]">
             <LabeledLockupBlock
               label="Presented by"
-              logoUrl={brandALogo}
-              fallback={brandAName}
+              logoUrl={
+                brandALogo
+              }
+              fallback={
+                brandAName
+              }
+              isLight={
+                isLight
+              }
               compact
             />
           </div>
 
-          <div
-            className="
-              absolute
-              bottom-[18%]
-              right-[10%]
-              w-[61%]
-            "
-          >
+          <div className="absolute bottom-[18%] right-[10%] w-[61%]">
             <OpticalLogoFrame
-              logoUrl={brandBLogo}
-              fallback={brandBName}
+              logoUrl={
+                brandBLogo
+              }
+              fallback={
+                brandBName
+              }
+              isLight={
+                isLight
+              }
               large
             />
           </div>
@@ -960,15 +923,13 @@ function PositioningSurface({
   );
 }
 
-/* ------------------------------------------------ */
-/* CANVAS GUIDES                                    */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* GUIDES                                            */
+/* ================================================= */
 
 function CanvasGuides() {
   return (
     <>
-      {/* GLOBAL SAFE AREA */}
-
       <div
         className="
           pointer-events-none
@@ -989,78 +950,44 @@ function CanvasGuides() {
         }}
       />
 
-      {/* VERTICAL CENTER */}
+      <div className="pointer-events-none absolute bottom-[8%] left-1/2 top-[8%] w-px -translate-x-1/2 bg-white/[0.04]" />
 
-      <div
-        className="
-          pointer-events-none
+      <div className="pointer-events-none absolute left-[8%] right-[8%] top-1/2 h-px -translate-y-1/2 bg-white/[0.04]" />
 
-          absolute
-
-          bottom-[8%]
-          left-1/2
-          top-[8%]
-
-          w-px
-          -translate-x-1/2
-
-          bg-white/[0.04]
-        "
-      />
-
-      {/* HORIZONTAL CENTER */}
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-
-          left-[8%]
-          right-[8%]
-          top-1/2
-
-          h-px
-          -translate-y-1/2
-
-          bg-white/[0.04]
-        "
-      />
-
-      <p
-        className="
-          absolute
-          bottom-[10%]
-          right-[10%]
-
-          text-[9px]
-          uppercase
-          tracking-[0.14em]
-          text-white/15
-        "
-      >
+      <p className="absolute bottom-[10%] right-[10%] text-[9px] uppercase tracking-[0.14em] text-white/15">
         8% safe area
       </p>
     </>
   );
 }
 
-/* ------------------------------------------------ */
-/* OPTICAL LOGO FRAME                               */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* LOGO FRAME                                        */
+/* ================================================= */
 
 function OpticalLogoFrame({
   logoUrl,
   fallback,
 
+  isLight,
+
   large = false,
   compact = false,
 }: {
-  logoUrl: string | null;
-  fallback: string;
+  logoUrl:
+    string | null;
 
-  large?: boolean;
-  compact?: boolean;
+  fallback:
+    string;
+
+  isLight:
+    boolean;
+
+  large?:
+    boolean;
+
+  compact?:
+    boolean;
 }) {
   const height =
     large
@@ -1080,100 +1007,57 @@ function OpticalLogoFrame({
 
         border
         border-white/[0.11]
-
-        bg-white/[0.012]
       `}
+      style={{
+        backgroundColor:
+          isLight
+            ? "#F8F8F6"
+            : "rgba(255,255,255,0.012)",
+      }}
     >
-      {/* INTERNAL SAFE AREA */}
+      <div className="absolute inset-[10%] rounded-[10px] border border-dashed border-white/[0.07]" />
 
-      <div
-        className="
-          absolute
-          inset-[10%]
+      <div className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-white/[0.035]" />
 
-          rounded-[10px]
+      <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-white/[0.035]" />
 
-          border
-          border-dashed
-          border-white/[0.07]
-        "
-      />
-
-      {/* AXES */}
-
-      <div
-        className="
-          absolute
-          bottom-0
-          left-1/2
-          top-0
-
-          w-px
-          -translate-x-1/2
-
-          bg-white/[0.035]
-        "
-      />
-
-      <div
-        className="
-          absolute
-          left-0
-          right-0
-          top-1/2
-
-          h-px
-          -translate-y-1/2
-
-          bg-white/[0.035]
-        "
-      />
-
-      {/* LOGO */}
-
-      <div
-        className="
-          absolute
-
-          bottom-[19%]
-          left-[13%]
-          right-[13%]
-          top-[19%]
-        "
-      >
+      <div className="absolute bottom-[19%] left-[13%] right-[13%] top-[19%]">
         <BrandLogo
-          logoUrl={logoUrl}
-          fallback={fallback}
+          logoUrl={
+            logoUrl
+          }
+          fallback={
+            fallback
+          }
         />
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------ */
-/* BARE LOGO                                        */
-/* ------------------------------------------------ */
-
 function BareLogo({
   logoUrl,
   fallback,
 }: {
-  logoUrl: string | null;
-  fallback: string;
+  logoUrl:
+    string | null;
+
+  fallback:
+    string;
 }) {
   return (
     <div className="h-[58px] w-full">
       <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
+        logoUrl={
+          logoUrl
+        }
+        fallback={
+          fallback
+        }
       />
     </div>
   );
 }
-
-/* ------------------------------------------------ */
-/* LABEL + LOGO                                     */
-/* ------------------------------------------------ */
 
 function LabeledLockupBlock({
   label,
@@ -1181,63 +1065,68 @@ function LabeledLockupBlock({
   logoUrl,
   fallback,
 
+  isLight,
+
   large = false,
   compact = false,
 }: {
-  label: string;
+  label:
+    string;
 
-  logoUrl: string | null;
-  fallback: string;
+  logoUrl:
+    string | null;
 
-  large?: boolean;
-  compact?: boolean;
+  fallback:
+    string;
+
+  isLight:
+    boolean;
+
+  large?:
+    boolean;
+
+  compact?:
+    boolean;
 }) {
   return (
     <div className="w-full">
-      <p
-        className="
-          mb-[10px]
-
-          text-[10px]
-          tracking-[0.02em]
-          text-white/32
-        "
-      >
+      <p className="mb-[10px] text-[10px] tracking-[0.02em] text-white/32">
         {label}
       </p>
 
       <OpticalLogoFrame
-        logoUrl={logoUrl}
-        fallback={fallback}
-        large={large}
-        compact={compact}
+        logoUrl={
+          logoUrl
+        }
+        fallback={
+          fallback
+        }
+        isLight={
+          isLight
+        }
+        large={
+          large
+        }
+        compact={
+          compact
+        }
       />
     </div>
   );
 }
 
-/* ------------------------------------------------ */
-/* CONNECTORS                                       */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* CONNECTORS                                        */
+/* ================================================= */
 
 function RelationshipWord({
   children,
 }: {
-  children: React.ReactNode;
+  children:
+    React.ReactNode;
 }) {
   return (
-    <div
-      className="
-        flex
-        items-center
-        justify-center
-
-        text-[30px]
-        text-white/55
-
-        oook-light
-      "
-    >
+    <div className="flex items-center justify-center text-[30px] text-white/55 oook-light">
       {children}
     </div>
   );
@@ -1246,254 +1135,14 @@ function RelationshipWord({
 function ConnectorText({
   children,
 }: {
-  children: React.ReactNode;
+  children:
+    React.ReactNode;
 }) {
   return (
-    <div
-      className="
-        flex
-        h-[48px]
-        items-center
-        justify-center
-      "
-    >
-      <p
-        className="
-          text-[11px]
-          uppercase
-          tracking-[0.16em]
-          text-white/34
-
-          oook-medium
-        "
-      >
+    <div className="flex h-[48px] items-center justify-center">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-white/34 oook-medium">
         {children}
       </p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* TOP RIGHT PARTNERSHIP LOCKUP                     */
-/* ------------------------------------------------ */
-
-function PartnershipLockup({
-  model,
-
-  brandAName,
-  brandBName,
-
-  brandALogo,
-  brandBLogo,
-}: {
-  model: PartnershipModelId;
-
-  brandAName: string;
-  brandBName: string;
-
-  brandALogo: string | null;
-  brandBLogo: string | null;
-}) {
-  /* A × B */
-
-  if (model === "axb") {
-    return (
-      <div
-        className="
-          flex
-          items-center
-          gap-[16px]
-        "
-      >
-        <TopLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-        />
-
-        <span
-          className="
-            text-[24px]
-            text-white/20
-          "
-        >
-          ×
-        </span>
-
-        <TopLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-        />
-      </div>
-    );
-  }
-
-  /* A WITH B */
-
-  if (model === "aandb") {
-    return (
-      <div
-        className="
-          flex
-          items-end
-          gap-[26px]
-        "
-      >
-        <TopLabeledLogo
-          label="Immersive experience by"
-          logoUrl={brandALogo}
-          fallback={brandAName}
-        />
-
-        <TopLabeledLogo
-          label="In collaboration with"
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-        />
-      </div>
-    );
-  }
-
-  /* B POWERED BY A */
-
-  if (
-    model ===
-    "poweredByA"
-  ) {
-    return (
-      <div
-        className="
-          flex
-          flex-col
-          items-end
-        "
-      >
-        <div className="h-[44px] w-[155px]">
-          <BrandLogo
-            logoUrl={brandBLogo}
-            fallback={brandBName}
-          />
-        </div>
-
-        <div
-          className="
-            mt-[7px]
-
-            flex
-            items-center
-            gap-[9px]
-          "
-        >
-          <span
-            className="
-              text-[8px]
-              uppercase
-              tracking-[0.14em]
-              text-white/20
-            "
-          >
-            Powered by
-          </span>
-
-          <div className="h-[25px] w-[95px]">
-            <BrandLogo
-              logoUrl={brandALogo}
-              fallback={brandAName}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* A PRESENTS B */
-
-  return (
-    <div
-      className="
-        flex
-        flex-col
-        items-end
-      "
-    >
-      <div className="h-[28px] w-[110px]">
-        <BrandLogo
-          logoUrl={brandALogo}
-          fallback={brandAName}
-        />
-      </div>
-
-      <p
-        className="
-          my-[5px]
-
-          text-[8px]
-          uppercase
-          tracking-[0.15em]
-          text-white/20
-        "
-      >
-        Presents
-      </p>
-
-      <div className="h-[39px] w-[140px]">
-        <BrandLogo
-          logoUrl={brandBLogo}
-          fallback={brandBName}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------ */
-/* TOP LOGO HELPERS                                 */
-/* ------------------------------------------------ */
-
-function TopLogo({
-  logoUrl,
-  fallback,
-}: {
-  logoUrl: string | null;
-  fallback: string;
-}) {
-  return (
-    <div className="h-[44px] w-[135px]">
-      <BrandLogo
-        logoUrl={logoUrl}
-        fallback={fallback}
-      />
-    </div>
-  );
-}
-
-function TopLabeledLogo({
-  label,
-  logoUrl,
-  fallback,
-}: {
-  label: string;
-  logoUrl: string | null;
-  fallback: string;
-}) {
-  return (
-    <div>
-      <p
-        className="
-          mb-[5px]
-
-          text-[8px]
-          text-white/18
-        "
-      >
-        {label}
-      </p>
-
-      <div className="h-[35px] w-[130px]">
-        <BrandLogo
-          logoUrl={logoUrl}
-          fallback={fallback}
-        />
-      </div>
     </div>
   );
 }

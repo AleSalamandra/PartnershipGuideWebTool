@@ -5,46 +5,70 @@ import {
   useState,
 } from "react";
 
-import GuidelinePage from "./GuidelinePage";
+import GuidelinePage, {
+  useGuidelineThemeStore,
+} from "./GuidelinePage";
+
 import PartnershipLockup from "./PartnershipLockup";
+import RasterGlow from "./RasterGlow";
+import RasterGradient from "./RasterGradient";
 
 import {
   BrandCharacterTraitId,
 } from "@/data/brandCharacterTraits";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 interface BrandView {
-  name: string;
+  name:
+    string;
 
-  logoUrl: string | null;
+  logoUrl:
+    string | null;
 
-  primaryColor: string;
-  secondaryColor: string;
+  primaryColor:
+    string;
 
-  fontFamily: string;
+  secondaryColor:
+    string;
+
+  fontFamily:
+    string;
 
   characterTraits:
     BrandCharacterTraitId[];
 }
 
 interface SceneProfile {
-  roundness: number;
-  energy: number;
-  glow: number;
-  depth: number;
+  roundness:
+    number;
 
-  expressiveTilt: number;
+  energy:
+    number;
+
+  glow:
+    number;
+
+  depth:
+    number;
+
+  expressiveTilt:
+    number;
 }
 
-/* ------------------------------------------------ */
-/* HELPERS                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 const DEFAULT_FONT =
   '"oook-variable", sans-serif';
@@ -65,27 +89,45 @@ function safeColour(
   value: unknown,
   fallback: string
 ) {
-  return typeof value === "string" &&
-    /^#[0-9A-Fa-f]{6}$/.test(value)
+  return (
+    typeof value ===
+      "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(
+      value
+    )
+  )
     ? value
     : fallback;
 }
 
 function getBrand(
   brand: unknown,
-  fallbackName: string,
-  fallbackPrimary: string,
-  fallbackSecondary: string
+
+  fallbackName:
+    string,
+
+  fallbackPrimary:
+    string,
+
+  fallbackSecondary:
+    string
 ): BrandView {
   const value =
     brand as {
-      name?: string;
-      logoUrl?: string | null;
+      name?:
+        string;
 
-      primaryColor?: string;
-      secondaryColor?: string;
+      logoUrl?:
+        string | null;
 
-      fontFamily?: string;
+      primaryColor?:
+        string;
+
+      secondaryColor?:
+        string;
+
+      fontFamily?:
+        string;
 
       characterTraits?:
         BrandCharacterTraitId[];
@@ -131,12 +173,20 @@ function buildProfile(
 ): SceneProfile {
   const p:
     SceneProfile = {
-    roundness: 0.42,
-    energy: 0.32,
-    glow: 0.2,
-    depth: 0.42,
+    roundness:
+      0.42,
 
-    expressiveTilt: 0,
+    energy:
+      0.32,
+
+    glow:
+      0.2,
+
+    depth:
+      0.42,
+
+    expressiveTilt:
+      0,
   };
 
   traits.forEach(
@@ -144,41 +194,54 @@ function buildProfile(
       switch (trait) {
         case "premium":
         case "cinematic":
-          p.depth += 0.2;
-          p.glow += 0.1;
+          p.depth +=
+            0.2;
+          p.glow +=
+            0.1;
           break;
 
         case "futuristic":
         case "immersive":
-          p.depth += 0.3;
-          p.glow += 0.22;
+          p.depth +=
+            0.3;
+          p.glow +=
+            0.22;
           break;
 
         case "dynamic":
         case "sporty":
         case "energetic":
-          p.energy += 0.3;
+          p.energy +=
+            0.3;
           break;
 
         case "friendly":
         case "organic":
-          p.roundness += 0.25;
+          p.roundness +=
+            0.25;
           break;
 
         case "playful":
-          p.roundness += 0.3;
-          p.energy += 0.15;
-          p.expressiveTilt += 0.8;
+          p.roundness +=
+            0.3;
+          p.energy +=
+            0.15;
+          p.expressiveTilt +=
+            0.8;
           break;
 
         case "experimental":
-          p.expressiveTilt += 0.7;
-          p.energy += 0.14;
+          p.expressiveTilt +=
+            0.7;
+          p.energy +=
+            0.14;
           break;
 
         case "disruptive":
-          p.expressiveTilt += 0.55;
-          p.energy += 0.22;
+          p.expressiveTilt +=
+            0.55;
+          p.energy +=
+            0.22;
           break;
       }
     }
@@ -213,40 +276,61 @@ function buildProfile(
 }
 
 function blend(
-  a: SceneProfile,
-  b: SceneProfile,
-  weight: number
+  a:
+    SceneProfile,
+
+  b:
+    SceneProfile,
+
+  weight:
+    number
 ): SceneProfile {
   const inverse =
-    1 - weight;
+    1 -
+    weight;
 
   return {
     roundness:
-      a.roundness * weight +
-      b.roundness * inverse,
+      a.roundness *
+        weight +
+      b.roundness *
+        inverse,
 
     energy:
-      a.energy * weight +
-      b.energy * inverse,
+      a.energy *
+        weight +
+      b.energy *
+        inverse,
 
     glow:
-      a.glow * weight +
-      b.glow * inverse,
+      a.glow *
+        weight +
+      b.glow *
+        inverse,
 
     depth:
-      a.depth * weight +
-      b.depth * inverse,
+      a.depth *
+        weight +
+      b.depth *
+        inverse,
 
     expressiveTilt:
-      a.expressiveTilt * weight +
-      b.expressiveTilt * inverse,
+      a.expressiveTilt *
+        weight +
+      b.expressiveTilt *
+        inverse,
   };
 }
 
 function getSharedProfile(
-  model: PartnershipModelId,
-  a: SceneProfile,
-  b: SceneProfile
+  model:
+    PartnershipModelId,
+
+  a:
+    SceneProfile,
+
+  b:
+    SceneProfile
 ) {
   switch (model) {
     case "axb":
@@ -276,9 +360,9 @@ function getSharedProfile(
   }
 }
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page13() {
   const {
@@ -287,6 +371,16 @@ export default function Page13() {
     brandB,
   } =
     useGuidelineStore();
+
+  const theme =
+    useGuidelineThemeStore(
+      (state) =>
+        state.theme
+    );
+
+  const isLight =
+    theme ===
+    "light";
 
   const model =
     partnershipModel as PartnershipModelId;
@@ -365,12 +459,18 @@ export default function Page13() {
           }}
         >
           <BackgroundImage
-            model={model}
-            profile={profile}
+            model={
+              model
+            }
+            profile={
+              profile
+            }
           />
 
           <SceneTreatment
-            profile={profile}
+            profile={
+              profile
+            }
             aPrimary={
               a.primaryColor
             }
@@ -383,9 +483,13 @@ export default function Page13() {
             bSecondary={
               b.secondaryColor
             }
+            isLight={
+              isLight
+            }
           />
 
-          {model === "axb" && (
+          {model ===
+            "axb" && (
             <AXBExample
               a={a}
               b={b}
@@ -422,6 +526,9 @@ export default function Page13() {
               bProfile={
                 bProfile
               }
+              isLight={
+                isLight
+              }
             />
           )}
         </div>
@@ -440,9 +547,9 @@ export default function Page13() {
   );
 }
 
-/* ------------------------------------------------ */
-/* BACKGROUND                                       */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* BACKGROUND                                        */
+/* ================================================= */
 
 function BackgroundImage({
   model,
@@ -455,11 +562,14 @@ function BackgroundImage({
     SceneProfile;
 }) {
   const imageNumber =
-    model === "axb"
+    model ===
+    "axb"
       ? 3
-      : model === "aandb"
+      : model ===
+          "aandb"
         ? 4
-        : model === "poweredByA"
+        : model ===
+            "poweredByA"
           ? 7
           : 9;
 
@@ -473,11 +583,14 @@ function BackgroundImage({
   const [
     extension,
     setExtension,
-  ] = useState(0);
+  ] =
+    useState(0);
 
   useEffect(
     () => {
-      setExtension(0);
+      setExtension(
+        0
+      );
     },
     [imageNumber]
   );
@@ -490,11 +603,13 @@ function BackgroundImage({
       onError={() => {
         if (
           extension <
-          extensions.length - 1
+          extensions.length -
+            1
         ) {
           setExtension(
             (current) =>
-              current + 1
+              current +
+              1
           );
         }
       }}
@@ -520,98 +635,151 @@ function BackgroundImage({
   );
 }
 
-/* ------------------------------------------------ */
-/* TREATMENT                                        */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* TREATMENT                                         */
+/* ================================================= */
 
 function SceneTreatment({
   profile,
+
   aPrimary,
   aSecondary,
+
   bPrimary,
   bSecondary,
+
+  isLight,
 }: {
-  profile: SceneProfile;
+  profile:
+    SceneProfile;
 
-  aPrimary: string;
-  aSecondary: string;
+  aPrimary:
+    string;
 
-  bPrimary: string;
-  bSecondary: string;
+  aSecondary:
+    string;
+
+  bPrimary:
+    string;
+
+  bSecondary:
+    string;
+
+  isLight:
+    boolean;
 }) {
   return (
     <>
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-black/20" />
+      <RasterGradient
+        direction="horizontal"
+        className="absolute inset-0 h-full w-full"
+        stops={
+          isLight
+            ? [
+                {
+                  color:
+                    "#FFFFFF",
+                  offset: 0,
+                  opacity: 0.8,
+                },
+                {
+                  color:
+                    "#FFFFFF",
+                  offset: 54,
+                  opacity: 0.3,
+                },
+                {
+                  color:
+                    "#FFFFFF",
+                  offset:
+                    100,
+                  opacity: 0.18,
+                },
+              ]
+            : [
+                {
+                  color:
+                    "#000000",
+                  offset: 0,
+                  opacity: 0.8,
+                },
+                {
+                  color:
+                    "#000000",
+                  offset: 54,
+                  opacity: 0.3,
+                },
+                {
+                  color:
+                    "#000000",
+                  offset:
+                    100,
+                  opacity: 0.2,
+                },
+              ]
+        }
+      />
 
-      <Glow
-        colour={
+      <RasterGlow
+        color={
           aPrimary
         }
-        secondary={
+        secondaryColor={
           aSecondary
         }
-        className="-left-[12%] -top-[25%]"
+        opacity={
+          0.08 +
+          profile.glow *
+            0.18
+        }
+        secondaryOpacity={
+          0.03 +
+          profile.glow *
+            0.05
+        }
+        centerX={30}
+        centerY={25}
+        className="absolute -left-[12%] -top-[25%] h-[420px] w-[520px]"
       />
 
-      <Glow
-        colour={
+      <RasterGlow
+        color={
           bPrimary
         }
-        secondary={
+        secondaryColor={
           bSecondary
         }
-        className="-bottom-[30%] right-[2%]"
+        opacity={
+          0.08 +
+          profile.glow *
+            0.18
+        }
+        secondaryOpacity={
+          0.03 +
+          profile.glow *
+            0.05
+        }
+        centerX={68}
+        centerY={68}
+        className="absolute -bottom-[34%] right-[0%] h-[430px] w-[540px]"
       />
-
-      {profile.depth > 0.55 && (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_35%,transparent_15%,rgba(0,0,0,.42)_100%)]" />
-      )}
     </>
   );
 }
 
-function Glow({
-  colour,
-  secondary,
-  className,
-}: {
-  colour: string;
-  secondary: string;
-  className: string;
-}) {
-  return (
-    <div
-      className={`
-        absolute
-        h-[330px]
-        w-[330px]
-        rounded-full
-        blur-[120px]
-
-        ${className}
-      `}
-      style={{
-        background:
-          `radial-gradient(circle,
-            ${colour}28,
-            ${secondary}18,
-            transparent 70%
-          )`,
-      }}
-    />
-  );
-}
-
-/* ------------------------------------------------ */
-/* MODEL EXAMPLES                                   */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* MODEL — A × B                                     */
+/* ================================================= */
 
 function AXBExample({
   a,
   b,
 }: {
-  a: BrandView;
-  b: BrandView;
+  a:
+    BrandView;
+
+  b:
+    BrandView;
 }) {
   return (
     <>
@@ -636,7 +804,9 @@ function AXBExample({
       <HeroCopy
         eyebrow="Shared immersive experience"
         title="Experience the moment from inside."
-        family={DEFAULT_FONT}
+        family={
+          DEFAULT_FONT
+        }
       />
 
       <AccentGraphic
@@ -667,12 +837,19 @@ function AXBExample({
   );
 }
 
+/* ================================================= */
+/* MODEL — A WITH B                                  */
+/* ================================================= */
+
 function AWithBExample({
   a,
   b,
 }: {
-  a: BrandView;
-  b: BrandView;
+  a:
+    BrandView;
+
+  b:
+    BrandView;
 }) {
   return (
     <>
@@ -699,7 +876,9 @@ function AWithBExample({
       <HeroCopy
         eyebrow="A curated immersive experience"
         title="See the event differently."
-        family={a.fontFamily}
+        family={
+          a.fontFamily
+        }
       />
 
       <AccentGraphic
@@ -730,14 +909,23 @@ function AWithBExample({
   );
 }
 
+/* ================================================= */
+/* MODEL — POWERED                                   */
+/* ================================================= */
+
 function PoweredExample({
   a,
   b,
   profile,
 }: {
-  a: BrandView;
-  b: BrandView;
-  profile: SceneProfile;
+  a:
+    BrandView;
+
+  b:
+    BrandView;
+
+  profile:
+    SceneProfile;
 }) {
   return (
     <>
@@ -764,11 +952,15 @@ function PoweredExample({
       <HeroCopy
         eyebrow="Live immersive coverage"
         title="Feel closer to every moment."
-        family={b.fontFamily}
+        family={
+          b.fontFamily
+        }
       />
 
       <Visualizer
-        profile={profile}
+        profile={
+          profile
+        }
         primary={
           b.primaryColor
         }
@@ -790,25 +982,38 @@ function PoweredExample({
   );
 }
 
+/* ================================================= */
+/* MODEL — PRESENTS                                  */
+/* ================================================= */
+
 function PresentsExample({
   a,
   b,
+
   aProfile,
   bProfile,
+
+  isLight,
 }: {
-  a: BrandView;
-  b: BrandView;
+  a:
+    BrandView;
+
+  b:
+    BrandView;
 
   aProfile:
     SceneProfile;
 
   bProfile:
     SceneProfile;
+
+  isLight:
+    boolean;
 }) {
   return (
     <>
       <div
-        className="absolute left-[26px] right-[26px] top-[24px] flex h-[72px] items-center border border-white/[0.09] bg-black/48 px-[19px] backdrop-blur-[14px]"
+        className="absolute left-[26px] right-[26px] top-[24px] flex h-[72px] items-center border border-white/[0.09] bg-black/48 px-[19px]"
         style={{
           borderRadius:
             `${
@@ -829,9 +1034,17 @@ function PresentsExample({
         </span>
 
         <div className="ml-auto flex gap-[20px] text-[9px] text-white/28">
-          <span>Live</span>
-          <span>Highlights</span>
-          <span>Explore</span>
+          <span>
+            Live
+          </span>
+
+          <span>
+            Highlights
+          </span>
+
+          <span>
+            Explore
+          </span>
         </div>
       </div>
 
@@ -846,7 +1059,55 @@ function PresentsExample({
             }px`,
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/20 to-transparent" />
+        <RasterGradient
+          direction="horizontal"
+          className="absolute inset-0 h-full w-full"
+          stops={
+            isLight
+              ? [
+                  {
+                    color:
+                      "#FFFFFF",
+                    offset: 0,
+                    opacity: 0.65,
+                  },
+                  {
+                    color:
+                      "#FFFFFF",
+                    offset: 58,
+                    opacity: 0.18,
+                  },
+                  {
+                    color:
+                      "#FFFFFF",
+                    offset:
+                      100,
+                    opacity: 0,
+                  },
+                ]
+              : [
+                  {
+                    color:
+                      "#000000",
+                    offset: 0,
+                    opacity: 0.65,
+                  },
+                  {
+                    color:
+                      "#000000",
+                    offset: 58,
+                    opacity: 0.2,
+                  },
+                  {
+                    color:
+                      "#000000",
+                    offset:
+                      100,
+                    opacity: 0,
+                  },
+                ]
+          }
+        />
 
         <div className="absolute bottom-[55px] left-[38px]">
           <div className="mb-[18px] flex items-center gap-[13px]">
@@ -905,20 +1166,27 @@ function PresentsExample({
   );
 }
 
-/* ------------------------------------------------ */
-/* HERO COMPONENTS                                  */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* BRAND IDENTITY                                    */
+/* ================================================= */
 
 function BrandIdentity({
   brand,
   width,
   height,
 }: {
-  brand: BrandView;
-  width: number;
-  height: number;
+  brand:
+    BrandView;
+
+  width:
+    number;
+
+  height:
+    number;
 }) {
-  if (brand.logoUrl) {
+  if (
+    brand.logoUrl
+  ) {
     return (
       <div
         className="flex shrink-0 items-center"
@@ -928,9 +1196,15 @@ function BrandIdentity({
         }}
       >
         <img
-          src={brand.logoUrl}
-          alt={brand.name}
-          draggable={false}
+          src={
+            brand.logoUrl
+          }
+          alt={
+            brand.name
+          }
+          draggable={
+            false
+          }
           className="block h-full w-full object-contain object-left"
         />
       </div>
@@ -942,7 +1216,8 @@ function BrandIdentity({
       className="flex items-center"
       style={{
         width,
-        minHeight: height,
+        minHeight:
+          height,
       }}
     >
       <span
@@ -958,14 +1233,23 @@ function BrandIdentity({
   );
 }
 
+/* ================================================= */
+/* COPY                                              */
+/* ================================================= */
+
 function HeroCopy({
   eyebrow,
   title,
   family,
 }: {
-  eyebrow: string;
-  title: string;
-  family: string;
+  eyebrow:
+    string;
+
+  title:
+    string;
+
+  family:
+    string;
 }) {
   return (
     <div className="absolute bottom-[110px] left-[42px] max-w-[760px]">
@@ -986,33 +1270,63 @@ function HeroCopy({
   );
 }
 
+/* ================================================= */
+/* GRAPHIC                                           */
+/* ================================================= */
+
 function AccentGraphic({
   primary,
   secondary,
   support,
   supportSecondary,
 }: {
-  primary: string;
-  secondary: string;
-  support: string;
-  supportSecondary: string;
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  support:
+    string;
+
+  supportSecondary:
+    string;
 }) {
   return (
     <div className="absolute right-[55px] top-[140px] flex h-[210px] w-[340px] items-end justify-end gap-[7px]">
-      {[70, 130, 96, 185, 120, 165, 82].map(
-        (height, index) => (
+      {[
+        70,
+        130,
+        96,
+        185,
+        120,
+        165,
+        82,
+      ].map(
+        (
+          height,
+          index
+        ) => (
           <div
-            key={index}
+            key={
+              index
+            }
             className="w-[6px] rounded-full"
             style={{
               height,
 
               backgroundColor:
-                index % 4 === 0
+                index %
+                  4 ===
+                0
                   ? support
-                  : index % 3 === 0
+                  : index %
+                        3 ===
+                      0
                     ? supportSecondary
-                    : index % 2 === 0
+                    : index %
+                          2 ===
+                        0
                       ? secondary
                       : primary,
             }}
@@ -1028,15 +1342,20 @@ function Visualizer({
   primary,
   secondary,
 }: {
-  profile: SceneProfile;
-  primary: string;
-  secondary: string;
+  profile:
+    SceneProfile;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   const count =
     Math.round(
       6 +
-      profile.energy *
-        8
+        profile.energy *
+          8
     );
 
   return (
@@ -1045,18 +1364,26 @@ function Visualizer({
         length:
           count,
       }).map(
-        (_, index) => (
+        (
+          _,
+          index
+        ) => (
           <div
-            key={index}
+            key={
+              index
+            }
             className="w-[6px] rounded-full"
             style={{
               height:
                 45 +
-                ((index * 41) %
+                ((index *
+                  41) %
                   155),
 
               backgroundColor:
-                index % 3 === 0
+                index %
+                  3 ===
+                0
                   ? secondary
                   : primary,
             }}
@@ -1067,16 +1394,27 @@ function Visualizer({
   );
 }
 
+/* ================================================= */
+/* CTA                                               */
+/* ================================================= */
+
 function CTA({
   primary,
   secondary,
   label,
   inset = false,
 }: {
-  primary: string;
-  secondary: string;
-  label: string;
-  inset?: boolean;
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  label:
+    string;
+
+  inset?:
+    boolean;
 }) {
   return (
     <div
