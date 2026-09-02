@@ -6,36 +6,48 @@ import type {
 
 import GuidelinePage from "./GuidelinePage";
 import PartnershipLockup from "./PartnershipLockup";
+import RasterGlow from "./RasterGlow";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import {
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
+
+type TypeOwner =
+  | "A"
+  | "B"
+  | "common";
 
 interface TypographyConfig {
   headlineOwner:
-    "A" | "B" | "common";
+    TypeOwner;
 
   contentOwner:
-    "A" | "B" | "common";
+    TypeOwner;
 
   uiOwner:
-    "A" | "B" | "common";
+    TypeOwner;
 
-  description: string;
+  description:
+    string;
 
   rules: [
     string,
     string,
-    string
+    string,
   ];
 }
 
-/* ------------------------------------------------ */
-/* HELPERS                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 const COMMON_FONT =
   '"oook-variable", sans-serif';
@@ -44,8 +56,13 @@ function safeColour(
   value: unknown,
   fallback: string
 ) {
-  return typeof value === "string" &&
-    /^#[0-9A-Fa-f]{6}$/.test(value)
+  return (
+    typeof value ===
+      "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(
+      value
+    )
+  )
     ? value
     : fallback;
 }
@@ -54,13 +71,19 @@ function cleanFontName(
   value: string
 ) {
   return value
-    .replace(/["']/g, "")
-    .split(",")[0]
+    .replace(
+      /["']/g,
+      ""
+    )
+    .split(
+      ","
+    )[0]
     .trim();
 }
 
 function getConfig(
-  model: PartnershipModelId
+  model:
+    PartnershipModelId
 ): TypographyConfig {
   switch (model) {
     case "axb":
@@ -150,22 +173,25 @@ function getConfig(
   }
 }
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page09() {
   const {
     partnershipModel,
     brandA,
     brandB,
-  } = useGuidelineStore();
+  } =
+    useGuidelineStore();
 
   const model =
     partnershipModel as PartnershipModelId;
 
   const config =
-    getConfig(model);
+    getConfig(
+      model
+    );
 
   const aFont =
     brandA.fontFamily ||
@@ -201,29 +227,136 @@ export default function Page09() {
 
   const getFont = (
     owner:
-      "A" | "B" | "common"
-  ) =>
-    owner === "A"
-      ? aFont
-      : owner === "B"
-        ? bFont
-        : COMMON_FONT;
+      TypeOwner
+  ) => {
+    if (
+      owner ===
+      "A"
+    ) {
+      return aFont;
+    }
+
+    if (
+      owner ===
+      "B"
+    ) {
+      return bFont;
+    }
+
+    return COMMON_FONT;
+  };
+
+  const getPrimary = (
+    owner:
+      TypeOwner
+  ) => {
+    if (
+      owner ===
+      "A"
+    ) {
+      return aPrimary;
+    }
+
+    if (
+      owner ===
+      "B"
+    ) {
+      return bPrimary;
+    }
+
+    return "#8A8A8A";
+  };
+
+  const getSecondary = (
+    owner:
+      TypeOwner
+  ) => {
+    if (
+      owner ===
+      "A"
+    ) {
+      return aSecondary;
+    }
+
+    if (
+      owner ===
+      "B"
+    ) {
+      return bSecondary;
+    }
+
+    return "#B9B9B9";
+  };
+
+  const headlinePrimary =
+    getPrimary(
+      config.headlineOwner
+    );
+
+  const headlineSecondary =
+    getSecondary(
+      config.headlineOwner
+    );
 
   return (
     <GuidelinePage>
-      {/* HEADER */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
-      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
+      <header
+        className="
+          absolute
+          left-[70px]
+          right-[70px]
+          top-[46px]
+
+          flex
+          items-start
+          justify-between
+        "
+      >
         <div>
-          <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
+          <p
+            className="
+              text-[13px]
+              uppercase
+              tracking-[0.17em]
+
+              text-white/30
+            "
+          >
             09 / Shared visual territory
           </p>
 
-          <h1 className="mt-[12px] text-[52px] leading-none tracking-[-0.045em] text-white oook-semibold">
+          <h1
+            className="
+              mt-[12px]
+
+              text-[52px]
+              leading-none
+              tracking-[-0.045em]
+
+              text-white
+
+              oook-semibold
+            "
+          >
             Shared visual territory — typography
           </h1>
 
-          <p className="mt-[13px] max-w-[870px] text-[16px] leading-[1.38] text-white/45">
+          <p
+            className="
+              mt-[13px]
+
+              max-w-[870px]
+
+              text-[16px]
+              leading-[1.38]
+
+              text-white/45
+            "
+          >
             Typography establishes who is speaking, what belongs to the platform and what belongs to the featured content.
           </p>
         </div>
@@ -235,9 +368,19 @@ export default function Page09() {
         />
       </header>
 
-      {/* LEFT */}
+      {/* ======================================== */}
+      {/* LEFT                                     */}
+      {/* ======================================== */}
 
-      <aside className="absolute left-[70px] top-[190px] w-[315px]">
+      <aside
+        className="
+          absolute
+          left-[70px]
+          top-[190px]
+
+          w-[315px]
+        "
+      >
         <Card className="p-[16px]">
           <SectionLabel>
             Typeface system
@@ -245,23 +388,37 @@ export default function Page09() {
 
           <FontRow
             label="Brand A"
-            family={aFont}
-            colour={aPrimary}
-            secondary={aSecondary}
+            family={
+              aFont
+            }
+            colour={
+              aPrimary
+            }
+            secondary={
+              aSecondary
+            }
           />
 
           <FontRow
             label="Brand B"
-            family={bFont}
-            colour={bPrimary}
-            secondary={bSecondary}
+            family={
+              bFont
+            }
+            colour={
+              bPrimary
+            }
+            secondary={
+              bSecondary
+            }
           />
 
           <FontRow
             label="Common"
-            family={COMMON_FONT}
-            colour="#FFFFFF"
-            secondary="#8A8A8A"
+            family={
+              COMMON_FONT
+            }
+            colour="#8A8A8A"
+            secondary="#B9B9B9"
           />
         </Card>
 
@@ -270,23 +427,54 @@ export default function Page09() {
             Partnership logic
           </SectionLabel>
 
-          <p className="mt-[10px] text-[11px] leading-[1.45] text-white/42">
-            {config.description}
+          <p
+            className="
+              mt-[10px]
+
+              text-[11px]
+              leading-[1.45]
+
+              text-white/42
+            "
+          >
+            {
+              config.description
+            }
           </p>
 
           <div className="mt-[13px] space-y-[8px]">
             {config.rules.map(
-              (rule, index) => (
+              (
+                rule,
+                index
+              ) => (
                 <div
-                  key={rule}
-                  className="grid grid-cols-[22px_1fr] gap-[7px]"
+                  key={
+                    rule
+                  }
+                  className="
+                    grid
+                    grid-cols-[22px_1fr]
+                    gap-[7px]
+                  "
                 >
                   <span className="text-[9px] text-white/20">
-                    0{index + 1}
+                    0
+                    {index +
+                      1}
                   </span>
 
-                  <span className="text-[10px] leading-[1.3] text-white/52">
-                    {rule}
+                  <span
+                    className="
+                      text-[10px]
+                      leading-[1.3]
+
+                      text-white/52
+                    "
+                  >
+                    {
+                      rule
+                    }
                   </span>
                 </div>
               )
@@ -322,26 +510,99 @@ export default function Page09() {
         </Card>
       </aside>
 
-      {/* HERO TYPE */}
+      {/* ======================================== */}
+      {/* HERO TYPE                                */}
+      {/* ======================================== */}
 
-      <section className="absolute left-[410px] right-[70px] top-[190px]">
-        <Card className="relative h-[315px] overflow-hidden p-[22px]">
-          <div
-            className="absolute -right-[80px] -top-[90px] h-[260px] w-[260px] rounded-full blur-[95px]"
-            style={{
-              backgroundColor:
-                `${config.headlineOwner === "B"
-                  ? bSecondary
-                  : aSecondary}28`,
-            }}
+      <section
+        className="
+          absolute
+
+          left-[410px]
+          right-[70px]
+          top-[190px]
+        "
+      >
+        <Card
+          className="
+            relative
+
+            h-[315px]
+
+            overflow-hidden
+
+            p-[22px]
+          "
+        >
+          {/*
+            Safe glow.
+            This is an SVG image rather than a
+            CSS blurred circle.
+          */}
+
+          <RasterGlow
+            color={
+              headlineSecondary
+            }
+            secondaryColor={
+              headlinePrimary
+            }
+            opacity={
+              0.18
+            }
+            secondaryOpacity={
+              0.055
+            }
+            centerX={
+              70
+            }
+            centerY={
+              24
+            }
+            radius={
+              72
+            }
+            className="
+              absolute
+
+              -right-[90px]
+              -top-[100px]
+
+              h-[320px]
+              w-[360px]
+            "
           />
 
-          <p className="text-[9px] uppercase tracking-[0.14em] text-white/25">
+          <p
+            className="
+              relative
+              z-10
+
+              text-[9px]
+              uppercase
+              tracking-[0.14em]
+
+              text-white/25
+            "
+          >
             Shared headline system
           </p>
 
           <h2
-            className="mt-[38px] max-w-[900px] text-[66px] leading-[0.9] tracking-[-0.05em] text-white"
+            className="
+              relative
+              z-10
+
+              mt-[38px]
+
+              max-w-[900px]
+
+              text-[66px]
+              leading-[0.9]
+              tracking-[-0.05em]
+
+              text-white
+            "
             style={{
               fontFamily:
                 getFont(
@@ -354,29 +615,58 @@ export default function Page09() {
             from inside.
           </h2>
 
-          <div className="mt-[22px] flex gap-[5px]">
+          <div
+            className="
+              relative
+              z-10
+
+              mt-[22px]
+
+              flex
+              gap-[5px]
+            "
+          >
             <div
-              className="h-[5px] w-[92px] rounded-full"
+              className="
+                h-[5px]
+                w-[92px]
+
+                rounded-full
+              "
               style={{
                 backgroundColor:
-                  config.headlineOwner === "B"
-                    ? bPrimary
-                    : aPrimary,
+                  headlinePrimary,
               }}
             />
 
             <div
-              className="h-[5px] w-[40px] rounded-full"
+              className="
+                h-[5px]
+                w-[40px]
+
+                rounded-full
+              "
               style={{
                 backgroundColor:
-                  config.headlineOwner === "B"
-                    ? bSecondary
-                    : aSecondary,
+                  headlineSecondary,
               }}
             />
           </div>
 
-          <p className="absolute bottom-[18px] right-[20px] text-[9px] text-white/24">
+          <p
+            className="
+              absolute
+
+              bottom-[18px]
+              right-[20px]
+
+              z-10
+
+              text-[9px]
+
+              text-white/24
+            "
+          >
             {cleanFontName(
               getFont(
                 config.headlineOwner
@@ -386,7 +676,9 @@ export default function Page09() {
         </Card>
       </section>
 
-      {/* APPLICATIONS */}
+      {/* ======================================== */}
+      {/* APPLICATIONS                             */}
+      {/* ======================================== */}
 
       <section
         className="
@@ -411,14 +703,14 @@ export default function Page09() {
             )
           }
           primary={
-            config.contentOwner === "B"
-              ? bPrimary
-              : aPrimary
+            getPrimary(
+              config.contentOwner
+            )
           }
           secondary={
-            config.contentOwner === "B"
-              ? bSecondary
-              : aSecondary
+            getSecondary(
+              config.contentOwner
+            )
           }
         />
 
@@ -431,18 +723,14 @@ export default function Page09() {
             )
           }
           primary={
-            config.uiOwner === "B"
-              ? bPrimary
-              : config.uiOwner === "A"
-                ? aPrimary
-                : "#FFFFFF"
+            getPrimary(
+              config.uiOwner
+            )
           }
           secondary={
-            config.uiOwner === "B"
-              ? bSecondary
-              : config.uiOwner === "A"
-                ? aSecondary
-                : "#8A8A8A"
+            getSecondary(
+              config.uiOwner
+            )
           }
         />
 
@@ -455,23 +743,26 @@ export default function Page09() {
             )
           }
           primary={
-            config.uiOwner === "B"
-              ? bPrimary
-              : aPrimary
+            getPrimary(
+              config.uiOwner
+            )
           }
           secondary={
-            config.uiOwner === "B"
-              ? bSecondary
-              : aSecondary
+            getSecondary(
+              config.uiOwner
+            )
           }
         />
       </section>
 
-      {/* DO / DON'T */}
+      {/* ======================================== */}
+      {/* DO / DON'T                               */}
+      {/* ======================================== */}
 
       <section
         className="
           absolute
+
           bottom-[30px]
           left-[410px]
           right-[70px]
@@ -497,43 +788,72 @@ export default function Page09() {
   );
 }
 
-/* ------------------------------------------------ */
-/* COMPONENTS                                       */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* CARD                                              */
+/* ================================================= */
 
 function Card({
   children,
   className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+  children:
+    ReactNode;
+
+  className?:
+    string;
 }) {
   return (
     <div
       className={`
         rounded-[18px]
+
         border
         border-white/[0.07]
+
         bg-white/[0.018]
+
         ${className}
       `}
     >
-      {children}
+      {
+        children
+      }
     </div>
   );
 }
 
+/* ================================================= */
+/* SECTION LABEL                                     */
+/* ================================================= */
+
 function SectionLabel({
   children,
 }: {
-  children: ReactNode;
+  children:
+    ReactNode;
 }) {
   return (
-    <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
-      {children}
+    <p
+      className="
+        text-[10px]
+        uppercase
+        tracking-[0.14em]
+
+        text-white/30
+
+        oook-medium
+      "
+    >
+      {
+        children
+      }
     </p>
   );
 }
+
+/* ================================================= */
+/* FONT ROW                                          */
+/* ================================================= */
 
 function FontRow({
   label,
@@ -541,15 +861,46 @@ function FontRow({
   colour,
   secondary,
 }: {
-  label: string;
-  family: string;
-  colour: string;
-  secondary: string;
+  label:
+    string;
+
+  family:
+    string;
+
+  colour:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
-    <div className="mt-[13px] grid grid-cols-[58px_1fr] items-center gap-[10px]">
+    <div
+      className="
+        mt-[13px]
+
+        grid
+        grid-cols-[58px_1fr]
+
+        items-center
+        gap-[10px]
+      "
+    >
       <div
-        className="flex h-[48px] items-center justify-center rounded-[9px] border border-white/[0.06] text-[25px]"
+        className="
+          flex
+
+          h-[48px]
+
+          items-center
+          justify-center
+
+          rounded-[9px]
+
+          border
+          border-white/[0.06]
+
+          text-[25px]
+        "
         style={{
           fontFamily:
             family,
@@ -571,7 +922,12 @@ function FontRow({
 
         <div className="mt-[6px] flex gap-[3px]">
           <span
-            className="h-[3px] w-[28px] rounded-full"
+            className="
+              h-[3px]
+              w-[28px]
+
+              rounded-full
+            "
             style={{
               backgroundColor:
                 colour,
@@ -579,7 +935,12 @@ function FontRow({
           />
 
           <span
-            className="h-[3px] w-[15px] rounded-full"
+            className="
+              h-[3px]
+              w-[15px]
+
+              rounded-full
+            "
             style={{
               backgroundColor:
                 secondary,
@@ -591,22 +952,39 @@ function FontRow({
   );
 }
 
+/* ================================================= */
+/* OWNERSHIP                                         */
+/* ================================================= */
+
 function OwnershipRow({
   label,
   value,
 }: {
-  label: string;
-  value: string;
+  label:
+    string;
+
+  value:
+    TypeOwner;
 }) {
   const display =
-    value === "A"
+    value ===
+    "A"
       ? "Brand A"
-      : value === "B"
+      : value ===
+          "B"
         ? "Brand B"
         : "Common";
 
   return (
-    <div className="mt-[10px] flex justify-between gap-[10px]">
+    <div
+      className="
+        mt-[10px]
+
+        flex
+        justify-between
+        gap-[10px]
+      "
+    >
       <span className="text-[9px] text-white/27">
         {label}
       </span>
@@ -618,6 +996,10 @@ function OwnershipRow({
   );
 }
 
+/* ================================================= */
+/* APPLICATION                                       */
+/* ================================================= */
+
 function TypeApplication({
   number,
   title,
@@ -625,11 +1007,20 @@ function TypeApplication({
   primary,
   secondary,
 }: {
-  number: string;
-  title: string;
-  family: string;
-  primary: string;
-  secondary: string;
+  number:
+    string;
+
+  title:
+    string;
+
+  family:
+    string;
+
+  primary:
+    string;
+
+  secondary:
+    string;
 }) {
   return (
     <Card className="h-[190px] p-[14px]">
@@ -644,7 +1035,15 @@ function TypeApplication({
       </div>
 
       <p
-        className="mt-[35px] text-[28px] leading-[0.95] tracking-[-0.04em] text-white/85"
+        className="
+          mt-[35px]
+
+          text-[28px]
+          leading-[0.95]
+          tracking-[-0.04em]
+
+          text-white/85
+        "
         style={{
           fontFamily:
             family,
@@ -657,7 +1056,12 @@ function TypeApplication({
 
       <div className="mt-[15px] flex gap-[4px]">
         <div
-          className="h-[4px] w-[60px] rounded-full"
+          className="
+            h-[4px]
+            w-[60px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               primary,
@@ -665,7 +1069,12 @@ function TypeApplication({
         />
 
         <div
-          className="h-[4px] w-[25px] rounded-full"
+          className="
+            h-[4px]
+            w-[25px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               secondary,
@@ -676,24 +1085,46 @@ function TypeApplication({
   );
 }
 
+/* ================================================= */
+/* RULE                                              */
+/* ================================================= */
+
 function RuleCard({
   good = false,
   title,
   text,
 }: {
-  good?: boolean;
-  title: string;
-  text: string;
+  good?:
+    boolean;
+
+  title:
+    string;
+
+  text:
+    string;
 }) {
   return (
-    <Card className="flex min-h-[72px] items-center gap-[12px] px-[14px]">
+    <Card
+      className="
+        flex
+        min-h-[72px]
+
+        items-center
+        gap-[12px]
+
+        px-[14px]
+      "
+    >
       <div
         className={`
           flex
+
           h-[25px]
           w-[25px]
+
           items-center
           justify-center
+
           rounded-full
 
           ${
