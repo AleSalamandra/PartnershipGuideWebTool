@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  type ReactNode,
 } from "react";
 
 import GuidelinePage, {
@@ -14,14 +15,15 @@ import RasterGlow from "./RasterGlow";
 import RasterGradient from "./RasterGradient";
 
 import {
-  BrandCharacterTraitId,
+  type BrandCharacterTraitId,
 } from "@/data/brandCharacterTraits";
 
 import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
@@ -30,48 +32,44 @@ import {
 /* ================================================= */
 
 interface BrandView {
-  name:
-    string;
+  name: string;
+  logoUrl: string | null;
 
-  logoUrl:
-    string | null;
+  primaryColor: string;
+  secondaryColor: string;
 
-  primaryColor:
-    string;
-
-  secondaryColor:
-    string;
-
-  fontFamily:
-    string;
+  fontFamily: string;
 
   characterTraits:
     BrandCharacterTraitId[];
 }
 
 interface SceneProfile {
-  roundness:
-    number;
+  roundness: number;
+  energy: number;
+  glow: number;
+  depth: number;
+  expressiveTilt: number;
+}
 
-  energy:
-    number;
+interface SceneColourSystem {
+  primary: string;
+  secondary: string;
 
-  glow:
-    number;
-
-  depth:
-    number;
-
-  expressiveTilt:
-    number;
+  supportPrimary: string;
+  supportSecondary: string;
 }
 
 /* ================================================= */
-/* HELPERS                                           */
+/* CONSTANTS                                         */
 /* ================================================= */
 
 const DEFAULT_FONT =
   '"oook-variable", sans-serif';
+
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 function clamp(
   value: number
@@ -90,8 +88,7 @@ function safeColour(
   fallback: string
 ) {
   return (
-    typeof value ===
-      "string" &&
+    typeof value === "string" &&
     /^#[0-9A-Fa-f]{6}$/.test(
       value
     )
@@ -103,19 +100,13 @@ function safeColour(
 function getBrand(
   brand: unknown,
 
-  fallbackName:
-    string,
-
-  fallbackPrimary:
-    string,
-
-  fallbackSecondary:
-    string
+  fallbackName: string,
+  fallbackPrimary: string,
+  fallbackSecondary: string
 ): BrandView {
   const value =
     brand as {
-      name?:
-        string;
+      name?: string;
 
       logoUrl?:
         string | null;
@@ -167,11 +158,15 @@ function getBrand(
   };
 }
 
+/* ================================================= */
+/* PROFILE                                           */
+/* ================================================= */
+
 function buildProfile(
   traits:
     BrandCharacterTraitId[]
 ): SceneProfile {
-  const p:
+  const profile:
     SceneProfile = {
     roundness:
       0.42,
@@ -190,57 +185,67 @@ function buildProfile(
   };
 
   traits.forEach(
-    (trait) => {
-      switch (trait) {
+    (
+      trait
+    ) => {
+      switch (
+        trait
+      ) {
         case "premium":
         case "cinematic":
-          p.depth +=
+          profile.depth +=
             0.2;
-          p.glow +=
+
+          profile.glow +=
             0.1;
           break;
 
         case "futuristic":
         case "immersive":
-          p.depth +=
+          profile.depth +=
             0.3;
-          p.glow +=
+
+          profile.glow +=
             0.22;
           break;
 
         case "dynamic":
         case "sporty":
         case "energetic":
-          p.energy +=
+          profile.energy +=
             0.3;
           break;
 
         case "friendly":
         case "organic":
-          p.roundness +=
+          profile.roundness +=
             0.25;
           break;
 
         case "playful":
-          p.roundness +=
+          profile.roundness +=
             0.3;
-          p.energy +=
+
+          profile.energy +=
             0.15;
-          p.expressiveTilt +=
+
+          profile.expressiveTilt +=
             0.8;
           break;
 
         case "experimental":
-          p.expressiveTilt +=
+          profile.expressiveTilt +=
             0.7;
-          p.energy +=
+
+          profile.energy +=
             0.14;
           break;
 
         case "disruptive":
-          p.expressiveTilt +=
+          profile.expressiveTilt +=
             0.55;
-          p.energy +=
+
+          profile.energy +=
             0.22;
           break;
       }
@@ -250,30 +255,34 @@ function buildProfile(
   return {
     roundness:
       clamp(
-        p.roundness
+        profile.roundness
       ),
 
     energy:
       clamp(
-        p.energy
+        profile.energy
       ),
 
     glow:
       clamp(
-        p.glow
+        profile.glow
       ),
 
     depth:
       clamp(
-        p.depth
+        profile.depth
       ),
 
     expressiveTilt:
       clamp(
-        p.expressiveTilt
+        profile.expressiveTilt
       ),
   };
 }
+
+/* ================================================= */
+/* PROFILE BLEND                                     */
+/* ================================================= */
 
 function blend(
   a:
@@ -332,7 +341,9 @@ function getSharedProfile(
   b:
     SceneProfile
 ) {
-  switch (model) {
+  switch (
+    model
+  ) {
     case "axb":
       return blend(
         a,
@@ -360,6 +371,30 @@ function getSharedProfile(
   }
 }
 
+function applyXProfile(
+  base:
+    SceneProfile,
+
+  x:
+    SceneProfile,
+
+  mode:
+    AdditionalRelationshipMode
+) {
+  if (
+    mode ===
+    "presenting"
+  ) {
+    return blend(
+      base,
+      x,
+      0.55
+    );
+  }
+
+  return base;
+}
+
 /* ================================================= */
 /* PAGE                                              */
 /* ================================================= */
@@ -367,14 +402,19 @@ function getSharedProfile(
 export default function Page13() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
+    propertyX,
   } =
     useGuidelineStore();
 
   const theme =
     useGuidelineThemeStore(
-      (state) =>
+      (
+        state
+      ) =>
         state.theme
     );
 
@@ -385,10 +425,24 @@ export default function Page13() {
   const model =
     partnershipModel as PartnershipModelId;
 
+  const presenting =
+    additionalRelationship ===
+    "presenting";
+
+  const sponsored =
+    additionalRelationship ===
+    "sponsored";
+
+  /* ------------------------------------------------ */
+  /* IDENTITIES                                       */
+  /* ------------------------------------------------ */
+
   const a =
     getBrand(
       brandA,
+
       "Brand A",
+
       "#FF453A",
       "#FF8A80"
     );
@@ -396,10 +450,26 @@ export default function Page13() {
   const b =
     getBrand(
       brandB,
+
       "Brand B",
+
       "#3478F6",
       "#64D2FF"
     );
+
+  const x =
+    getBrand(
+      propertyX,
+
+      "X",
+
+      "#8A8A8A",
+      "#B9B9B9"
+    );
+
+  /* ------------------------------------------------ */
+  /* PROFILES                                         */
+  /* ------------------------------------------------ */
 
   const aProfile =
     buildProfile(
@@ -411,44 +481,202 @@ export default function Page13() {
       b.characterTraits
     );
 
-  const profile =
+  const xProfile =
+    buildProfile(
+      x.characterTraits
+    );
+
+  const baseProfile =
     getSharedProfile(
       model,
       aProfile,
       bProfile
     );
 
+  const profile =
+    applyXProfile(
+      baseProfile,
+      xProfile,
+      additionalRelationship
+    );
+
+  /* ------------------------------------------------ */
+  /* COLOUR SYSTEM                                    */
+  /* ------------------------------------------------ */
+
+  const baseLead =
+    model ===
+    "poweredByA"
+      ? b
+      : a;
+
+  const baseSupport =
+    model ===
+    "poweredByA"
+      ? a
+      : b;
+
+  const colours:
+    SceneColourSystem =
+    presenting
+      ? {
+          primary:
+            x.primaryColor,
+
+          secondary:
+            x.secondaryColor,
+
+          supportPrimary:
+            baseLead.primaryColor,
+
+          supportSecondary:
+            baseSupport.primaryColor,
+        }
+      : {
+          primary:
+            baseLead.primaryColor,
+
+          secondary:
+            baseLead.secondaryColor,
+
+          supportPrimary:
+            baseSupport.primaryColor,
+
+          supportSecondary:
+            baseSupport.secondaryColor,
+        };
+
   return (
     <GuidelinePage>
-      {/* HEADER */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
-      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
+      <header
+        className="
+          absolute
+
+          left-[70px]
+          right-[70px]
+          top-[46px]
+
+          flex
+          items-start
+          justify-between
+        "
+      >
         <div>
-          <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
+          <p
+            className="
+              text-[13px]
+              uppercase
+              tracking-[0.17em]
+
+              text-white/30
+            "
+          >
             13 / Shared visual territory
           </p>
 
-          <h1 className="mt-[12px] text-[52px] leading-none tracking-[-0.045em] text-white oook-semibold">
+          <h1
+            className="
+              mt-[12px]
+
+              text-[52px]
+              leading-none
+              tracking-[-0.045em]
+
+              text-white
+
+              oook-semibold
+            "
+          >
             Complete shared branding example
           </h1>
 
-          <p className="mt-[13px] max-w-[850px] text-[16px] leading-[1.38] text-white/45">
-            A complete application of hierarchy, colour, typography, graphic language, image treatment and brand character.
+          <p
+            className="
+              mt-[13px]
+
+              max-w-[920px]
+
+              text-[16px]
+              leading-[1.38]
+
+              text-white/45
+            "
+          >
+            {presenting
+              ? `${x.name} becomes the featured consumer identity while the A / B relationship acts as the presenting system behind the experience.`
+              : sponsored
+                ? `${x.name} appears as commercial attribution only. The complete A / B visual system remains unchanged.`
+                : "A complete application of hierarchy, colour, typography, graphic language, image treatment and brand character."}
           </p>
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+
+            gap-[10px]
+          "
+        >
+          <PartnershipLockup
+            model={
+              model
+            }
+            brandA={
+              brandA
+            }
+            brandB={
+              brandB
+            }
+          />
+
+          {additionalRelationship !==
+            "none" && (
+            <HeaderRelationship
+              mode={
+                additionalRelationship
+              }
+              brand={
+                x
+              }
+            />
+          )}
+        </div>
       </header>
 
-      {/* HERO */}
+      {/* ======================================== */}
+      {/* HERO                                     */}
+      {/* ======================================== */}
 
-      <section className="absolute bottom-[58px] left-[70px] right-[70px] top-[185px]">
+      <section
+        className="
+          absolute
+
+          bottom-[58px]
+          left-[70px]
+          right-[70px]
+          top-[185px]
+        "
+      >
         <div
-          className="relative h-full w-full overflow-hidden border border-white/[0.08] bg-[#050506]"
+          className="
+            relative
+
+            h-full
+            w-full
+
+            overflow-hidden
+
+            border
+            border-white/[0.08]
+
+            bg-[#050506]
+          "
           style={{
             borderRadius:
               `${
@@ -471,76 +699,156 @@ export default function Page13() {
             profile={
               profile
             }
-            aPrimary={
-              a.primaryColor
+            primary={
+              colours.primary
             }
-            aSecondary={
-              a.secondaryColor
+            secondary={
+              colours.secondary
             }
-            bPrimary={
-              b.primaryColor
+            supportPrimary={
+              colours.supportPrimary
             }
-            bSecondary={
-              b.secondaryColor
+            supportSecondary={
+              colours.supportSecondary
             }
             isLight={
               isLight
             }
           />
 
-          {model ===
-            "axb" && (
-            <AXBExample
-              a={a}
-              b={b}
-            />
-          )}
+          {/* ==================================== */}
+          {/* PRESENTING X                         */}
+          {/* ==================================== */}
 
-          {model ===
-            "aandb" && (
-            <AWithBExample
-              a={a}
-              b={b}
-            />
-          )}
-
-          {model ===
-            "poweredByA" && (
-            <PoweredExample
-              a={a}
-              b={b}
+          {presenting ? (
+            <PresentingExample
+              model={
+                model
+              }
+              a={
+                a
+              }
+              b={
+                b
+              }
+              x={
+                x
+              }
               profile={
-                bProfile
+                profile
               }
             />
-          )}
+          ) : (
+            <>
+              {/* ================================ */}
+              {/* NORMAL A/B EXAMPLES              */}
+              {/* ================================ */}
 
-          {model ===
-            "presentsB" && (
-            <PresentsExample
-              a={a}
-              b={b}
-              aProfile={
-                aProfile
-              }
-              bProfile={
-                bProfile
-              }
-              isLight={
-                isLight
-              }
-            />
+              {model ===
+                "axb" && (
+                <AXBExample
+                  a={
+                    a
+                  }
+                  b={
+                    b
+                  }
+                />
+              )}
+
+              {model ===
+                "aandb" && (
+                <AWithBExample
+                  a={
+                    a
+                  }
+                  b={
+                    b
+                  }
+                />
+              )}
+
+              {model ===
+                "poweredByA" && (
+                <PoweredExample
+                  a={
+                    a
+                  }
+                  b={
+                    b
+                  }
+                  profile={
+                    bProfile
+                  }
+                />
+              )}
+
+              {model ===
+                "presentsB" && (
+                <PresentsExample
+                  a={
+                    a
+                  }
+                  b={
+                    b
+                  }
+                  aProfile={
+                    aProfile
+                  }
+                  bProfile={
+                    bProfile
+                  }
+                  isLight={
+                    isLight
+                  }
+                />
+              )}
+
+              {/* ================================ */}
+              {/* SPONSOR                          */}
+              {/* ================================ */}
+
+              {sponsored && (
+                <SponsorCredit
+                  brand={
+                    x
+                  }
+                />
+              )}
+            </>
           )}
         </div>
       </section>
 
-      <div className="absolute bottom-[24px] left-[70px] right-[70px] flex justify-between text-[9px] text-white/22">
+      {/* ======================================== */}
+      {/* FOOTER                                   */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          absolute
+
+          bottom-[24px]
+          left-[70px]
+          right-[70px]
+
+          flex
+          justify-between
+
+          text-[9px]
+          text-white/22
+        "
+      >
         <span>
           Full application sample
         </span>
 
         <span>
-          Image · colour · type · graphic language · hierarchy
+          {presenting
+            ? "Presented property · presenter hierarchy · colour · type · motion · imagery"
+            : sponsored
+              ? "Core partnership system · sponsor attribution"
+              : "Image · colour · type · graphic language · hierarchy"}
         </span>
       </div>
     </GuidelinePage>
@@ -584,7 +892,9 @@ function BackgroundImage({
     extension,
     setExtension,
   ] =
-    useState(0);
+    useState(
+      0
+    );
 
   useEffect(
     () => {
@@ -592,14 +902,18 @@ function BackgroundImage({
         0
       );
     },
-    [imageNumber]
+    [
+      imageNumber,
+    ]
   );
 
   return (
     <img
       src={`/images/image${imageNumber}.${extensions[extension]}`}
       alt=""
-      draggable={false}
+      draggable={
+        false
+      }
       onError={() => {
         if (
           extension <
@@ -607,13 +921,23 @@ function BackgroundImage({
             1
         ) {
           setExtension(
-            (current) =>
+            (
+              current
+            ) =>
               current +
               1
           );
         }
       }}
-      className="absolute inset-0 h-full w-full object-cover"
+      className="
+        absolute
+        inset-0
+
+        h-full
+        w-full
+
+        object-cover
+      "
       style={{
         filter:
           `grayscale(.22)
@@ -636,33 +960,33 @@ function BackgroundImage({
 }
 
 /* ================================================= */
-/* TREATMENT                                         */
+/* SCENE TREATMENT                                   */
 /* ================================================= */
 
 function SceneTreatment({
   profile,
 
-  aPrimary,
-  aSecondary,
+  primary,
+  secondary,
 
-  bPrimary,
-  bSecondary,
+  supportPrimary,
+  supportSecondary,
 
   isLight,
 }: {
   profile:
     SceneProfile;
 
-  aPrimary:
+  primary:
     string;
 
-  aSecondary:
+  secondary:
     string;
 
-  bPrimary:
+  supportPrimary:
     string;
 
-  bSecondary:
+  supportSecondary:
     string;
 
   isLight:
@@ -672,49 +996,81 @@ function SceneTreatment({
     <>
       <RasterGradient
         direction="horizontal"
-        className="absolute inset-0 h-full w-full"
+        className="
+          absolute
+          inset-0
+
+          h-full
+          w-full
+        "
         stops={
           isLight
             ? [
                 {
                   color:
                     "#FFFFFF",
-                  offset: 0,
-                  opacity: 0.8,
+
+                  offset:
+                    0,
+
+                  opacity:
+                    0.8,
                 },
+
                 {
                   color:
                     "#FFFFFF",
-                  offset: 54,
-                  opacity: 0.3,
+
+                  offset:
+                    54,
+
+                  opacity:
+                    0.3,
                 },
+
                 {
                   color:
                     "#FFFFFF",
+
                   offset:
                     100,
-                  opacity: 0.18,
+
+                  opacity:
+                    0.18,
                 },
               ]
             : [
                 {
                   color:
                     "#000000",
-                  offset: 0,
-                  opacity: 0.8,
+
+                  offset:
+                    0,
+
+                  opacity:
+                    0.8,
                 },
+
                 {
                   color:
                     "#000000",
-                  offset: 54,
-                  opacity: 0.3,
+
+                  offset:
+                    54,
+
+                  opacity:
+                    0.3,
                 },
+
                 {
                   color:
                     "#000000",
+
                   offset:
                     100,
-                  opacity: 0.2,
+
+                  opacity:
+                    0.2,
                 },
               ]
         }
@@ -722,53 +1078,763 @@ function SceneTreatment({
 
       <RasterGlow
         color={
-          aPrimary
+          primary
         }
         secondaryColor={
-          aSecondary
+          secondary
         }
         opacity={
           0.08 +
           profile.glow *
-            0.18
+            0.2
         }
         secondaryOpacity={
           0.03 +
           profile.glow *
-            0.05
+            0.055
         }
-        centerX={30}
-        centerY={25}
-        className="absolute -left-[12%] -top-[25%] h-[420px] w-[520px]"
+        centerX={
+          30
+        }
+        centerY={
+          25
+        }
+        className="
+          absolute
+
+          -left-[12%]
+          -top-[25%]
+
+          h-[420px]
+          w-[520px]
+        "
       />
 
       <RasterGlow
         color={
-          bPrimary
+          supportPrimary
         }
         secondaryColor={
-          bSecondary
+          supportSecondary
         }
         opacity={
-          0.08 +
+          0.05 +
           profile.glow *
-            0.18
+            0.1
         }
         secondaryOpacity={
-          0.03 +
+          0.02 +
           profile.glow *
-            0.05
+            0.03
         }
-        centerX={68}
-        centerY={68}
-        className="absolute -bottom-[34%] right-[0%] h-[430px] w-[540px]"
+        centerX={
+          68
+        }
+        centerY={
+          68
+        }
+        className="
+          absolute
+
+          -bottom-[34%]
+          right-[0%]
+
+          h-[430px]
+          w-[540px]
+        "
       />
     </>
   );
 }
 
 /* ================================================= */
-/* MODEL — A × B                                     */
+/* PRESENTING X                                      */
+/* ================================================= */
+
+function PresentingExample({
+  model,
+  a,
+  b,
+  x,
+  profile,
+}: {
+  model:
+    PartnershipModelId;
+
+  a:
+    BrandView;
+
+  b:
+    BrandView;
+
+  x:
+    BrandView;
+
+  profile:
+    SceneProfile;
+}) {
+  return (
+    <>
+      {/* ======================================== */}
+      {/* PRESENTING SIGNATURE                     */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          absolute
+
+          left-[38px]
+          top-[30px]
+
+          flex
+          items-center
+
+          rounded-[14px]
+
+          border
+          border-white/[0.08]
+
+          bg-black/48
+
+          px-[15px]
+          py-[10px]
+        "
+      >
+        <PresenterSignature
+          model={
+            model
+          }
+          a={
+            a
+          }
+          b={
+            b
+          }
+        />
+
+        <span
+          className="
+            ml-[14px]
+
+            text-[8px]
+            uppercase
+            tracking-[0.13em]
+
+            text-white/23
+          "
+        >
+          presenting
+        </span>
+      </div>
+
+      {/* ======================================== */}
+      {/* PROPERTY IDENTITY                        */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          absolute
+
+          bottom-[188px]
+          left-[42px]
+
+          h-[82px]
+          w-[330px]
+        "
+      >
+        <BrandIdentity
+          brand={
+            x
+          }
+          width={
+            330
+          }
+          height={
+            82
+          }
+        />
+      </div>
+
+      {/* ======================================== */}
+      {/* COPY                                     */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          absolute
+
+          bottom-[79px]
+          left-[42px]
+
+          max-w-[760px]
+        "
+      >
+        <p
+          className="
+            text-[10px]
+            uppercase
+            tracking-[0.16em]
+
+            text-white/40
+          "
+        >
+          Featured immersive experience
+        </p>
+
+        <h2
+          className="
+            mt-[9px]
+
+            text-[54px]
+            leading-[0.92]
+            tracking-[-0.045em]
+
+            text-white
+          "
+          style={{
+            fontFamily:
+              x.fontFamily,
+          }}
+        >
+          Enter the world
+          <br />
+          of {x.name}.
+        </h2>
+      </div>
+
+      {/* ======================================== */}
+      {/* PROPERTY GRAPHIC LANGUAGE                */}
+      {/* ======================================== */}
+
+      <PresentedGraphic
+        profile={
+          profile
+        }
+        primary={
+          x.primaryColor
+        }
+        secondary={
+          x.secondaryColor
+        }
+        support={
+          model ===
+          "poweredByA"
+            ? b.primaryColor
+            : a.primaryColor
+        }
+      />
+
+      {/* ======================================== */}
+      {/* CTA                                      */}
+      {/* ======================================== */}
+
+      <CTA
+        primary={
+          x.primaryColor
+        }
+        secondary={
+          x.secondaryColor
+        }
+        label={`Explore ${x.name}`}
+      />
+
+      {/* ======================================== */}
+      {/* BOTTOM AUTHORSHIP                        */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          absolute
+
+          bottom-[34px]
+          left-[42px]
+
+          flex
+          items-center
+          gap-[7px]
+        "
+      >
+        <span
+          className="
+            h-[4px]
+            w-[54px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              x.primaryColor,
+          }}
+        />
+
+        <span
+          className="
+            h-[4px]
+            w-[24px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              x.secondaryColor,
+          }}
+        />
+
+        <span
+          className="
+            ml-[5px]
+
+            text-[8px]
+
+            text-white/24
+          "
+        >
+          {x.name} content territory
+        </span>
+      </div>
+    </>
+  );
+}
+
+/* ================================================= */
+/* PRESENTER SIGNATURE                               */
+/* ================================================= */
+
+function PresenterSignature({
+  model,
+  a,
+  b,
+}: {
+  model:
+    PartnershipModelId;
+
+  a:
+    BrandView;
+
+  b:
+    BrandView;
+}) {
+  if (
+    model ===
+    "axb"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+          gap-[8px]
+        "
+      >
+        <BrandIdentity
+          brand={
+            a
+          }
+          width={
+            88
+          }
+          height={
+            28
+          }
+        />
+
+        <span className="text-[12px] text-white/30">
+          ×
+        </span>
+
+        <BrandIdentity
+          brand={
+            b
+          }
+          width={
+            88
+          }
+          height={
+            28
+          }
+        />
+      </div>
+    );
+  }
+
+  if (
+    model ===
+    "aandb"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+          gap-[8px]
+        "
+      >
+        <BrandIdentity
+          brand={
+            a
+          }
+          width={
+            102
+          }
+          height={
+            30
+          }
+        />
+
+        <RelationshipWord>
+          with
+        </RelationshipWord>
+
+        <BrandIdentity
+          brand={
+            b
+          }
+          width={
+            58
+          }
+          height={
+            22
+          }
+        />
+      </div>
+    );
+  }
+
+  if (
+    model ===
+    "poweredByA"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+          gap-[8px]
+        "
+      >
+        <BrandIdentity
+          brand={
+            b
+          }
+          width={
+            105
+          }
+          height={
+            30
+          }
+        />
+
+        <RelationshipWord>
+          powered by
+        </RelationshipWord>
+
+        <BrandIdentity
+          brand={
+            a
+          }
+          width={
+            58
+          }
+          height={
+            22
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="
+        flex
+        items-center
+        gap-[8px]
+      "
+    >
+      <BrandIdentity
+        brand={
+          a
+        }
+        width={
+          58
+        }
+        height={
+          22
+        }
+      />
+
+      <RelationshipWord>
+        presents
+      </RelationshipWord>
+
+      <BrandIdentity
+        brand={
+          b
+        }
+        width={
+          105
+        }
+        height={
+          30
+        }
+      />
+    </div>
+  );
+}
+
+function RelationshipWord({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  return (
+    <span
+      className="
+        whitespace-nowrap
+
+        text-[7px]
+        uppercase
+        tracking-[0.11em]
+
+        text-white/24
+      "
+    >
+      {children}
+    </span>
+  );
+}
+
+/* ================================================= */
+/* PRESENTED GRAPHIC                                 */
+/* ================================================= */
+
+function PresentedGraphic({
+  profile,
+  primary,
+  secondary,
+  support,
+}: {
+  profile:
+    SceneProfile;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  support:
+    string;
+}) {
+  const count =
+    Math.round(
+      7 +
+      profile.energy *
+        8
+    );
+
+  return (
+    <div
+      className="
+        absolute
+
+        right-[50px]
+        top-[130px]
+
+        flex
+
+        h-[260px]
+        w-[390px]
+
+        items-end
+        justify-end
+
+        gap-[7px]
+      "
+      style={{
+        transform:
+          profile.expressiveTilt >
+          0.4
+            ? `rotate(${
+                (
+                  profile.expressiveTilt -
+                  0.4
+                ) *
+                5
+              }deg)`
+            : undefined,
+      }}
+    >
+      {Array.from({
+        length:
+          count,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <div
+            key={
+              index
+            }
+            className="
+              w-[7px]
+
+              rounded-full
+            "
+            style={{
+              height:
+                55 +
+                (
+                  index *
+                  43
+                ) %
+                  180,
+
+              backgroundColor:
+                index %
+                    5 ===
+                  0
+                  ? support
+                  : index %
+                        3 ===
+                      0
+                    ? secondary
+                    : primary,
+
+              opacity:
+                0.46 +
+                profile.energy *
+                  0.4,
+            }}
+          />
+        )
+      )}
+    </div>
+  );
+}
+
+/* ================================================= */
+/* SPONSOR                                           */
+/* ================================================= */
+
+function SponsorCredit({
+  brand,
+}: {
+  brand:
+    BrandView;
+}) {
+  return (
+    <div
+      className="
+        absolute
+
+        bottom-[32px]
+        right-[38px]
+
+        flex
+        items-center
+        gap-[9px]
+
+        rounded-[12px]
+
+        border
+        border-white/[0.07]
+
+        bg-black/48
+
+        px-[12px]
+        py-[8px]
+      "
+    >
+      <span
+        className="
+          text-[7px]
+          uppercase
+          tracking-[0.12em]
+
+          text-white/22
+        "
+      >
+        Sponsored by
+      </span>
+
+      <BrandIdentity
+        brand={
+          brand
+        }
+        width={
+          76
+        }
+        height={
+          24
+        }
+      />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* HEADER RELATIONSHIP                               */
+/* ================================================= */
+
+function HeaderRelationship({
+  mode,
+  brand,
+}: {
+  mode:
+    AdditionalRelationshipMode;
+
+  brand:
+    BrandView;
+}) {
+  return (
+    <div
+      className="
+        flex
+        items-center
+        gap-[8px]
+      "
+    >
+      <span
+        className="
+          text-[7px]
+          uppercase
+          tracking-[0.13em]
+
+          text-white/22
+        "
+      >
+        {mode ===
+        "presenting"
+          ? "Presenting"
+          : "Sponsored by"}
+      </span>
+
+      <BrandIdentity
+        brand={
+          brand
+        }
+        width={
+          mode ===
+          "presenting"
+            ? 105
+            : 70
+        }
+        height={
+          mode ===
+          "presenting"
+            ? 32
+            : 21
+        }
+      />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* BASE MODEL — A × B                                */
 /* ================================================= */
 
 function AXBExample({
@@ -783,21 +1849,50 @@ function AXBExample({
 }) {
   return (
     <>
-      <div className="absolute left-[42px] top-[36px] flex items-center gap-[20px]">
+      <div
+        className="
+          absolute
+
+          left-[42px]
+          top-[36px]
+
+          flex
+          items-center
+          gap-[20px]
+        "
+      >
         <BrandIdentity
-          brand={a}
-          width={180}
-          height={50}
+          brand={
+            a
+          }
+          width={
+            180
+          }
+          height={
+            50
+          }
         />
 
-        <span className="text-[23px] text-white/38">
+        <span
+          className="
+            text-[23px]
+
+            text-white/38
+          "
+        >
           ×
         </span>
 
         <BrandIdentity
-          brand={b}
-          width={180}
-          height={50}
+          brand={
+            b
+          }
+          width={
+            180
+          }
+          height={
+            50
+          }
         />
       </div>
 
@@ -838,7 +1933,7 @@ function AXBExample({
 }
 
 /* ================================================= */
-/* MODEL — A WITH B                                  */
+/* BASE MODEL — A WITH B                             */
 /* ================================================= */
 
 function AWithBExample({
@@ -853,22 +1948,57 @@ function AWithBExample({
 }) {
   return (
     <>
-      <div className="absolute left-[42px] top-[34px]">
+      <div
+        className="
+          absolute
+
+          left-[42px]
+          top-[34px]
+        "
+      >
         <BrandIdentity
-          brand={a}
-          width={220}
-          height={58}
+          brand={
+            a
+          }
+          width={
+            220
+          }
+          height={
+            58
+          }
         />
 
-        <div className="mt-[12px] flex items-center gap-[10px]">
-          <span className="text-[9px] uppercase tracking-[0.12em] text-white/28">
+        <div
+          className="
+            mt-[12px]
+
+            flex
+            items-center
+            gap-[10px]
+          "
+        >
+          <span
+            className="
+              text-[9px]
+              uppercase
+              tracking-[0.12em]
+
+              text-white/28
+            "
+          >
             with
           </span>
 
           <BrandIdentity
-            brand={b}
-            width={105}
-            height={30}
+            brand={
+              b
+            }
+            width={
+              105
+            }
+            height={
+              30
+            }
           />
         </div>
       </div>
@@ -910,7 +2040,7 @@ function AWithBExample({
 }
 
 /* ================================================= */
-/* MODEL — POWERED                                   */
+/* BASE MODEL — POWERED                              */
 /* ================================================= */
 
 function PoweredExample({
@@ -929,23 +2059,71 @@ function PoweredExample({
 }) {
   return (
     <>
-      <div className="absolute left-[42px] top-[34px]">
+      <div
+        className="
+          absolute
+
+          left-[42px]
+          top-[34px]
+        "
+      >
         <BrandIdentity
-          brand={b}
-          width={245}
-          height={64}
+          brand={
+            b
+          }
+          width={
+            245
+          }
+          height={
+            64
+          }
         />
       </div>
 
-      <div className="absolute right-[38px] top-[34px] flex items-center gap-[9px] rounded-[14px] border border-white/[0.09] bg-black/50 px-[14px] py-[9px]">
-        <span className="text-[8px] uppercase tracking-[0.11em] text-white/28">
+      <div
+        className="
+          absolute
+
+          right-[38px]
+          top-[34px]
+
+          flex
+          items-center
+          gap-[9px]
+
+          rounded-[14px]
+
+          border
+          border-white/[0.09]
+
+          bg-black/50
+
+          px-[14px]
+          py-[9px]
+        "
+      >
+        <span
+          className="
+            text-[8px]
+            uppercase
+            tracking-[0.11em]
+
+            text-white/28
+          "
+        >
           Powered by
         </span>
 
         <BrandIdentity
-          brand={a}
-          width={105}
-          height={29}
+          brand={
+            a
+          }
+          width={
+            105
+          }
+          height={
+            29
+          }
         />
       </div>
 
@@ -983,16 +2161,14 @@ function PoweredExample({
 }
 
 /* ================================================= */
-/* MODEL — PRESENTS                                  */
+/* BASE MODEL — PRESENTS                             */
 /* ================================================= */
 
 function PresentsExample({
   a,
   b,
-
   aProfile,
   bProfile,
-
   isLight,
 }: {
   a:
@@ -1013,7 +2189,25 @@ function PresentsExample({
   return (
     <>
       <div
-        className="absolute left-[26px] right-[26px] top-[24px] flex h-[72px] items-center border border-white/[0.09] bg-black/48 px-[19px]"
+        className="
+          absolute
+
+          left-[26px]
+          right-[26px]
+          top-[24px]
+
+          flex
+          h-[72px]
+
+          items-center
+
+          border
+          border-white/[0.09]
+
+          bg-black/48
+
+          px-[19px]
+        "
         style={{
           borderRadius:
             `${
@@ -1024,16 +2218,43 @@ function PresentsExample({
         }}
       >
         <BrandIdentity
-          brand={a}
-          width={160}
-          height={42}
+          brand={
+            a
+          }
+          width={
+            160
+          }
+          height={
+            42
+          }
         />
 
-        <span className="ml-[20px] text-[9px] uppercase tracking-[0.12em] text-white/27">
+        <span
+          className="
+            ml-[20px]
+
+            text-[9px]
+            uppercase
+            tracking-[0.12em]
+
+            text-white/27
+          "
+        >
           Presents
         </span>
 
-        <div className="ml-auto flex gap-[20px] text-[9px] text-white/28">
+        <div
+          className="
+            ml-auto
+
+            flex
+            gap-[20px]
+
+            text-[9px]
+
+            text-white/28
+          "
+        >
           <span>
             Live
           </span>
@@ -1049,7 +2270,19 @@ function PresentsExample({
       </div>
 
       <div
-        className="absolute bottom-[28px] left-[30px] right-[30px] top-[112px] overflow-hidden border border-white/[0.08]"
+        className="
+          absolute
+
+          bottom-[28px]
+          left-[30px]
+          right-[30px]
+          top-[112px]
+
+          overflow-hidden
+
+          border
+          border-white/[0.08]
+        "
         style={{
           borderRadius:
             `${
@@ -1061,69 +2294,138 @@ function PresentsExample({
       >
         <RasterGradient
           direction="horizontal"
-          className="absolute inset-0 h-full w-full"
+          className="
+            absolute
+            inset-0
+
+            h-full
+            w-full
+          "
           stops={
             isLight
               ? [
                   {
                     color:
                       "#FFFFFF",
-                    offset: 0,
-                    opacity: 0.65,
+
+                    offset:
+                      0,
+
+                    opacity:
+                      0.65,
                   },
+
                   {
                     color:
                       "#FFFFFF",
-                    offset: 58,
-                    opacity: 0.18,
+
+                    offset:
+                      58,
+
+                    opacity:
+                      0.18,
                   },
+
                   {
                     color:
                       "#FFFFFF",
+
                     offset:
                       100,
-                    opacity: 0,
+
+                    opacity:
+                      0,
                   },
                 ]
               : [
                   {
                     color:
                       "#000000",
-                    offset: 0,
-                    opacity: 0.65,
+
+                    offset:
+                      0,
+
+                    opacity:
+                      0.65,
                   },
+
                   {
                     color:
                       "#000000",
-                    offset: 58,
-                    opacity: 0.2,
+
+                    offset:
+                      58,
+
+                    opacity:
+                      0.2,
                   },
+
                   {
                     color:
                       "#000000",
+
                     offset:
                       100,
-                    opacity: 0,
+
+                    opacity:
+                      0,
                   },
                 ]
           }
         />
 
-        <div className="absolute bottom-[55px] left-[38px]">
-          <div className="mb-[18px] flex items-center gap-[13px]">
+        <div
+          className="
+            absolute
+
+            bottom-[55px]
+            left-[38px]
+          "
+        >
+          <div
+            className="
+              mb-[18px]
+
+              flex
+              items-center
+              gap-[13px]
+            "
+          >
             <BrandIdentity
-              brand={b}
-              width={205}
-              height={54}
+              brand={
+                b
+              }
+              width={
+                205
+              }
+              height={
+                54
+              }
             />
 
-            <span className="text-[8px] uppercase tracking-[0.11em] text-white/27">
+            <span
+              className="
+                text-[8px]
+                uppercase
+                tracking-[0.11em]
+
+                text-white/27
+              "
+            >
               Featured content
             </span>
           </div>
 
           <h2
-            className="max-w-[690px] text-[55px] leading-[0.94] tracking-[-0.045em] text-white"
+            className="
+              max-w-[690px]
+
+              text-[55px]
+              leading-[0.94]
+              tracking-[-0.045em]
+
+              text-white
+            "
             style={{
               fontFamily:
                 b.fontFamily,
@@ -1132,9 +2434,21 @@ function PresentsExample({
             Step into the experience.
           </h2>
 
-          <div className="mt-[16px] flex gap-[5px]">
+          <div
+            className="
+              mt-[16px]
+
+              flex
+              gap-[5px]
+            "
+          >
             <span
-              className="h-[5px] w-[72px] rounded-full"
+              className="
+                h-[5px]
+                w-[72px]
+
+                rounded-full
+              "
               style={{
                 backgroundColor:
                   b.primaryColor,
@@ -1142,7 +2456,12 @@ function PresentsExample({
             />
 
             <span
-              className="h-[5px] w-[32px] rounded-full"
+              className="
+                h-[5px]
+                w-[32px]
+
+                rounded-full
+              "
               style={{
                 backgroundColor:
                   b.secondaryColor,
@@ -1189,7 +2508,12 @@ function BrandIdentity({
   ) {
     return (
       <div
-        className="flex shrink-0 items-center"
+        className="
+          flex
+          shrink-0
+
+          items-center
+        "
         style={{
           width,
           height,
@@ -1205,7 +2529,19 @@ function BrandIdentity({
           draggable={
             false
           }
-          className="block h-full w-full object-contain object-left"
+          className="
+            block
+
+            h-full
+            w-full
+
+            object-contain
+            object-left
+          "
+          style={{
+            filter:
+              "none",
+          }}
         />
       </div>
     );
@@ -1213,15 +2549,26 @@ function BrandIdentity({
 
   return (
     <div
-      className="flex items-center"
+      className="
+        flex
+        items-center
+      "
       style={{
         width,
+
         minHeight:
           height,
       }}
     >
       <span
-        className="whitespace-nowrap text-[23px] leading-none text-white"
+        className="
+          whitespace-nowrap
+
+          text-[23px]
+          leading-none
+
+          text-white
+        "
         style={{
           fontFamily:
             brand.fontFamily,
@@ -1234,7 +2581,7 @@ function BrandIdentity({
 }
 
 /* ================================================= */
-/* COPY                                              */
+/* HERO COPY                                         */
 /* ================================================= */
 
 function HeroCopy({
@@ -1252,13 +2599,38 @@ function HeroCopy({
     string;
 }) {
   return (
-    <div className="absolute bottom-[110px] left-[42px] max-w-[760px]">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">
+    <div
+      className="
+        absolute
+
+        bottom-[110px]
+        left-[42px]
+
+        max-w-[760px]
+      "
+    >
+      <p
+        className="
+          text-[10px]
+          uppercase
+          tracking-[0.16em]
+
+          text-white/40
+        "
+      >
         {eyebrow}
       </p>
 
       <h2
-        className="mt-[10px] text-[56px] leading-[0.94] tracking-[-0.045em] text-white"
+        className="
+          mt-[10px]
+
+          text-[56px]
+          leading-[0.94]
+          tracking-[-0.045em]
+
+          text-white
+        "
         style={{
           fontFamily:
             family,
@@ -1271,7 +2643,7 @@ function HeroCopy({
 }
 
 /* ================================================= */
-/* GRAPHIC                                           */
+/* ACCENT GRAPHIC                                    */
 /* ================================================= */
 
 function AccentGraphic({
@@ -1293,7 +2665,24 @@ function AccentGraphic({
     string;
 }) {
   return (
-    <div className="absolute right-[55px] top-[140px] flex h-[210px] w-[340px] items-end justify-end gap-[7px]">
+    <div
+      className="
+        absolute
+
+        right-[55px]
+        top-[140px]
+
+        flex
+
+        h-[210px]
+        w-[340px]
+
+        items-end
+        justify-end
+
+        gap-[7px]
+      "
+    >
       {[
         70,
         130,
@@ -1311,7 +2700,11 @@ function AccentGraphic({
             key={
               index
             }
-            className="w-[6px] rounded-full"
+            className="
+              w-[6px]
+
+              rounded-full
+            "
             style={{
               height,
 
@@ -1337,6 +2730,10 @@ function AccentGraphic({
   );
 }
 
+/* ================================================= */
+/* VISUALIZER                                        */
+/* ================================================= */
+
 function Visualizer({
   profile,
   primary,
@@ -1354,12 +2751,29 @@ function Visualizer({
   const count =
     Math.round(
       6 +
-        profile.energy *
-          8
+      profile.energy *
+        8
     );
 
   return (
-    <div className="absolute right-[48px] top-[130px] flex h-[220px] w-[340px] items-end justify-end gap-[7px]">
+    <div
+      className="
+        absolute
+
+        right-[48px]
+        top-[130px]
+
+        flex
+
+        h-[220px]
+        w-[340px]
+
+        items-end
+        justify-end
+
+        gap-[7px]
+      "
+    >
       {Array.from({
         length:
           count,
@@ -1372,13 +2786,19 @@ function Visualizer({
             key={
               index
             }
-            className="w-[6px] rounded-full"
+            className="
+              w-[6px]
+
+              rounded-full
+            "
             style={{
               height:
                 45 +
-                ((index *
-                  41) %
-                  155),
+                (
+                  index *
+                  41
+                ) %
+                  155,
 
               backgroundColor:
                 index %
@@ -1443,7 +2863,12 @@ function CTA({
       `}
     >
       <span
-        className="h-[7px] w-[7px] rounded-full"
+        className="
+          h-[7px]
+          w-[7px]
+
+          rounded-full
+        "
         style={{
           backgroundColor:
             primary,
@@ -1451,18 +2876,35 @@ function CTA({
       />
 
       <span
-        className="h-[4px] w-[10px] rounded-full"
+        className="
+          h-[4px]
+          w-[10px]
+
+          rounded-full
+        "
         style={{
           backgroundColor:
             secondary,
         }}
       />
 
-      <span className="text-[10px] text-white/67">
+      <span
+        className="
+          text-[10px]
+
+          text-white/67
+        "
+      >
         {label}
       </span>
 
-      <span className="text-[11px] text-white/30">
+      <span
+        className="
+          text-[11px]
+
+          text-white/30
+        "
+      >
         →
       </span>
     </div>

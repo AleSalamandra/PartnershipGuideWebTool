@@ -1,40 +1,148 @@
+import type {
+  BrandCharacterTraitId,
+} from "@/data/brandCharacterTraits";
+
+/* ================================================= */
+/* PARTNERSHIP MODEL                                 */
+/* ================================================= */
+
 export type PartnershipModelId =
   | "axb"
   | "aandb"
   | "poweredByA"
   | "presentsB";
 
+/* ================================================= */
+/* ADDITIONAL RELATIONSHIP                           */
+/* ================================================= */
+
+/*
+  This layer is completely independent from
+  the A / B partnership model.
+
+  Example:
+
+  A × B
+       +
+  Presenting X
+
+  or
+
+  B powered by A
+       +
+  Sponsored by X
+*/
+
+export type AdditionalRelationshipMode =
+  | "none"
+  | "presenting"
+  | "sponsored";
+
+/* ================================================= */
+/* BRAND                                             */
+/* ================================================= */
+
 export interface BrandConfig {
   name: string;
-  logoUrl: string | null;
-  primaryColor: string;
-  secondaryColor: string;
-  fontFamily: string;
+
+  logoUrl:
+    string | null;
+
+  primaryColor:
+    string;
+
+  secondaryColor:
+    string;
+
+  fontFamily:
+    string;
+
+  characterTraits:
+    BrandCharacterTraitId[];
 }
 
-export interface GuidelineState {
-  partnershipModel: PartnershipModelId;
+/* ================================================= */
+/* PROPERTY / SPONSOR X                              */
+/* ================================================= */
 
-  brandA: BrandConfig;
-  brandB: BrandConfig;
+/*
+  We keep one persistent X object regardless of
+  whether X is acting as:
 
-  commonFontFamily: string;
+  - presented property
+  - sponsor
+
+  Presenting mode uses the complete identity.
+  Sponsored mode intentionally uses only name/logo
+  in the visual system.
+
+  Keeping one object means switching modes does not
+  destroy information the user already entered.
+*/
+
+export interface PropertyXConfig {
+  name: string;
+
+  logoUrl:
+    string | null;
+
+  primaryColor:
+    string;
+
+  secondaryColor:
+    string;
+
+  fontFamily:
+    string;
+
+  characterTraits:
+    BrandCharacterTraitId[];
+}
+
+/* ================================================= */
+/* STORE                                             */
+/* ================================================= */
+
+export interface GuidelineStoreState {
+  partnershipModel:
+    PartnershipModelId;
+
+  additionalRelationship:
+    AdditionalRelationshipMode;
+
+  brandA:
+    BrandConfig;
+
+  brandB:
+    BrandConfig;
+
+  propertyX:
+    PropertyXConfig;
 
   setPartnershipModel: (
-    model: PartnershipModelId
+    model:
+      PartnershipModelId
+  ) => void;
+
+  setAdditionalRelationship: (
+    mode:
+      AdditionalRelationshipMode
   ) => void;
 
   updateBrandA: (
-    data: Partial<BrandConfig>
+    patch:
+      Partial<BrandConfig>
   ) => void;
 
   updateBrandB: (
-    data: Partial<BrandConfig>
+    patch:
+      Partial<BrandConfig>
   ) => void;
 
-  setCommonFontFamily: (
-    fontFamily: string
+  updatePropertyX: (
+    patch:
+      Partial<PropertyXConfig>
   ) => void;
 
-  reset: () => void;
+  resetGuideline: () => void;
 }

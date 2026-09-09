@@ -21,24 +21,36 @@ import Page11 from "./Page11";
 import Page12 from "./Page12";
 import Page13 from "./Page13";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 export interface GuidelinePageDefinition {
-  id: string;
-  number: string;
-  title: string;
-  component: ComponentType;
+  id:
+    string;
+
+  number:
+    string;
+
+  title:
+    string;
+
+  component:
+    ComponentType;
 }
 
 interface GuidelineDocumentProps {
-  currentPage: number;
+  currentPage:
+    number;
 }
 
-/* ------------------------------------------------ */
-/* DOCUMENT STRUCTURE                               */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* DOCUMENT STRUCTURE                                */
+/* ================================================= */
 
 /*
   SINGLE SOURCE OF TRUTH
@@ -55,148 +67,282 @@ interface GuidelineDocumentProps {
   10  Shared Visual Territory — Colour
   11  Shared Visual Territory — Typography
   12  Shared Visual Territory — Graphic Language
-  13  Page11
-  14  Page12
-  15  Page13
+  13  Motion Language
+  14  Footage & Image Treatment
+  15  Complete Shared Branding Example
 */
 
-export const GUIDELINE_PAGES: GuidelinePageDefinition[] =
-  [
-    {
-      id: "cover",
-      number: "01",
-      title: "Style Guide",
-      component: CoverPage,
-    },
+export const GUIDELINE_PAGES:
+  GuidelinePageDefinition[] = [
+  {
+    id:
+      "cover",
 
-    {
-      id: "partnership-principle",
-      number: "02",
-      title: "Partnership Principle",
-      component:
-        PartnershipPrinciple,
-    },
+    number:
+      "01",
 
-    {
-      id: "partnership-model",
-      number: "03",
-      title: "Partnership Model",
-      component: Page01,
-    },
+    title:
+      "Style Guide",
 
-    {
-      id: "corporate-visuals",
-      number: "04",
-      title: "Corporate Visuals",
-      component: Page02,
-    },
+    component:
+      CoverPage,
+  },
 
-    {
-      id: "logo-positioning",
-      number: "05",
-      title:
-        "Logo Positioning Suggestions",
-      component: Page03,
-    },
+  {
+    id:
+      "partnership-principle",
 
-    {
-      id: "brand-hierarchy",
-      number: "06",
-      title:
-        "Brand Hierarchy Across Media",
-      component: Page04,
-    },
+    number:
+      "02",
 
-    {
-      id: "video-opening",
-      number: "07",
-      title:
-        "Video Opening Keyframes",
-      component: Page05,
-    },
+    title:
+      "Partnership Principle",
 
-    {
-      id: "content-branding",
-      number: "08",
-      title:
-        "Content Branding Applications",
-      component: Page06,
-    },
+    component:
+      PartnershipPrinciple,
+  },
 
-    {
-      id: "video-closing",
-      number: "09",
-      title:
-        "Video Closing Applications",
-      component: Page07,
-    },
+  {
+    id:
+      "partnership-model",
 
-    {
-      id: "shared-colour",
-      number: "10",
-      title:
-        "Shared Visual Territory — Colour",
-      component: Page08,
-    },
+    number:
+      "03",
 
-    {
-      id: "shared-typography",
-      number: "11",
-      title:
-        "Shared Visual Territory — Typography",
-      component: Page09,
-    },
+    title:
+      "Partnership Model",
 
-    {
-      id: "shared-graphic-language",
-      number: "12",
-      title:
-        "Shared Visual Territory — Graphic Language",
-      component: Page10,
-    },
+    component:
+      Page01,
+  },
 
-    {
-      id: "page-11",
-      number: "13",
-      title: "Guideline 11",
-      component: Page11,
-    },
+  {
+    id:
+      "corporate-visuals",
 
-    {
-      id: "page-12",
-      number: "14",
-      title: "Guideline 12",
-      component: Page12,
-    },
+    number:
+      "04",
 
-    {
-      id: "page-13",
-      number: "15",
-      title: "Guideline 13",
-      component: Page13,
-    },
-  ];
+    title:
+      "Corporate Visuals",
 
-/* ------------------------------------------------ */
-/* PAGE COUNT                                       */
-/* ------------------------------------------------ */
+    component:
+      Page02,
+  },
+
+  {
+    id:
+      "logo-positioning",
+
+    number:
+      "05",
+
+    title:
+      "Logo Positioning Suggestions",
+
+    component:
+      Page03,
+  },
+
+  {
+    id:
+      "brand-hierarchy",
+
+    number:
+      "06",
+
+    title:
+      "Brand Hierarchy Across Media",
+
+    component:
+      Page04,
+  },
+
+  {
+    id:
+      "video-opening",
+
+    number:
+      "07",
+
+    title:
+      "Video Opening Keyframes",
+
+    component:
+      Page05,
+  },
+
+  {
+    id:
+      "content-branding",
+
+    number:
+      "08",
+
+    title:
+      "Content Branding Applications",
+
+    component:
+      Page06,
+  },
+
+  {
+    id:
+      "video-closing",
+
+    number:
+      "09",
+
+    title:
+      "Video Closing Applications",
+
+    component:
+      Page07,
+  },
+
+  {
+    id:
+      "shared-colour",
+
+    number:
+      "10",
+
+    title:
+      "Shared Visual Territory — Colour",
+
+    component:
+      Page08,
+  },
+
+  {
+    id:
+      "shared-typography",
+
+    number:
+      "11",
+
+    title:
+      "Shared Visual Territory — Typography",
+
+    component:
+      Page09,
+  },
+
+  {
+    id:
+      "shared-graphic-language",
+
+    number:
+      "12",
+
+    title:
+      "Shared Visual Territory — Graphic Language",
+
+    component:
+      Page10,
+  },
+
+  {
+    id:
+      "motion-language",
+
+    number:
+      "13",
+
+    title:
+      "Shared Visual Territory — Motion Language",
+
+    component:
+      Page11,
+  },
+
+  {
+    id:
+      "footage-treatment",
+
+    number:
+      "14",
+
+    title:
+      "Footage & Image Treatment",
+
+    component:
+      Page12,
+  },
+
+  {
+    id:
+      "complete-example",
+
+    number:
+      "15",
+
+    title:
+      "Complete Shared Branding Example",
+
+    component:
+      Page13,
+  },
+];
+
+/* ================================================= */
+/* PAGE COUNT                                        */
+/* ================================================= */
 
 export const GUIDELINE_PAGE_COUNT =
   GUIDELINE_PAGES.length;
 
-/* ------------------------------------------------ */
-/* DOCUMENT                                         */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* DOCUMENT                                          */
+/* ================================================= */
 
 export default function GuidelineDocument({
   currentPage,
 }: GuidelineDocumentProps) {
+  /*
+    Read the configuration here as well.
+
+    Individual pages still subscribe to the store,
+    but this guarantees that the document tree
+    itself responds to changes in the relationship
+    layer.
+  */
+
+  const partnershipModel =
+    useGuidelineStore(
+      (
+        state
+      ) =>
+        state.partnershipModel
+    );
+
+  const additionalRelationship =
+    useGuidelineStore(
+      (
+        state
+      ) =>
+        state.additionalRelationship
+    );
+
+  const propertyX =
+    useGuidelineStore(
+      (
+        state
+      ) =>
+        state.propertyX
+    );
+
+  /* ------------------------------------------------ */
+  /* SAFE PAGE                                        */
+  /* ------------------------------------------------ */
+
   const safePageIndex =
     Math.min(
       Math.max(
         currentPage,
         0
       ),
+
       GUIDELINE_PAGES.length -
         1
     );
@@ -209,5 +355,55 @@ export default function GuidelineDocument({
   const CurrentPage =
     pageDefinition.component;
 
-  return <CurrentPage />;
+  /* ------------------------------------------------ */
+  /* CONFIGURATION KEY                                */
+  /* ------------------------------------------------ */
+
+  /*
+    This is especially useful for pages that contain
+    local React state, image selection or animations.
+
+    Switching:
+
+      None
+      Presenting X
+      Sponsored by X
+
+    forces the active guideline page to mount with the
+    correct relationship context.
+  */
+
+  const configurationKey = [
+    pageDefinition.id,
+
+    partnershipModel,
+
+    additionalRelationship,
+
+    propertyX.name,
+
+    propertyX.logoUrl
+      ? "x-logo"
+      : "no-x-logo",
+
+    propertyX.primaryColor,
+
+    propertyX.secondaryColor,
+
+    propertyX.fontFamily,
+
+    propertyX.characterTraits.join(
+      "-"
+    ),
+  ].join(
+    "::"
+  );
+
+  return (
+    <CurrentPage
+      key={
+        configurationKey
+      }
+    />
+  );
 }

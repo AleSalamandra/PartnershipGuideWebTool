@@ -1,88 +1,248 @@
-"use client";
-
-import { create } from "zustand";
-
 import {
+  create,
+} from "zustand";
+
+import type {
   BrandConfig,
-  GuidelineState,
-  PartnershipModelId,
+  GuidelineStoreState,
+  PropertyXConfig,
 } from "@/types/guideline";
 
-const defaultBrandA: BrandConfig = {
-  name: "Brand A",
-  logoUrl: null,
-  primaryColor: "#FFFFFF",
-  secondaryColor: "#8A8A8A",
-  fontFamily: "Arial",
-};
+/* ================================================= */
+/* DEFAULTS                                          */
+/* ================================================= */
 
-const defaultBrandB: BrandConfig = {
-  name: "Brand B",
-  logoUrl: null,
-  primaryColor: "#FFFFFF",
-  secondaryColor: "#8A8A8A",
-  fontFamily: "Arial",
-};
+export const DEFAULT_FONT =
+  '"oook-variable", sans-serif';
+
+export const DEFAULT_A_PRIMARY =
+  "#FF453A";
+
+export const DEFAULT_A_SECONDARY =
+  "#FF8A80";
+
+export const DEFAULT_B_PRIMARY =
+  "#3478F6";
+
+export const DEFAULT_B_SECONDARY =
+  "#64D2FF";
+
+export const DEFAULT_X_PRIMARY =
+  "#8A8A8A";
+
+export const DEFAULT_X_SECONDARY =
+  "#B9B9B9";
+
+/* ================================================= */
+/* DEFAULT FACTORIES                                 */
+/* ================================================= */
+
+/*
+  Factories rather than shared objects so arrays and
+  nested state are always recreated on Reset.
+*/
+
+export function createDefaultBrandA():
+  BrandConfig {
+  return {
+    name:
+      "Brand A",
+
+    logoUrl:
+      null,
+
+    primaryColor:
+      DEFAULT_A_PRIMARY,
+
+    secondaryColor:
+      DEFAULT_A_SECONDARY,
+
+    fontFamily:
+      DEFAULT_FONT,
+
+    characterTraits:
+      [],
+  };
+}
+
+export function createDefaultBrandB():
+  BrandConfig {
+  return {
+    name:
+      "Brand B",
+
+    logoUrl:
+      null,
+
+    primaryColor:
+      DEFAULT_B_PRIMARY,
+
+    secondaryColor:
+      DEFAULT_B_SECONDARY,
+
+    fontFamily:
+      DEFAULT_FONT,
+
+    characterTraits:
+      [],
+  };
+}
+
+export function createDefaultPropertyX():
+  PropertyXConfig {
+  return {
+    name:
+      "X",
+
+    logoUrl:
+      null,
+
+    primaryColor:
+      DEFAULT_X_PRIMARY,
+
+    secondaryColor:
+      DEFAULT_X_SECONDARY,
+
+    fontFamily:
+      DEFAULT_FONT,
+
+    characterTraits:
+      [],
+  };
+}
+
+/* ================================================= */
+/* STORE                                             */
+/* ================================================= */
 
 export const useGuidelineStore =
-  create<GuidelineState>((set) => ({
-    partnershipModel: "axb",
+  create<GuidelineStoreState>(
+    (
+      set
+    ) => ({
+      /* ========================================= */
+      /* DATA                                      */
+      /* ========================================= */
 
-    brandA: {
-      ...defaultBrandA,
-    },
+      partnershipModel:
+        "axb",
 
-    brandB: {
-      ...defaultBrandB,
-    },
+      additionalRelationship:
+        "none",
 
-    commonFontFamily:
-      "oook-variable",
+      brandA:
+        createDefaultBrandA(),
 
-    setPartnershipModel: (
-      model: PartnershipModelId
-    ) =>
-      set({
-        partnershipModel: model,
-      }),
+      brandB:
+        createDefaultBrandB(),
 
-    updateBrandA: (data) =>
-      set((state) => ({
-        brandA: {
-          ...state.brandA,
-          ...data,
-        },
-      })),
+      propertyX:
+        createDefaultPropertyX(),
 
-    updateBrandB: (data) =>
-      set((state) => ({
-        brandB: {
-          ...state.brandB,
-          ...data,
-        },
-      })),
+      /* ========================================= */
+      /* PARTNERSHIP                               */
+      /* ========================================= */
 
-    setCommonFontFamily: (
-      fontFamily
-    ) =>
-      set({
-        commonFontFamily:
-          fontFamily,
-      }),
+      setPartnershipModel: (
+        model
+      ) => {
+        set({
+          partnershipModel:
+            model,
+        });
+      },
 
-    reset: () =>
-      set({
-        partnershipModel: "axb",
+      /* ========================================= */
+      /* ADDITIONAL RELATIONSHIP                   */
+      /* ========================================= */
 
-        brandA: {
-          ...defaultBrandA,
-        },
+      setAdditionalRelationship: (
+        mode
+      ) => {
+        set({
+          additionalRelationship:
+            mode,
+        });
+      },
 
-        brandB: {
-          ...defaultBrandB,
-        },
+      /* ========================================= */
+      /* BRAND A                                   */
+      /* ========================================= */
 
-        commonFontFamily:
-          "oook-variable",
-      }),
-  }));
+      updateBrandA: (
+        patch
+      ) => {
+        set(
+          (
+            state
+          ) => ({
+            brandA: {
+              ...state.brandA,
+              ...patch,
+            },
+          })
+        );
+      },
+
+      /* ========================================= */
+      /* BRAND B                                   */
+      /* ========================================= */
+
+      updateBrandB: (
+        patch
+      ) => {
+        set(
+          (
+            state
+          ) => ({
+            brandB: {
+              ...state.brandB,
+              ...patch,
+            },
+          })
+        );
+      },
+
+      /* ========================================= */
+      /* PROPERTY X                                */
+      /* ========================================= */
+
+      updatePropertyX: (
+        patch
+      ) => {
+        set(
+          (
+            state
+          ) => ({
+            propertyX: {
+              ...state.propertyX,
+              ...patch,
+            },
+          })
+        );
+      },
+
+      /* ========================================= */
+      /* RESET                                     */
+      /* ========================================= */
+
+      resetGuideline: () => {
+        set({
+          partnershipModel:
+            "axb",
+
+          additionalRelationship:
+            "none",
+
+          brandA:
+            createDefaultBrandA(),
+
+          brandB:
+            createDefaultBrandB(),
+
+          propertyX:
+            createDefaultPropertyX(),
+        });
+      },
+    })
+  );

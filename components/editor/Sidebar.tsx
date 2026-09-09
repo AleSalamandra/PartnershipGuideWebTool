@@ -1,20 +1,30 @@
 "use client";
 
 import {
-  ChangeEvent,
   useRef,
   useState,
+  type ChangeEvent,
   type ReactNode,
 } from "react";
 
 import BrandCharacterSelector from "./BrandCharacterSelector";
 
 import {
+  DEFAULT_A_PRIMARY,
+  DEFAULT_A_SECONDARY,
+  DEFAULT_B_PRIMARY,
+  DEFAULT_B_SECONDARY,
+  DEFAULT_FONT,
+  DEFAULT_X_PRIMARY,
+  DEFAULT_X_SECONDARY,
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
+  BrandConfig,
   PartnershipModelId,
+  PropertyXConfig,
 } from "@/types/guideline";
 
 import {
@@ -26,33 +36,22 @@ import {
   type GuidelineTheme,
 } from "@/components/guideline/GuidelinePage";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 type BrandSide =
   | "A"
   | "B";
 
-interface BrandData {
-  name: string;
+type IdentityKey =
+  | "A"
+  | "B"
+  | "X";
 
-  logoUrl:
-    string | null;
-
-  primaryColor:
-    string;
-
-  secondaryColor?:
-    string;
-
-  fontFamily?:
-    string;
-}
-
-/* ------------------------------------------------ */
-/* PARTNERSHIP MODELS                               */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PARTNERSHIP MODELS                                */
+/* ================================================= */
 
 const PARTNERSHIP_MODELS: {
   id:
@@ -109,9 +108,57 @@ const PARTNERSHIP_MODELS: {
   },
 ];
 
-/* ------------------------------------------------ */
-/* THEMES                                           */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* ADDITIONAL RELATIONSHIPS                          */
+/* ================================================= */
+
+const ADDITIONAL_RELATIONSHIPS: {
+  id:
+    AdditionalRelationshipMode;
+
+  label:
+    string;
+
+  description:
+    string;
+}[] = [
+  {
+    id:
+      "none",
+
+    label:
+      "None",
+
+    description:
+      "Only Brand A and Brand B",
+  },
+
+  {
+    id:
+      "presenting",
+
+    label:
+      "Presenting X",
+
+    description:
+      "X actively shapes the shared system",
+  },
+
+  {
+    id:
+      "sponsored",
+
+    label:
+      "Sponsored by X",
+
+    description:
+      "X appears as a restrained sponsor credit",
+  },
+];
+
+/* ================================================= */
+/* THEMES                                            */
+/* ================================================= */
 
 const THEMES: {
   id:
@@ -137,46 +184,43 @@ const THEMES: {
   },
 ];
 
-/* ------------------------------------------------ */
-/* DEFAULTS                                         */
-/* ------------------------------------------------ */
-
-const DEFAULT_A_PRIMARY =
-  "#FF453A";
-
-const DEFAULT_A_SECONDARY =
-  "#FF8A80";
-
-const DEFAULT_B_PRIMARY =
-  "#3478F6";
-
-const DEFAULT_B_SECONDARY =
-  "#64D2FF";
-
-const DEFAULT_FONT =
-  '"oook-variable", sans-serif';
-
-/* ------------------------------------------------ */
-/* SIDEBAR                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* SIDEBAR                                           */
+/* ================================================= */
 
 export default function Sidebar() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
+    propertyX,
+
+    setPartnershipModel,
+    setAdditionalRelationship,
+
+    updateBrandA,
+    updateBrandB,
+    updatePropertyX,
+
+    resetGuideline,
   } =
     useGuidelineStore();
 
   const theme =
     useGuidelineThemeStore(
-      (state) =>
+      (
+        state
+      ) =>
         state.theme
     );
 
   const setTheme =
     useGuidelineThemeStore(
-      (state) =>
+      (
+        state
+      ) =>
         state.setTheme
     );
 
@@ -184,59 +228,39 @@ export default function Sidebar() {
     isExporting,
     setIsExporting,
   ] =
-    useState(false);
+    useState(
+      false
+    );
 
-  /* ---------------------------------------------- */
-  /* PARTNERSHIP MODEL                              */
-  /* ---------------------------------------------- */
-
-  const setPartnershipModel = (
-    model:
-      PartnershipModelId
-  ) => {
-    useGuidelineStore.setState({
-      partnershipModel:
-        model,
-    });
-  };
-
-  /* ---------------------------------------------- */
-  /* UPDATE BRAND                                   */
-  /* ---------------------------------------------- */
+  /* ================================================= */
+  /* BRAND UPDATE                                      */
+  /* ================================================= */
 
   const updateBrand = (
     side:
       BrandSide,
 
     patch:
-      Partial<BrandData>
+      Partial<BrandConfig>
   ) => {
-    useGuidelineStore.setState(
-      (state) => {
-        if (
-          side === "A"
-        ) {
-          return {
-            brandA: {
-              ...state.brandA,
-              ...patch,
-            } as typeof state.brandA,
-          };
-        }
+    if (
+      side === "A"
+    ) {
+      updateBrandA(
+        patch
+      );
 
-        return {
-          brandB: {
-            ...state.brandB,
-            ...patch,
-          } as typeof state.brandB,
-        };
-      }
+      return;
+    }
+
+    updateBrandB(
+      patch
     );
   };
 
-  /* ---------------------------------------------- */
-  /* RESET                                          */
-  /* ---------------------------------------------- */
+  /* ================================================= */
+  /* RESET                                             */
+  /* ================================================= */
 
   const handleReset =
     () => {
@@ -244,61 +268,12 @@ export default function Sidebar() {
         "dark"
       );
 
-      useGuidelineStore.setState(
-        (state) => ({
-          partnershipModel:
-            "axb",
-
-          brandA: {
-            ...state.brandA,
-
-            name:
-              "Brand A",
-
-            logoUrl:
-              null,
-
-            primaryColor:
-              DEFAULT_A_PRIMARY,
-
-            secondaryColor:
-              DEFAULT_A_SECONDARY,
-
-            fontFamily:
-              DEFAULT_FONT,
-
-            characterTraits:
-              [],
-          } as typeof state.brandA,
-
-          brandB: {
-            ...state.brandB,
-
-            name:
-              "Brand B",
-
-            logoUrl:
-              null,
-
-            primaryColor:
-              DEFAULT_B_PRIMARY,
-
-            secondaryColor:
-              DEFAULT_B_SECONDARY,
-
-            fontFamily:
-              DEFAULT_FONT,
-
-            characterTraits:
-              [],
-          } as typeof state.brandB,
-        })
-      );
+      resetGuideline();
     };
 
-  /* ---------------------------------------------- */
-  /* EXPORT                                         */
-  /* ---------------------------------------------- */
+  /* ================================================= */
+  /* EXPORT                                            */
+  /* ================================================= */
 
   const handleExport =
     async () => {
@@ -313,15 +288,6 @@ export default function Sidebar() {
       );
 
       try {
-        /*
-          GuidelineDocument uses the
-          same GuidelinePage theme store.
-
-          Therefore the PDF automatically
-          exports the currently selected
-          Dark / Light appearance.
-        */
-
         await exportGuidelinePdf();
       } catch (
         error
@@ -341,9 +307,9 @@ export default function Sidebar() {
       }
     };
 
-  /* ---------------------------------------------- */
-  /* RENDER                                         */
-  /* ---------------------------------------------- */
+  /* ================================================= */
+  /* RENDER                                            */
+  /* ================================================= */
 
   return (
     <aside
@@ -404,7 +370,7 @@ export default function Sidebar() {
       </header>
 
       {/* ======================================== */}
-      {/* DOCUMENT APPEARANCE                       */}
+      {/* APPEARANCE                               */}
       {/* ======================================== */}
 
       <div
@@ -423,7 +389,6 @@ export default function Sidebar() {
             flex
             items-center
             justify-between
-
             gap-[14px]
           "
         >
@@ -455,8 +420,6 @@ export default function Sidebar() {
             </p>
           </div>
 
-          {/* SEGMENTED SWITCH */}
-
           <div
             className="
               flex
@@ -473,7 +436,9 @@ export default function Sidebar() {
             "
           >
             {THEMES.map(
-              (option) => {
+              (
+                option
+              ) => {
                 const active =
                   theme ===
                   option.id;
@@ -525,7 +490,9 @@ export default function Sidebar() {
                       }
                     `}
                   >
-                    {option.label}
+                    {
+                      option.label
+                    }
                   </button>
                 );
               }
@@ -535,7 +502,7 @@ export default function Sidebar() {
       </div>
 
       {/* ======================================== */}
-      {/* SCROLLABLE CONFIG                         */}
+      {/* SCROLLABLE                               */}
       {/* ======================================== */}
 
       <div
@@ -553,7 +520,7 @@ export default function Sidebar() {
         "
       >
         {/* ====================================== */}
-        {/* PARTNERSHIP MODEL                      */}
+        {/* 01 — PARTNERSHIP MODEL                 */}
         {/* ====================================== */}
 
         <SidebarSection
@@ -561,105 +528,47 @@ export default function Sidebar() {
 
           title="Partnership model"
 
-          description="Defines ownership, hierarchy and how both brands relate."
+          description="Defines ownership, hierarchy and how Brand A and Brand B relate."
         >
           <div
             className="
               grid
               grid-cols-2
-
               gap-[7px]
             "
           >
             {PARTNERSHIP_MODELS.map(
-              (model) => {
+              (
+                model
+              ) => {
                 const active =
                   partnershipModel ===
                   model.id;
 
                 return (
-                  <button
+                  <SelectionCard
                     key={
                       model.id
                     }
 
-                    type="button"
+                    active={
+                      active
+                    }
+
+                    label={
+                      model.label
+                    }
+
+                    description={
+                      model.description
+                    }
 
                     onClick={() =>
                       setPartnershipModel(
                         model.id
                       )
                     }
-
-                    className={`
-                      min-h-[62px]
-
-                      rounded-[12px]
-
-                      border
-
-                      px-[11px]
-                      py-[10px]
-
-                      text-left
-
-                      transition-all
-                      duration-150
-
-                      ${
-                        active
-                          ? `
-                              border-white
-                              bg-white
-                            `
-                          : `
-                              border-white/[0.075]
-                              bg-white/[0.018]
-
-                              hover:border-white/16
-                              hover:bg-white/[0.04]
-                            `
-                      }
-                    `}
-                  >
-                    <p
-                      className={`
-                        text-[11px]
-                        leading-none
-
-                        oook-medium
-
-                        ${
-                          active
-                            ? "text-black"
-                            : "text-white/72"
-                        }
-                      `}
-                    >
-                      {
-                        model.label
-                      }
-                    </p>
-
-                    <p
-                      className={`
-                        mt-[5px]
-
-                        text-[7px]
-                        leading-[1.3]
-
-                        ${
-                          active
-                            ? "text-black/42"
-                            : "text-white/24"
-                        }
-                      `}
-                    >
-                      {
-                        model.description
-                      }
-                    </p>
-                  </button>
+                  />
                 );
               }
             )}
@@ -669,14 +578,218 @@ export default function Sidebar() {
         <Divider />
 
         {/* ====================================== */}
-        {/* BRAND A                                */}
+        {/* 02 — ADDITIONAL RELATIONSHIP           */}
+        {/* ====================================== */}
+
+        <SidebarSection
+          eyebrow="02"
+
+          title="Additional relationship"
+
+          description="Adds a presented property or commercial sponsor without changing the A / B partnership model."
+        >
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-[7px]
+            "
+          >
+            {ADDITIONAL_RELATIONSHIPS.map(
+              (
+                option
+              ) => {
+                const active =
+                  additionalRelationship ===
+                  option.id;
+
+                return (
+                  <SelectionCard
+                    key={
+                      option.id
+                    }
+
+                    active={
+                      active
+                    }
+
+                    label={
+                      option.label
+                    }
+
+                    description={
+                      option.description
+                    }
+
+                    horizontal
+
+                    onClick={() =>
+                      setAdditionalRelationship(
+                        option.id
+                      )
+                    }
+                  />
+                );
+              }
+            )}
+          </div>
+
+          {/* ==================================== */}
+          {/* PRESENTING X                         */}
+          {/* ==================================== */}
+
+          {additionalRelationship ===
+            "presenting" && (
+            <div
+              className="
+                mt-[20px]
+
+                border-t
+                border-white/[0.065]
+
+                pt-[20px]
+              "
+            >
+              <div
+                className="
+                  mb-[18px]
+
+                  rounded-[12px]
+
+                  border
+                  border-white/[0.07]
+
+                  bg-white/[0.018]
+
+                  px-[12px]
+                  py-[11px]
+                "
+              >
+                <p
+                  className="
+                    text-[9px]
+                    uppercase
+                    tracking-[0.12em]
+
+                    text-white/46
+
+                    oook-medium
+                  "
+                >
+                  Presented property
+                </p>
+
+                <p
+                  className="
+                    mt-[4px]
+
+                    text-[8px]
+                    leading-[1.4]
+
+                    text-white/24
+                  "
+                >
+                  X becomes an active part of colour, typography, character, motion and content identity.
+                </p>
+              </div>
+
+              <PresentedPropertyEditor
+                property={
+                  propertyX
+                }
+
+                onChange={
+                  updatePropertyX
+                }
+              />
+            </div>
+          )}
+
+          {/* ==================================== */}
+          {/* SPONSORED BY X                       */}
+          {/* ==================================== */}
+
+          {additionalRelationship ===
+            "sponsored" && (
+            <div
+              className="
+                mt-[20px]
+
+                border-t
+                border-white/[0.065]
+
+                pt-[20px]
+              "
+            >
+              <div
+                className="
+                  mb-[18px]
+
+                  rounded-[12px]
+
+                  border
+                  border-white/[0.07]
+
+                  bg-white/[0.018]
+
+                  px-[12px]
+                  py-[11px]
+                "
+              >
+                <p
+                  className="
+                    text-[9px]
+                    uppercase
+                    tracking-[0.12em]
+
+                    text-white/46
+
+                    oook-medium
+                  "
+                >
+                  Sponsor
+                </p>
+
+                <p
+                  className="
+                    mt-[4px]
+
+                    text-[8px]
+                    leading-[1.4]
+
+                    text-white/24
+                  "
+                >
+                  Sponsor identity remains a restrained commercial credit and does not alter the shared visual system.
+                </p>
+              </div>
+
+              <SponsorEditor
+                property={
+                  propertyX
+                }
+
+                onChange={
+                  updatePropertyX
+                }
+              />
+            </div>
+          )}
+        </SidebarSection>
+
+        <Divider />
+
+        {/* ====================================== */}
+        {/* 03 — BRAND A                           */}
         {/* ====================================== */}
 
         <BrandEditor
+          sectionNumber="03"
+
           side="A"
 
           brand={
-            brandA as BrandData
+            brandA
           }
 
           defaultPrimary={
@@ -695,14 +808,16 @@ export default function Sidebar() {
         <Divider />
 
         {/* ====================================== */}
-        {/* BRAND B                                */}
+        {/* 04 — BRAND B                           */}
         {/* ====================================== */}
 
         <BrandEditor
+          sectionNumber="04"
+
           side="B"
 
           brand={
-            brandB as BrandData
+            brandB
           }
 
           defaultPrimary={
@@ -718,11 +833,7 @@ export default function Sidebar() {
           }
         />
 
-        <div
-          className="
-            h-[34px]
-          "
-        />
+        <div className="h-[34px]" />
       </div>
 
       {/* ======================================== */}
@@ -746,12 +857,9 @@ export default function Sidebar() {
           className="
             grid
             grid-cols-1
-
             gap-[8px]
           "
         >
-          {/* RESET */}
-
           <button
             type="button"
 
@@ -795,8 +903,6 @@ export default function Sidebar() {
           >
             Reset
           </button>
-
-          {/* EXPORT */}
 
           <button
             type="button"
@@ -844,7 +950,6 @@ export default function Sidebar() {
                 className="
                   flex
                   items-center
-
                   gap-[8px]
                 "
               >
@@ -862,22 +967,131 @@ export default function Sidebar() {
   );
 }
 
-/* ------------------------------------------------ */
-/* BRAND EDITOR                                     */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* SELECTION CARD                                    */
+/* ================================================= */
+
+function SelectionCard({
+  active,
+  label,
+  description,
+  onClick,
+  horizontal = false,
+}: {
+  active:
+    boolean;
+
+  label:
+    string;
+
+  description:
+    string;
+
+  onClick: () => void;
+
+  horizontal?:
+    boolean;
+}) {
+  return (
+    <button
+      type="button"
+
+      onClick={
+        onClick
+      }
+
+      className={`
+        rounded-[12px]
+
+        border
+
+        px-[11px]
+        py-[10px]
+
+        text-left
+
+        transition-all
+        duration-150
+
+        ${
+          horizontal
+            ? "min-h-[52px]"
+            : "min-h-[62px]"
+        }
+
+        ${
+          active
+            ? `
+                border-white
+                bg-white
+              `
+            : `
+                border-white/[0.075]
+                bg-white/[0.018]
+
+                hover:border-white/16
+                hover:bg-white/[0.04]
+              `
+        }
+      `}
+    >
+      <p
+        className={`
+          text-[11px]
+          leading-none
+
+          oook-medium
+
+          ${
+            active
+              ? "text-black"
+              : "text-white/72"
+          }
+        `}
+      >
+        {label}
+      </p>
+
+      <p
+        className={`
+          mt-[5px]
+
+          text-[7px]
+          leading-[1.3]
+
+          ${
+            active
+              ? "text-black/42"
+              : "text-white/24"
+          }
+        `}
+      >
+        {description}
+      </p>
+    </button>
+  );
+}
+
+/* ================================================= */
+/* BRAND EDITOR                                      */
+/* ================================================= */
 
 function BrandEditor({
+  sectionNumber,
   side,
   brand,
   defaultPrimary,
   defaultSecondary,
   onChange,
 }: {
+  sectionNumber:
+    string;
+
   side:
     BrandSide;
 
   brand:
-    BrandData;
+    BrandConfig;
 
   defaultPrimary:
     string;
@@ -890,30 +1104,13 @@ function BrandEditor({
       BrandSide,
 
     patch:
-      Partial<BrandData>
+      Partial<BrandConfig>
   ) => void;
 }) {
   const brandLabel =
     side === "A"
       ? "Brand A"
       : "Brand B";
-
-  const sectionNumber =
-    side === "A"
-      ? "02"
-      : "03";
-
-  const primaryColor =
-    brand.primaryColor ||
-    defaultPrimary;
-
-  const secondaryColor =
-    brand.secondaryColor ||
-    defaultSecondary;
-
-  const fontFamily =
-    brand.fontFamily ||
-    DEFAULT_FONT;
 
   return (
     <SidebarSection
@@ -927,19 +1124,12 @@ function BrandEditor({
 
       description="Brand identity, visual assets and character."
     >
-      {/* ======================================== */}
-      {/* NAME                                     */}
-      {/* ======================================== */}
-
       <EditorGroup
         label="Brand name"
       >
-        <input
-          type="text"
-
+        <TextControl
           value={
-            brand.name ??
-            ""
+            brand.name
           }
 
           placeholder={
@@ -947,71 +1137,47 @@ function BrandEditor({
           }
 
           onChange={(
-            event
+            value
           ) =>
             onChange(
               side,
               {
                 name:
-                  event.target
-                    .value,
+                  value,
               }
             )
           }
-
-          className="
-            h-[42px]
-            w-full
-
-            rounded-[11px]
-
-            border
-            border-white/[0.08]
-
-            bg-white/[0.022]
-
-            px-[12px]
-
-            text-[11px]
-
-            text-white/78
-
-            outline-none
-
-            transition-all
-            duration-150
-
-            placeholder:text-white/18
-
-            hover:border-white/13
-
-            focus:border-white/22
-            focus:bg-white/[0.032]
-          "
         />
       </EditorGroup>
-
-      {/* ======================================== */}
-      {/* LOGO                                     */}
-      {/* ======================================== */}
 
       <EditorGroup
         label="Logo"
       >
         <LogoControl
-          side={side}
+          identity={
+            side
+          }
 
-          brand={brand}
+          name={
+            brand.name
+          }
 
-          onChange={
-            onChange
+          logoUrl={
+            brand.logoUrl
+          }
+
+          onChange={(
+            logoUrl
+          ) =>
+            onChange(
+              side,
+              {
+                logoUrl,
+              }
+            )
           }
         />
       </EditorGroup>
-
-      {/* ======================================== */}
-      {/* COLOURS                                  */}
-      {/* ======================================== */}
 
       <EditorGroup
         label="Colours"
@@ -1022,7 +1188,6 @@ function BrandEditor({
           className="
             grid
             grid-cols-2
-
             gap-[8px]
           "
         >
@@ -1030,7 +1195,7 @@ function BrandEditor({
             label="Primary"
 
             value={
-              primaryColor
+              brand.primaryColor
             }
 
             fallback={
@@ -1054,7 +1219,7 @@ function BrandEditor({
             label="Secondary"
 
             value={
-              secondaryColor
+              brand.secondaryColor
             }
 
             fallback={
@@ -1076,20 +1241,18 @@ function BrandEditor({
         </div>
       </EditorGroup>
 
-      {/* ======================================== */}
-      {/* TYPEFACE                                 */}
-      {/* ======================================== */}
-
       <EditorGroup
         label="Typeface"
 
         description="Upload the brand font or enter an installed font family."
       >
         <TypefaceControl
-          side={side}
+          identity={
+            side
+          }
 
           value={
-            fontFamily
+            brand.fontFamily
           }
 
           onChange={(
@@ -1105,10 +1268,6 @@ function BrandEditor({
           }
         />
       </EditorGroup>
-
-      {/* ======================================== */}
-      {/* CHARACTER                                */}
-      {/* ======================================== */}
 
       <div
         className="
@@ -1130,27 +1289,359 @@ function BrandEditor({
   );
 }
 
-/* ------------------------------------------------ */
-/* LOGO                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* PRESENTING X                                      */
+/* ================================================= */
 
-function LogoControl({
-  side,
-  brand,
+function PresentedPropertyEditor({
+  property,
   onChange,
 }: {
-  side:
-    BrandSide;
-
-  brand:
-    BrandData;
+  property:
+    PropertyXConfig;
 
   onChange: (
-    side:
-      BrandSide,
-
     patch:
-      Partial<BrandData>
+      Partial<PropertyXConfig>
+  ) => void;
+}) {
+  return (
+    <>
+      <EditorGroup
+        label="Property name"
+      >
+        <TextControl
+          value={
+            property.name
+          }
+
+          placeholder="X"
+
+          onChange={(
+            value
+          ) =>
+            onChange({
+              name:
+                value,
+            })
+          }
+        />
+      </EditorGroup>
+
+      <EditorGroup
+        label="Logo"
+      >
+        <LogoControl
+          identity="X"
+
+          name={
+            property.name ||
+            "X"
+          }
+
+          logoUrl={
+            property.logoUrl
+          }
+
+          onChange={(
+            logoUrl
+          ) =>
+            onChange({
+              logoUrl,
+            })
+          }
+        />
+      </EditorGroup>
+
+      <EditorGroup
+        label="Colours"
+
+        description="X actively influences the shared palette in presenting mode."
+      >
+        <div
+          className="
+            grid
+            grid-cols-2
+            gap-[8px]
+          "
+        >
+          <ColourControl
+            label="Primary"
+
+            value={
+              property.primaryColor
+            }
+
+            fallback={
+              DEFAULT_X_PRIMARY
+            }
+
+            onChange={(
+              colour
+            ) =>
+              onChange({
+                primaryColor:
+                  colour,
+              })
+            }
+          />
+
+          <ColourControl
+            label="Secondary"
+
+            value={
+              property.secondaryColor
+            }
+
+            fallback={
+              DEFAULT_X_SECONDARY
+            }
+
+            onChange={(
+              colour
+            ) =>
+              onChange({
+                secondaryColor:
+                  colour,
+              })
+            }
+          />
+        </div>
+      </EditorGroup>
+
+      <EditorGroup
+        label="Typeface"
+
+        description="Used by presented-content headlines and authored X moments."
+      >
+        <TypefaceControl
+          identity="X"
+
+          value={
+            property.fontFamily ||
+            DEFAULT_FONT
+          }
+
+          onChange={(
+            fontFamily
+          ) =>
+            onChange({
+              fontFamily,
+            })
+          }
+        />
+      </EditorGroup>
+
+      <div
+        className="
+          mt-[24px]
+
+          border-t
+          border-white/[0.065]
+
+          pt-[20px]
+        "
+      >
+        <BrandCharacterSelector
+          brand="X"
+        />
+      </div>
+    </>
+  );
+}
+
+/* ================================================= */
+/* SPONSOR X                                         */
+/* ================================================= */
+
+function SponsorEditor({
+  property,
+  onChange,
+}: {
+  property:
+    PropertyXConfig;
+
+  onChange: (
+    patch:
+      Partial<PropertyXConfig>
+  ) => void;
+}) {
+  return (
+    <>
+      <EditorGroup
+        label="Sponsor name"
+      >
+        <TextControl
+          value={
+            property.name
+          }
+
+          placeholder="Sponsor X"
+
+          onChange={(
+            value
+          ) =>
+            onChange({
+              name:
+                value,
+            })
+          }
+        />
+      </EditorGroup>
+
+      <EditorGroup
+        label="Sponsor logo"
+
+        description="The sponsor appears as a small endorsement only."
+      >
+        <LogoControl
+          identity="X"
+
+          name={
+            property.name ||
+            "Sponsor X"
+          }
+
+          logoUrl={
+            property.logoUrl
+          }
+
+          onChange={(
+            logoUrl
+          ) =>
+            onChange({
+              logoUrl,
+            })
+          }
+        />
+      </EditorGroup>
+
+      <div
+        className="
+          mt-[14px]
+
+          rounded-[11px]
+
+          border
+          border-white/[0.055]
+
+          bg-white/[0.012]
+
+          px-[11px]
+          py-[10px]
+        "
+      >
+        <p
+          className="
+            text-[8px]
+            leading-[1.45]
+
+            text-white/24
+          "
+        >
+          Sponsor colour, typography and character do not modify the partnership system. Only the sponsor name and logo are used.
+        </p>
+      </div>
+    </>
+  );
+}
+
+/* ================================================= */
+/* TEXT                                              */
+/* ================================================= */
+
+function TextControl({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value:
+    string;
+
+  placeholder:
+    string;
+
+  onChange: (
+    value:
+      string
+  ) => void;
+}) {
+  return (
+    <input
+      type="text"
+
+      value={
+        value
+      }
+
+      placeholder={
+        placeholder
+      }
+
+      onChange={(
+        event
+      ) =>
+        onChange(
+          event.target
+            .value
+        )
+      }
+
+      className="
+        h-[42px]
+        w-full
+
+        rounded-[11px]
+
+        border
+        border-white/[0.08]
+
+        bg-white/[0.022]
+
+        px-[12px]
+
+        text-[11px]
+
+        text-white/78
+
+        outline-none
+
+        transition-all
+        duration-150
+
+        placeholder:text-white/18
+
+        hover:border-white/13
+
+        focus:border-white/22
+        focus:bg-white/[0.032]
+      "
+    />
+  );
+}
+
+/* ================================================= */
+/* LOGO                                              */
+/* ================================================= */
+
+function LogoControl({
+  identity,
+  name,
+  logoUrl,
+  onChange,
+}: {
+  identity:
+    IdentityKey;
+
+  name:
+    string;
+
+  logoUrl:
+    string | null;
+
+  onChange: (
+    logoUrl:
+      string | null
   ) => void;
 }) {
   const inputRef =
@@ -1166,7 +1657,9 @@ function LogoControl({
       event.target
         .files?.[0];
 
-    if (!file) {
+    if (
+      !file
+    ) {
       return;
     }
 
@@ -1180,11 +1673,7 @@ function LogoControl({
           "string"
         ) {
           onChange(
-            side,
-            {
-              logoUrl:
-                reader.result,
-            }
+            reader.result
           );
         }
       };
@@ -1199,7 +1688,7 @@ function LogoControl({
 
   const hasLogo =
     Boolean(
-      brand.logoUrl
+      logoUrl
     );
 
   return (
@@ -1211,12 +1700,7 @@ function LogoControl({
 
         type="file"
 
-        accept="
-          image/png,
-          image/jpeg,
-          image/webp,
-          image/svg+xml
-        "
+        accept="image/png,image/jpeg,image/webp,image/svg+xml"
 
         onChange={
           handleUpload
@@ -1265,11 +1749,13 @@ function LogoControl({
           <>
             <img
               src={
-                brand.logoUrl ??
+                logoUrl ??
                 ""
               }
 
-              alt=""
+              alt={
+                name
+              }
 
               draggable={
                 false
@@ -1296,8 +1782,6 @@ function LogoControl({
 
                 opacity-0
 
-                backdrop-blur-[4px]
-
                 transition-opacity
 
                 group-hover:opacity-100
@@ -1306,7 +1790,6 @@ function LogoControl({
               <span
                 className="
                   text-[8px]
-
                   text-white/68
                 "
               >
@@ -1315,11 +1798,7 @@ function LogoControl({
             </div>
           </>
         ) : (
-          <div
-            className="
-              text-center
-            "
-          >
+          <div className="text-center">
             <div
               className="
                 mx-auto
@@ -1367,7 +1846,7 @@ function LogoControl({
                 text-white/14
               "
             >
-              SVG · PNG · WEBP
+              {identity} · SVG · PNG · WEBP
             </p>
           </div>
         )}
@@ -1379,11 +1858,7 @@ function LogoControl({
 
           onClick={() =>
             onChange(
-              side,
-              {
-                logoUrl:
-                  null,
-              }
+              null
             )
           }
 
@@ -1406,9 +1881,9 @@ function LogoControl({
   );
 }
 
-/* ------------------------------------------------ */
-/* COLOUR                                           */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* COLOUR                                            */
+/* ================================================= */
 
 function ColourControl({
   label,
@@ -1468,7 +1943,6 @@ function ColourControl({
 
           flex
           items-center
-
           gap-[8px]
         "
       >
@@ -1576,17 +2050,17 @@ function ColourControl({
   );
 }
 
-/* ------------------------------------------------ */
-/* TYPEFACE                                         */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* TYPEFACE                                          */
+/* ================================================= */
 
 function TypefaceControl({
-  side,
+  identity,
   value,
   onChange,
 }: {
-  side:
-    BrandSide;
+  identity:
+    IdentityKey;
 
   value:
     string;
@@ -1610,7 +2084,9 @@ function TypefaceControl({
         event.target
           .files?.[0];
 
-      if (!file) {
+      if (
+        !file
+      ) {
         return;
       }
 
@@ -1621,7 +2097,7 @@ function TypefaceControl({
           );
 
         const fontName =
-          `brand-${side.toLowerCase()}-${Date.now()}`;
+          `brand-${identity.toLowerCase()}-${Date.now()}`;
 
         const font =
           new FontFace(
@@ -1661,16 +2137,7 @@ function TypefaceControl({
 
         type="file"
 
-        accept="
-          .ttf,
-          .otf,
-          .woff,
-          .woff2,
-          font/ttf,
-          font/otf,
-          font/woff,
-          font/woff2
-        "
+        accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2"
 
         onChange={
           handleFontUpload
@@ -1699,7 +2166,6 @@ function TypefaceControl({
             flex
             items-center
             justify-between
-
             gap-[10px]
           "
         >
@@ -1718,7 +2184,6 @@ function TypefaceControl({
           <p
             className="
               max-w-[150px]
-
               truncate
 
               text-[7px]
@@ -1770,14 +2235,11 @@ function TypefaceControl({
         </p>
       </div>
 
-      {/* CONTROLS */}
-
       <div
         className="
           mt-[8px]
 
           flex
-
           gap-[7px]
         "
       >
@@ -1869,9 +2331,9 @@ function TypefaceControl({
   );
 }
 
-/* ------------------------------------------------ */
-/* SECTION                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* SECTION                                           */
+/* ================================================= */
 
 function SidebarSection({
   eyebrow,
@@ -1897,7 +2359,6 @@ function SidebarSection({
         className="
           flex
           items-start
-
           gap-[10px]
         "
       >
@@ -1916,11 +2377,7 @@ function SidebarSection({
           {eyebrow}
         </p>
 
-        <div
-          className="
-            min-w-0
-          "
-        >
+        <div className="min-w-0">
           <h2
             className="
               text-[17px]
@@ -1954,20 +2411,16 @@ function SidebarSection({
         </div>
       </div>
 
-      <div
-        className="
-          mt-[18px]
-        "
-      >
+      <div className="mt-[18px]">
         {children}
       </div>
     </section>
   );
 }
 
-/* ------------------------------------------------ */
-/* EDITOR GROUP                                     */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* EDITOR GROUP                                      */
+/* ================================================= */
 
 function EditorGroup({
   label,
@@ -1987,15 +2440,10 @@ function EditorGroup({
     <div
       className="
         mt-[24px]
-
         first:mt-0
       "
     >
-      <div
-        className="
-          mb-[10px]
-        "
-      >
+      <div className="mb-[10px]">
         <p
           className="
             text-[11px]
@@ -2031,9 +2479,9 @@ function EditorGroup({
   );
 }
 
-/* ------------------------------------------------ */
-/* DIVIDER                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* DIVIDER                                           */
+/* ================================================= */
 
 function Divider() {
   return (
@@ -2050,9 +2498,9 @@ function Divider() {
   );
 }
 
-/* ------------------------------------------------ */
-/* EXPORT SPINNER                                   */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* EXPORT SPINNER                                    */
+/* ================================================= */
 
 function ExportSpinner() {
   return (
@@ -2073,9 +2521,9 @@ function ExportSpinner() {
   );
 }
 
-/* ------------------------------------------------ */
-/* HELPERS                                          */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 function isHexColour(
   value:
@@ -2093,15 +2541,11 @@ function normalizeColour(
   fallback:
     string
 ) {
-  if (
-    isHexColour(
-      value
-    )
-  ) {
-    return value;
-  }
-
-  return fallback;
+  return isHexColour(
+    value
+  )
+    ? value
+    : fallback;
 }
 
 function cleanFontName(

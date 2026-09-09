@@ -7,18 +7,18 @@ import type {
 import GuidelinePage from "./GuidelinePage";
 import PartnershipLockup from "./PartnershipLockup";
 import RasterGlow from "./RasterGlow";
-import RasterGradient from "./RasterGradient";
 
 import {
-  brandCharacterTraits,
   BrandCharacterTraitId,
+  brandCharacterTraits,
 } from "@/data/brandCharacterTraits";
 
 import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
@@ -55,12 +55,27 @@ interface GraphicProfile {
     number;
 }
 
+interface ColourSystem {
+  leadPrimary:
+    string;
+
+  leadSecondary:
+    string;
+
+  supportPrimary:
+    string;
+
+  supportSecondary:
+    string;
+}
+
 /* ================================================= */
 /* HELPERS                                           */
 /* ================================================= */
 
 function clamp(
-  value: number
+  value:
+    number
 ) {
   return Math.min(
     1,
@@ -72,8 +87,11 @@ function clamp(
 }
 
 function safeColour(
-  value: unknown,
-  fallback: string
+  value:
+    unknown,
+
+  fallback:
+    string
 ) {
   return (
     typeof value ===
@@ -87,8 +105,9 @@ function safeColour(
 }
 
 function getTraits(
-  brand: unknown
-) {
+  brand:
+    unknown
+): BrandCharacterTraitId[] {
   const value =
     brand as {
       characterTraits?:
@@ -103,7 +122,8 @@ function getTraits(
 }
 
 function hexToRgb(
-  colour: string
+  colour:
+    string
 ) {
   const value =
     parseInt(
@@ -116,11 +136,17 @@ function hexToRgb(
 
   return {
     r:
-      (value >> 16) &
+      (
+        value >>
+        16
+      ) &
       255,
 
     g:
-      (value >> 8) &
+      (
+        value >>
+        8
+      ) &
       255,
 
     b:
@@ -130,8 +156,11 @@ function hexToRgb(
 }
 
 function alpha(
-  colour: string,
-  opacity: number
+  colour:
+    string,
+
+  opacity:
+    number
 ) {
   const {
     r,
@@ -153,7 +182,7 @@ function buildProfile(
   traits:
     BrandCharacterTraitId[]
 ): GraphicProfile {
-  const p:
+  const profile:
     GraphicProfile = {
     roundness:
       0.42,
@@ -184,165 +213,199 @@ function buildProfile(
   };
 
   traits.forEach(
-    (trait) => {
-      switch (trait) {
+    (
+      trait
+    ) => {
+      switch (
+        trait
+      ) {
         case "classic":
-          p.precision +=
+          profile.precision +=
             0.2;
-          p.grid +=
+
+          profile.grid +=
             0.1;
-          p.energy -=
+
+          profile.energy -=
             0.08;
           break;
 
         case "elegant":
-          p.roundness +=
+          profile.roundness +=
             0.05;
-          p.energy -=
+
+          profile.energy -=
             0.1;
-          p.glow +=
+
+          profile.glow +=
             0.04;
           break;
 
         case "premium":
-          p.glow +=
+          profile.glow +=
             0.1;
-          p.texture +=
+
+          profile.texture +=
             0.08;
-          p.energy -=
+
+          profile.energy -=
             0.08;
           break;
 
         case "minimal":
-          p.particles -=
+          profile.particles -=
             0.2;
-          p.texture -=
+
+          profile.texture -=
             0.12;
-          p.energy -=
+
+          profile.energy -=
             0.1;
           break;
 
         case "editorial":
-          p.grid +=
+          profile.grid +=
             0.28;
-          p.precision +=
+
+          profile.precision +=
             0.15;
           break;
 
         case "technical":
-          p.grid +=
+          profile.grid +=
             0.3;
-          p.precision +=
+
+          profile.precision +=
             0.28;
-          p.glow +=
+
+          profile.glow +=
             0.06;
           break;
 
         case "precise":
-          p.precision +=
+          profile.precision +=
             0.34;
-          p.organic -=
+
+          profile.organic -=
             0.16;
           break;
 
         case "futuristic":
-          p.glow +=
+          profile.glow +=
             0.32;
-          p.grid +=
+
+          profile.grid +=
             0.12;
-          p.particles +=
+
+          profile.particles +=
             0.12;
           break;
 
         case "bold":
-          p.energy +=
+          profile.energy +=
             0.18;
           break;
 
         case "dynamic":
-          p.energy +=
+          profile.energy +=
             0.3;
-          p.particles +=
+
+          profile.particles +=
             0.08;
           break;
 
         case "energetic":
-          p.energy +=
+          profile.energy +=
             0.4;
-          p.particles +=
+
+          profile.particles +=
             0.25;
           break;
 
         case "sporty":
-          p.energy +=
+          profile.energy +=
             0.38;
-          p.grid +=
+
+          profile.grid +=
             0.1;
           break;
 
         case "friendly":
-          p.roundness +=
+          profile.roundness +=
             0.3;
-          p.organic +=
+
+          profile.organic +=
             0.12;
           break;
 
         case "organic":
-          p.organic +=
+          profile.organic +=
             0.5;
-          p.roundness +=
+
+          profile.roundness +=
             0.18;
-          p.texture +=
+
+          profile.texture +=
             0.18;
-          p.grid -=
+
+          profile.grid -=
             0.14;
           break;
 
         case "immersive":
-          p.glow +=
+          profile.glow +=
             0.16;
-          p.particles +=
+
+          profile.particles +=
             0.12;
           break;
 
         case "cinematic":
-          p.glow +=
+          profile.glow +=
             0.12;
-          p.texture +=
+
+          profile.texture +=
             0.18;
           break;
 
         case "youthful":
-          p.energy +=
+          profile.energy +=
             0.2;
-          p.roundness +=
+
+          profile.roundness +=
             0.1;
           break;
 
         case "playful":
-          p.energy +=
+          profile.energy +=
             0.15;
-          p.roundness +=
+
+          profile.roundness +=
             0.3;
-          p.organic +=
+
+          profile.organic +=
             0.2;
-          p.expressiveTilt +=
+
+          profile.expressiveTilt +=
             0.8;
           break;
 
         case "experimental":
-          p.energy +=
+          profile.energy +=
             0.14;
-          p.organic +=
+
+          profile.organic +=
             0.2;
-          p.expressiveTilt +=
+
+          profile.expressiveTilt +=
             0.7;
           break;
 
         case "disruptive":
-          p.energy +=
+          profile.energy +=
             0.28;
-          p.expressiveTilt +=
+
+          profile.expressiveTilt +=
             0.55;
           break;
       }
@@ -350,26 +413,41 @@ function buildProfile(
   );
 
   Object.keys(
-    p
+    profile
   ).forEach(
-    (key) => {
-      const k =
+    (
+      key
+    ) => {
+      const property =
         key as keyof GraphicProfile;
 
-      p[k] =
+      profile[
+        property
+      ] =
         clamp(
-          p[k]
+          profile[
+            property
+          ]
         );
     }
   );
 
-  return p;
+  return profile;
 }
 
+/* ================================================= */
+/* BLENDING                                          */
+/* ================================================= */
+
 function blend(
-  a: GraphicProfile,
-  b: GraphicProfile,
-  weight: number
+  a:
+    GraphicProfile,
+
+  b:
+    GraphicProfile,
+
+  weight:
+    number
 ): GraphicProfile {
   const inverse =
     1 -
@@ -432,7 +510,7 @@ function blend(
   };
 }
 
-function getSharedProfile(
+function getBaseProfile(
   model:
     PartnershipModelId,
 
@@ -442,7 +520,9 @@ function getSharedProfile(
   b:
     GraphicProfile
 ) {
-  switch (model) {
+  switch (
+    model
+  ) {
     case "axb":
       return blend(
         a,
@@ -470,6 +550,89 @@ function getSharedProfile(
   }
 }
 
+function applyXProfile(
+  base:
+    GraphicProfile,
+
+  x:
+    GraphicProfile,
+
+  mode:
+    AdditionalRelationshipMode
+) {
+  if (
+    mode ===
+    "presenting"
+  ) {
+    /*
+      55% underlying partnership
+      45% presented property.
+    */
+
+    return blend(
+      base,
+      x,
+      0.55
+    );
+  }
+
+  return base;
+}
+
+/* ================================================= */
+/* COLOUR SYSTEM                                     */
+/* ================================================= */
+
+function getBaseColours(
+  model:
+    PartnershipModelId,
+
+  aPrimary:
+    string,
+
+  aSecondary:
+    string,
+
+  bPrimary:
+    string,
+
+  bSecondary:
+    string
+): ColourSystem {
+  if (
+    model ===
+    "poweredByA"
+  ) {
+    return {
+      leadPrimary:
+        bPrimary,
+
+      leadSecondary:
+        bSecondary,
+
+      supportPrimary:
+        aPrimary,
+
+      supportSecondary:
+        aSecondary,
+    };
+  }
+
+  return {
+    leadPrimary:
+      aPrimary,
+
+    leadSecondary:
+      aSecondary,
+
+    supportPrimary:
+      bPrimary,
+
+    supportSecondary:
+      bSecondary,
+  };
+}
+
 /* ================================================= */
 /* PAGE                                              */
 /* ================================================= */
@@ -477,13 +640,32 @@ function getSharedProfile(
 export default function Page10() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
+    propertyX,
   } =
     useGuidelineStore();
 
   const model =
     partnershipModel as PartnershipModelId;
+
+  const presenting =
+    additionalRelationship ===
+    "presenting";
+
+  const sponsored =
+    additionalRelationship ===
+    "sponsored";
+
+  const propertyName =
+    propertyX.name.trim() ||
+    "X";
+
+  /* ------------------------------------------------ */
+  /* TRAITS                                           */
+  /* ------------------------------------------------ */
 
   const aTraits =
     getTraits(
@@ -495,6 +677,15 @@ export default function Page10() {
       brandB
     );
 
+  const xTraits =
+    getTraits(
+      propertyX
+    );
+
+  /* ------------------------------------------------ */
+  /* PROFILES                                         */
+  /* ------------------------------------------------ */
+
   const aProfile =
     buildProfile(
       aTraits
@@ -505,12 +696,28 @@ export default function Page10() {
       bTraits
     );
 
-  const profile =
-    getSharedProfile(
+  const xProfile =
+    buildProfile(
+      xTraits
+    );
+
+  const baseProfile =
+    getBaseProfile(
       model,
       aProfile,
       bProfile
     );
+
+  const profile =
+    applyXProfile(
+      baseProfile,
+      xProfile,
+      additionalRelationship
+    );
+
+  /* ------------------------------------------------ */
+  /* COLOURS                                          */
+  /* ------------------------------------------------ */
 
   const aPrimary =
     safeColour(
@@ -536,59 +743,164 @@ export default function Page10() {
       "#64D2FF"
     );
 
-  const leadPrimary =
-    model ===
-    "poweredByA"
-      ? bPrimary
-      : aPrimary;
+  const xPrimary =
+    safeColour(
+      propertyX.primaryColor,
+      "#8A8A8A"
+    );
 
-  const leadSecondary =
-    model ===
-    "poweredByA"
-      ? bSecondary
-      : aSecondary;
+  const xSecondary =
+    safeColour(
+      propertyX.secondaryColor,
+      "#B9B9B9"
+    );
 
-  const supportPrimary =
-    model ===
-    "poweredByA"
-      ? aPrimary
-      : bPrimary;
+  const baseColours =
+    getBaseColours(
+      model,
 
-  const supportSecondary =
-    model ===
-    "poweredByA"
-      ? aSecondary
-      : bSecondary;
+      aPrimary,
+      aSecondary,
+
+      bPrimary,
+      bSecondary
+    );
+
+  const colours:
+    ColourSystem =
+    presenting
+      ? {
+          leadPrimary:
+            xPrimary,
+
+          leadSecondary:
+            xSecondary,
+
+          supportPrimary:
+            baseColours.leadPrimary,
+
+          supportSecondary:
+            baseColours.supportPrimary,
+        }
+      : baseColours;
 
   return (
     <GuidelinePage>
-      {/* HEADER */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
-      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
+      <header
+        className="
+          absolute
+
+          left-[70px]
+          right-[70px]
+          top-[46px]
+
+          flex
+          items-start
+          justify-between
+        "
+      >
         <div>
-          <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
+          <p
+            className="
+              text-[13px]
+              uppercase
+              tracking-[0.17em]
+
+              text-white/30
+            "
+          >
             10 / Shared visual territory
           </p>
 
-          <h1 className="mt-[12px] text-[52px] leading-none tracking-[-0.045em] text-white oook-semibold">
+          <h1
+            className="
+              mt-[12px]
+
+              text-[52px]
+              leading-none
+              tracking-[-0.045em]
+
+              text-white
+
+              oook-semibold
+            "
+          >
             Shared visual territory — graphic language
           </h1>
 
-          <p className="mt-[13px] max-w-[850px] text-[16px] leading-[1.38] text-white/45">
-            Brand character controls geometry, density, rhythm and expression while partnership hierarchy decides who leads the system.
+          <p
+            className="
+              mt-[13px]
+
+              max-w-[890px]
+
+              text-[16px]
+              leading-[1.38]
+
+              text-white/45
+            "
+          >
+            {presenting
+              ? `${propertyName} contributes directly to geometry, density, rhythm and expression. Its character is blended with the existing A / B partnership rather than added as a separate graphic system.`
+              : sponsored
+                ? `${propertyName} does not influence the graphic language. The system continues to be generated exclusively from Brand A, Brand B and their partnership hierarchy.`
+                : "Brand character controls geometry, density, rhythm and expression while partnership hierarchy decides who leads the system."}
           </p>
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+
+            gap-[10px]
+          "
+        >
+          <PartnershipLockup
+            model={
+              model
+            }
+            brandA={
+              brandA
+            }
+            brandB={
+              brandB
+            }
+          />
+
+          {additionalRelationship !==
+            "none" && (
+            <RelationshipLabel
+              mode={
+                additionalRelationship
+              }
+              propertyName={
+                propertyName
+              }
+            />
+          )}
+        </div>
       </header>
 
-      {/* CHARACTER */}
+      {/* ======================================== */}
+      {/* CHARACTER                                */}
+      {/* ======================================== */}
 
-      <aside className="absolute left-[70px] top-[190px] w-[300px]">
+      <aside
+        className="
+          absolute
+
+          left-[70px]
+          top-[190px]
+
+          w-[300px]
+        "
+      >
         <Card className="p-[16px]">
           <SectionLabel>
             Character input
@@ -619,6 +931,44 @@ export default function Page10() {
               bSecondary
             }
           />
+
+          {presenting && (
+            <CharacterGroup
+              label={
+                propertyName
+              }
+              traits={
+                xTraits
+              }
+              primary={
+                xPrimary
+              }
+              secondary={
+                xSecondary
+              }
+              featured
+            />
+          )}
+
+          {sponsored && (
+            <p
+              className="
+                mt-[13px]
+
+                border-t
+                border-white/[0.06]
+
+                pt-[10px]
+
+                text-[8px]
+                leading-[1.4]
+
+                text-white/24
+              "
+            >
+              Sponsor character is intentionally excluded from the resulting profile.
+            </p>
+          )}
         </Card>
 
         <Card className="mt-[10px] p-[16px]">
@@ -626,7 +976,17 @@ export default function Page10() {
             Resulting behaviour
           </SectionLabel>
 
-          <div className="mt-[13px] grid grid-cols-2 gap-x-[14px] gap-y-[11px]">
+          <div
+            className="
+              mt-[13px]
+
+              grid
+              grid-cols-2
+
+              gap-x-[14px]
+              gap-y-[11px]
+            "
+          >
             <Metric
               label="Geometry"
               value={
@@ -681,60 +1041,120 @@ export default function Page10() {
               right="Dense"
             />
           </div>
+
+          {presenting && (
+            <p
+              className="
+                mt-[13px]
+
+                text-[8px]
+                leading-[1.4]
+
+                text-white/24
+              "
+            >
+              Result = 55% partnership character + 45% {propertyName}.
+            </p>
+          )}
         </Card>
       </aside>
 
-      {/* DO / DON'T */}
+      {/* ======================================== */}
+      {/* DO / DON'T                               */}
+      {/* ======================================== */}
 
-      <section className="absolute left-[395px] right-[70px] top-[190px] grid grid-cols-2 gap-[12px]">
+      <section
+        className="
+          absolute
+
+          left-[395px]
+          right-[70px]
+          top-[190px]
+
+          grid
+          grid-cols-2
+
+          gap-[12px]
+        "
+      >
         <Comparison
           good
           title="DO"
-          description="Create one visual grammar from both personalities and the partnership hierarchy."
+          description={
+            presenting
+              ? `Create one visual grammar in which ${propertyName} visibly influences the shared system.`
+              : "Create one visual grammar from both personalities and the partnership hierarchy."
+          }
         >
           <GeneratedSystem
             profile={
               profile
             }
             primary={
-              leadPrimary
+              colours.leadPrimary
             }
             secondary={
-              leadSecondary
+              colours.leadSecondary
             }
             support={
-              supportPrimary
+              colours.supportPrimary
             }
             supportSecondary={
-              supportSecondary
+              colours.supportSecondary
             }
           />
         </Comparison>
 
         <Comparison
           title="DON'T"
-          description="Do not place two independent branded visual systems side by side."
+          description={
+            presenting
+              ? "Do not create three independent branded visual systems competing inside the same experience."
+              : sponsored
+                ? "Do not allow sponsor aesthetics to alter the collaboration system."
+                : "Do not place two independent branded visual systems side by side."
+          }
         >
           <SplitSystem
+            mode={
+              additionalRelationship
+            }
             aPrimary={
               aPrimary
-            }
-            aSecondary={
-              aSecondary
             }
             bPrimary={
               bPrimary
             }
-            bSecondary={
-              bSecondary
+            xPrimary={
+              xPrimary
             }
           />
         </Comparison>
       </section>
 
-      {/* CHARACTER IMPLICATIONS */}
+      {/* ======================================== */}
+      {/* TRAIT IMPLICATIONS                       */}
+      {/* ======================================== */}
 
-      <section className="absolute left-[395px] right-[70px] top-[610px] grid grid-cols-2 gap-[12px]">
+      <section
+        className={`
+          absolute
+
+          left-[395px]
+          right-[70px]
+          top-[585px]
+
+          grid
+
+          gap-[10px]
+
+          ${
+            presenting
+              ? "grid-cols-3"
+              : "grid-cols-2"
+          }
+        `}
+      >
         <TraitCard
           label="Brand A character"
           traits={
@@ -760,28 +1180,88 @@ export default function Page10() {
             bSecondary
           }
         />
+
+        {presenting && (
+          <TraitCard
+            label={`${propertyName} character`}
+            traits={
+              xTraits
+            }
+            primary={
+              xPrimary
+            }
+            secondary={
+              xSecondary
+            }
+            featured
+          />
+        )}
       </section>
 
-      {/* TOOLKIT */}
+      {/* ======================================== */}
+      {/* TOOLKIT                                  */}
+      {/* ======================================== */}
 
-      <section className="absolute bottom-[26px] left-[70px] right-[70px]">
-        <div className="flex justify-between">
+      <section
+        className="
+          absolute
+
+          bottom-[26px]
+          left-[70px]
+          right-[70px]
+        "
+      >
+        <div
+          className="
+            flex
+            justify-between
+          "
+        >
           <div>
             <SectionLabel>
               Generated graphic toolkit
             </SectionLabel>
 
-            <p className="mt-[3px] text-[9px] text-white/27">
-              Secondary colours support depth, layering and micro-expression.
+            <p
+              className="
+                mt-[3px]
+
+                text-[9px]
+
+                text-white/27
+              "
+            >
+              {presenting
+                ? `${propertyName} leads content expression while partnership colours support structure and authorship.`
+                : "Secondary colours support depth, layering and micro-expression."}
             </p>
           </div>
 
-          <p className="text-[8px] uppercase tracking-[0.12em] text-white/18">
-            Character × hierarchy
+          <p
+            className="
+              text-[8px]
+              uppercase
+              tracking-[0.12em]
+
+              text-white/18
+            "
+          >
+            {presenting
+              ? "A/B character × X character × hierarchy"
+              : "Character × hierarchy"}
           </p>
         </div>
 
-        <div className="mt-[8px] grid grid-cols-13 gap-[5px]">
+        <div
+          className="
+            mt-[8px]
+
+            grid
+            grid-cols-[repeat(13,minmax(0,1fr))]
+
+            gap-[5px]
+          "
+        >
           {[
             "Shapes",
             "Lines",
@@ -813,17 +1293,20 @@ export default function Page10() {
                 }
                 primary={
                   index %
-                    4 ===
-                  0
-                    ? supportPrimary
-                    : leadPrimary
+                      4 ===
+                    0
+                    ? colours.supportPrimary
+                    : colours.leadPrimary
                 }
                 secondary={
                   index %
-                    3 ===
-                  0
-                    ? supportSecondary
-                    : leadSecondary
+                      3 ===
+                    0
+                    ? colours.supportSecondary
+                    : colours.leadSecondary
+                }
+                roundness={
+                  profile.roundness
                 }
               />
             )
@@ -852,9 +1335,12 @@ function Card({
     <div
       className={`
         rounded-[18px]
+
         border
         border-white/[0.07]
+
         bg-white/[0.018]
+
         ${className}
       `}
     >
@@ -870,17 +1356,32 @@ function SectionLabel({
     ReactNode;
 }) {
   return (
-    <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
+    <p
+      className="
+        text-[10px]
+        uppercase
+        tracking-[0.14em]
+
+        text-white/30
+
+        oook-medium
+      "
+    >
       {children}
     </p>
   );
 }
+
+/* ================================================= */
+/* CHARACTER                                         */
+/* ================================================= */
 
 function CharacterGroup({
   label,
   traits,
   primary,
   secondary,
+  featured = false,
 }: {
   label:
     string;
@@ -893,12 +1394,43 @@ function CharacterGroup({
 
   secondary:
     string;
+
+  featured?:
+    boolean;
 }) {
   return (
-    <div className="mt-[13px]">
-      <div className="flex items-center gap-[6px]">
+    <div
+      className={`
+        mt-[13px]
+
+        ${
+          featured
+            ? `
+                rounded-[10px]
+
+                border
+                border-white/[0.07]
+
+                p-[8px]
+              `
+            : ""
+        }
+      `}
+    >
+      <div
+        className="
+          flex
+          items-center
+          gap-[6px]
+        "
+      >
         <div
-          className="h-[4px] w-[22px] rounded-full"
+          className="
+            h-[4px]
+            w-[22px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               primary,
@@ -906,23 +1438,45 @@ function CharacterGroup({
         />
 
         <div
-          className="h-[4px] w-[10px] rounded-full"
+          className="
+            h-[4px]
+            w-[10px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               secondary,
           }}
         />
 
-        <span className="text-[10px] text-white/55">
+        <span
+          className={
+            featured
+              ? "truncate text-[10px] text-white/72"
+              : "truncate text-[10px] text-white/55"
+          }
+        >
           {label}
         </span>
       </div>
 
-      <div className="mt-[7px] flex flex-wrap gap-[4px]">
+      <div
+        className="
+          mt-[7px]
+
+          flex
+          flex-wrap
+
+          gap-[4px]
+        "
+      >
         {traits.length >
         0 ? (
           traits.map(
-            (id) => {
+            (
+              id
+            ) => {
               const trait =
                 brandCharacterTraits.find(
                   (
@@ -937,7 +1491,19 @@ function CharacterGroup({
                   key={
                     id
                   }
-                  className="rounded-full border border-white/[0.07] px-[6px] py-[3px] text-[8px] text-white/38"
+                  className="
+                    rounded-full
+
+                    border
+                    border-white/[0.07]
+
+                    px-[6px]
+                    py-[3px]
+
+                    text-[8px]
+
+                    text-white/38
+                  "
                 >
                   {trait?.label ??
                     id}
@@ -954,6 +1520,10 @@ function CharacterGroup({
     </div>
   );
 }
+
+/* ================================================= */
+/* METRIC                                            */
+/* ================================================= */
 
 function Metric({
   label,
@@ -975,13 +1545,39 @@ function Metric({
 }) {
   return (
     <div>
-      <p className="text-[8px] uppercase tracking-[0.1em] text-white/26">
+      <p
+        className="
+          text-[8px]
+          uppercase
+          tracking-[0.1em]
+
+          text-white/26
+        "
+      >
         {label}
       </p>
 
-      <div className="mt-[5px] h-[4px] overflow-hidden rounded-full bg-white/[0.07]">
+      <div
+        className="
+          mt-[5px]
+
+          h-[4px]
+
+          overflow-hidden
+
+          rounded-full
+
+          bg-white/[0.07]
+        "
+      >
         <div
-          className="h-full rounded-full bg-white/50"
+          className="
+            h-full
+
+            rounded-full
+
+            bg-white/50
+          "
           style={{
             width:
               `${Math.round(
@@ -992,7 +1588,18 @@ function Metric({
         />
       </div>
 
-      <div className="mt-[4px] flex justify-between text-[7px] text-white/18">
+      <div
+        className="
+          mt-[4px]
+
+          flex
+          justify-between
+
+          text-[7px]
+
+          text-white/18
+        "
+      >
         <span>
           {left}
         </span>
@@ -1004,6 +1611,10 @@ function Metric({
     </div>
   );
 }
+
+/* ================================================= */
+/* COMPARISON                                        */
+/* ================================================= */
 
 function Comparison({
   good = false,
@@ -1025,16 +1636,36 @@ function Comparison({
 }) {
   return (
     <Card className="p-[13px]">
-      <div className="flex min-h-[38px] items-start justify-between gap-[12px]">
-        <div className="flex items-center gap-[8px]">
+      <div
+        className="
+          flex
+          min-h-[38px]
+
+          items-start
+          justify-between
+
+          gap-[12px]
+        "
+      >
+        <div
+          className="
+            flex
+            items-center
+            gap-[8px]
+          "
+        >
           <span
             className={`
               flex
+
               h-[24px]
               w-[24px]
+
               items-center
               justify-center
+
               rounded-full
+
               text-[11px]
 
               ${
@@ -1049,99 +1680,56 @@ function Comparison({
               : "×"}
           </span>
 
-          <span className="text-[14px] text-white/74 oook-medium">
+          <span
+            className="
+              text-[14px]
+
+              text-white/74
+
+              oook-medium
+            "
+          >
             {title}
           </span>
         </div>
 
-        <p className="max-w-[300px] text-right text-[10px] leading-[1.35] text-white/35">
+        <p
+          className="
+            max-w-[300px]
+
+            text-right
+
+            text-[10px]
+            leading-[1.35]
+
+            text-white/35
+          "
+        >
           {description}
         </p>
       </div>
 
-      <div className="relative mt-[9px] h-[340px] overflow-hidden rounded-[13px] border border-white/[0.06] bg-[#050506]">
+      <div
+        className="
+          relative
+
+          mt-[9px]
+
+          h-[315px]
+
+          overflow-hidden
+
+          rounded-[13px]
+
+          border
+          border-white/[0.06]
+
+          bg-[#050506]
+        "
+      >
         {children}
       </div>
     </Card>
-  );
-}
-
-/* ================================================= */
-/* GRID                                              */
-/* ================================================= */
-
-function GridField({
-  density,
-}: {
-  density:
-    number;
-}) {
-  const columns =
-    Math.round(
-      7 +
-        density *
-          8
-    );
-
-  const rows =
-    Math.round(
-      5 +
-        density *
-          6
-    );
-
-  return (
-    <div className="pointer-events-none absolute inset-0 opacity-30">
-      {Array.from({
-        length:
-          columns,
-      }).map(
-        (
-          _,
-          index
-        ) => (
-          <div
-            key={`v-${index}`}
-            className="absolute bottom-0 top-0 w-px bg-white/[0.08]"
-            style={{
-              left:
-                `${
-                  (index +
-                    1) /
-                  (columns +
-                    1) *
-                  100
-                }%`,
-            }}
-          />
-        )
-      )}
-
-      {Array.from({
-        length:
-          rows,
-      }).map(
-        (
-          _,
-          index
-        ) => (
-          <div
-            key={`h-${index}`}
-            className="absolute left-0 right-0 h-px bg-white/[0.08]"
-            style={{
-              top:
-                `${
-                  (index +
-                    1) /
-                  (rows +
-                    1) *
-                  100
-                }%`,
-            }}
-          />
-        )
-      )}
-    </div>
   );
 }
 
@@ -1174,7 +1762,7 @@ function GeneratedSystem({
   const radius =
     10 +
     profile.roundness *
-      65;
+      60;
 
   const rotate =
     profile.expressiveTilt >
@@ -1189,36 +1777,100 @@ function GeneratedSystem({
   const particleCount =
     Math.round(
       4 +
-        profile.particles *
-          14
+      profile.particles *
+        12
+    );
+
+  const gridCount =
+    Math.max(
+      4,
+      Math.round(
+        4 +
+        profile.grid *
+          7
+      )
     );
 
   return (
     <>
-      <GridField
-        density={
-          profile.grid
-        }
-      />
+      {/* GRID */}
 
-      <div
-        className="absolute left-[16%] top-[14%] h-[170px] w-[195px] overflow-hidden border"
-        style={{
-          borderRadius:
-            radius,
+      {Array.from({
+        length:
+          gridCount,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <div
+            key={`v-${index}`}
+            className="
+              absolute
+              bottom-0
+              top-0
 
-          borderColor:
-            alpha(
-              primary,
-              0.7
-            ),
+              w-px
 
-          transform:
-            rotate
-              ? `rotate(${rotate}deg)`
-              : undefined,
-        }}
-      >
+              bg-white/[0.035]
+            "
+            style={{
+              left:
+                `${
+                  (
+                    index +
+                    1
+                  ) /
+                  (
+                    gridCount +
+                    1
+                  ) *
+                  100
+                }%`,
+            }}
+          />
+        )
+      )}
+
+      {Array.from({
+        length:
+          gridCount -
+          1,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <div
+            key={`h-${index}`}
+            className="
+              absolute
+              left-0
+              right-0
+
+              h-px
+
+              bg-white/[0.035]
+            "
+            style={{
+              top:
+                `${
+                  (
+                    index +
+                    1
+                  ) /
+                  gridCount *
+                  100
+                }%`,
+            }}
+          />
+        )
+      )}
+
+      {/* SAFE RASTER GLOW */}
+
+      {profile.glow >
+        0.15 && (
         <RasterGlow
           color={
             secondary
@@ -1227,23 +1879,85 @@ function GeneratedSystem({
             primary
           }
           opacity={
-            0.12 +
+            0.08 +
             profile.glow *
-              0.24
+              0.18
           }
           secondaryOpacity={
-            0.04 +
-            profile.glow *
-              0.08
+            0.03
           }
-          centerX={28}
-          centerY={24}
-          className="absolute inset-0 h-full w-full"
+          centerX={
+            35
+          }
+          centerY={
+            35
+          }
+          radius={
+            62
+          }
+          className="
+            absolute
+
+            left-[8%]
+            top-[5%]
+
+            h-[250px]
+            w-[280px]
+          "
         />
-      </div>
+      )}
+
+      {/* PRIMARY SHAPE */}
 
       <div
-        className="absolute right-[17%] top-[27%] h-[105px] w-[125px] overflow-hidden border"
+        className="
+          absolute
+
+          left-[16%]
+          top-[14%]
+
+          h-[155px]
+          w-[190px]
+
+          border
+        "
+        style={{
+          borderRadius:
+            radius,
+
+          borderColor:
+            alpha(
+              primary,
+              0.72
+            ),
+
+          backgroundColor:
+            alpha(
+              secondary,
+              0.13
+            ),
+
+          transform:
+            rotate
+              ? `rotate(${rotate}deg)`
+              : undefined,
+        }}
+      />
+
+      {/* SUPPORT SHAPE */}
+
+      <div
+        className="
+          absolute
+
+          right-[17%]
+          top-[27%]
+
+          h-[100px]
+          w-[128px]
+
+          border
+        "
         style={{
           borderRadius:
             radius *
@@ -1252,43 +1966,41 @@ function GeneratedSystem({
           borderColor:
             alpha(
               support,
-              0.45
+              0.52
+            ),
+
+          backgroundColor:
+            alpha(
+              supportSecondary,
+              0.1
             ),
         }}
-      >
-        <RasterGradient
-          direction="diagonal"
-          className="absolute inset-0 h-full w-full"
-          stops={[
-            {
-              color:
-                supportSecondary,
-              offset: 0,
-              opacity: 0.18,
-            },
-            {
-              color:
-                supportSecondary,
-              offset: 55,
-              opacity: 0.05,
-            },
-            {
-              color:
-                supportSecondary,
-              offset:
-                100,
-              opacity: 0,
-            },
-          ]}
-        />
-      </div>
+      />
 
-      <div className="absolute right-[8%] top-[16%] flex w-[38%] flex-col gap-[10px]">
+      {/* RHYTHM LINES */}
+
+      <div
+        className="
+          absolute
+
+          bottom-[72px]
+          right-[8%]
+
+          flex
+          w-[42%]
+
+          flex-col
+          items-end
+
+          gap-[7px]
+        "
+      >
         {[
-          80,
-          55,
-          95,
-          42,
+          94,
+          78,
+          62,
+          86,
+          54,
         ].map(
           (
             width,
@@ -1298,30 +2010,34 @@ function GeneratedSystem({
               key={
                 index
               }
-              className="h-[2px] rounded-full"
+              className="
+                h-[2px]
+
+                rounded-full
+              "
               style={{
                 width:
                   `${width}%`,
 
-                marginLeft:
-                  "auto",
-
                 backgroundColor:
                   index %
-                    2
+                      2 ===
+                    0
                     ? alpha(
-                        secondary,
-                        0.55
-                      )
-                    : alpha(
                         primary,
                         0.65
+                      )
+                    : alpha(
+                        supportSecondary,
+                        0.5
                       ),
               }}
             />
           )
         )}
       </div>
+
+      {/* PARTICLES */}
 
       {Array.from({
         length:
@@ -1335,43 +2051,51 @@ function GeneratedSystem({
             key={
               index
             }
-            className="absolute rounded-full"
+            className="
+              absolute
+
+              rounded-full
+            "
             style={{
               left:
                 `${
                   8 +
-                  ((index *
-                    37) %
-                    85)
+                  (
+                    index *
+                    37
+                  ) %
+                    85
                 }%`,
 
               top:
                 `${
                   10 +
-                  ((index *
-                    29) %
-                    72)
+                  (
+                    index *
+                    29
+                  ) %
+                    70
                 }%`,
 
               width:
                 2 +
-                (index %
-                  3),
+                index %
+                  3,
 
               height:
                 2 +
-                (index %
-                  3),
+                index %
+                  3,
 
               backgroundColor:
                 index %
-                  3 ===
-                0
+                    3 ===
+                  0
                   ? supportSecondary
                   : primary,
 
               opacity:
-                0.2 +
+                0.18 +
                 profile.energy *
                   0.5,
             }}
@@ -1379,7 +2103,25 @@ function GeneratedSystem({
         )
       )}
 
-      <div className="absolute bottom-[16px] left-[16px] right-[16px] rounded-[10px] border border-white/[0.07] bg-black/50 px-[11px] py-[9px]">
+      <div
+        className="
+          absolute
+
+          bottom-[14px]
+          left-[14px]
+          right-[14px]
+
+          rounded-[10px]
+
+          border
+          border-white/[0.07]
+
+          bg-black/55
+
+          px-[11px]
+          py-[9px]
+        "
+      >
         <p className="text-[9px] text-white/55">
           One shared graphic system
         </p>
@@ -1393,75 +2135,157 @@ function GeneratedSystem({
 /* ================================================= */
 
 function SplitSystem({
+  mode,
   aPrimary,
-  aSecondary,
   bPrimary,
-  bSecondary,
+  xPrimary,
 }: {
-  aPrimary:
-    string;
+  mode:
+    AdditionalRelationshipMode;
 
-  aSecondary:
+  aPrimary:
     string;
 
   bPrimary:
     string;
 
-  bSecondary:
+  xPrimary:
     string;
 }) {
+  const presenting =
+    mode ===
+    "presenting";
+
   return (
     <>
-      <div className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">
-        <RasterGradient
-          direction="diagonal"
-          className="h-full w-full"
-          stops={[
-            {
-              color:
-                aPrimary,
-              offset: 0,
-              opacity: 0.34,
-            },
-            {
-              color:
-                aSecondary,
-              offset:
-                100,
-              opacity: 0.12,
-            },
-          ]}
+      <div
+        className={
+          presenting
+            ? "absolute inset-y-0 left-0 w-1/3"
+            : "absolute inset-y-0 left-0 w-1/2"
+        }
+        style={{
+          backgroundColor:
+            alpha(
+              aPrimary,
+              0.28
+            ),
+        }}
+      />
+
+      <div
+        className={
+          presenting
+            ? "absolute inset-y-0 left-1/3 w-1/3"
+            : "absolute inset-y-0 right-0 w-1/2"
+        }
+        style={{
+          backgroundColor:
+            alpha(
+              bPrimary,
+              0.28
+            ),
+        }}
+      />
+
+      {presenting && (
+        <div
+          className="
+            absolute
+            inset-y-0
+            right-0
+
+            w-1/3
+          "
+          style={{
+            backgroundColor:
+              alpha(
+                xPrimary,
+                0.32
+              ),
+          }}
         />
-      </div>
+      )}
 
-      <div className="absolute inset-y-0 right-0 w-1/2 overflow-hidden">
-        <RasterGradient
-          direction="diagonal"
-          className="h-full w-full"
-          stops={[
-            {
-              color:
-                bPrimary,
-              offset: 0,
-              opacity: 0.34,
-            },
-            {
-              color:
-                bSecondary,
-              offset:
-                100,
-              opacity: 0.12,
-            },
-          ]}
+      <div
+        className="
+          absolute
+
+          left-[8%]
+          top-[25%]
+
+          h-[128px]
+          w-[25%]
+
+          rounded-[24px]
+
+          border
+          border-white/25
+        "
+      />
+
+      <div
+        className="
+          absolute
+
+          left-[39%]
+          top-[30%]
+
+          h-[110px]
+          w-[22%]
+
+          rounded-full
+
+          border
+          border-white/25
+        "
+      />
+
+      {presenting && (
+        <div
+          className="
+            absolute
+
+            right-[7%]
+            top-[21%]
+
+            h-[145px]
+            w-[23%]
+
+            border
+            border-white/25
+          "
         />
-      </div>
+      )}
 
-      <div className="absolute left-[12%] top-[24%] h-[145px] w-[145px] rounded-[30px] border border-white/35" />
+      <div
+        className="
+          absolute
+          inset-0
 
-      <div className="absolute right-[12%] top-[24%] h-[145px] w-[145px] rounded-full border border-white/35" />
+          flex
+          items-center
+          justify-center
+        "
+      >
+        <span
+          className="
+            flex
 
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-black/70 text-[20px] text-white">
+            h-[40px]
+            w-[40px]
+
+            items-center
+            justify-center
+
+            rounded-full
+
+            bg-black/70
+
+            text-[20px]
+            text-white
+          "
+        >
           ×
         </span>
       </div>
@@ -1478,6 +2302,7 @@ function TraitCard({
   traits,
   primary,
   secondary,
+  featured = false,
 }: {
   label:
     string;
@@ -1490,12 +2315,38 @@ function TraitCard({
 
   secondary:
     string;
+
+  featured?:
+    boolean;
 }) {
   return (
-    <Card className="min-h-[122px] p-[13px]">
-      <div className="flex items-center gap-[5px]">
+    <Card
+      className={`
+        min-h-[92px]
+
+        p-[12px]
+
+        ${
+          featured
+            ? "border-white/[0.11]"
+            : ""
+        }
+      `}
+    >
+      <div
+        className="
+          flex
+          items-center
+          gap-[6px]
+        "
+      >
         <span
-          className="h-[4px] w-[24px] rounded-full"
+          className="
+            h-[4px]
+            w-[25px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               primary,
@@ -1503,26 +2354,39 @@ function TraitCard({
         />
 
         <span
-          className="h-[4px] w-[12px] rounded-full"
+          className="
+            h-[4px]
+            w-[11px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               secondary,
           }}
         />
 
-        <p className="ml-[4px] text-[9px] uppercase tracking-[0.11em] text-white/32">
+        <p className="text-[9px] text-white/48">
           {label}
         </p>
       </div>
 
-      <div className="mt-[10px] grid grid-cols-2 gap-[6px]">
-        {traits
-          .slice(
-            0,
-            4
-          )
-          .map(
-            (id) => {
+      <div
+        className="
+          mt-[9px]
+
+          flex
+          flex-wrap
+
+          gap-[4px]
+        "
+      >
+        {traits.length >
+        0 ? (
+          traits.map(
+            (
+              id
+            ) => {
               const trait =
                 brandCharacterTraits.find(
                   (
@@ -1533,24 +2397,35 @@ function TraitCard({
                 );
 
               return (
-                <div
+                <span
                   key={
                     id
                   }
-                  className="rounded-[8px] border border-white/[0.05] px-[8px] py-[6px]"
-                >
-                  <p className="text-[9px] text-white/55">
-                    {trait?.label ??
-                      id}
-                  </p>
+                  className="
+                    rounded-full
 
-                  <p className="mt-[2px] text-[8px] text-white/24">
-                    Influences visual behaviour.
-                  </p>
-                </div>
+                    border
+                    border-white/[0.07]
+
+                    px-[6px]
+                    py-[3px]
+
+                    text-[7px]
+
+                    text-white/32
+                  "
+                >
+                  {trait?.label ??
+                    id}
+                </span>
               );
             }
-          )}
+          )
+        ) : (
+          <span className="text-[8px] text-white/20">
+            Neutral
+          </span>
+        )}
       </div>
     </Card>
   );
@@ -1565,6 +2440,7 @@ function ToolkitItem({
   index,
   primary,
   secondary,
+  roundness,
 }: {
   label:
     string;
@@ -1577,91 +2453,148 @@ function ToolkitItem({
 
   secondary:
     string;
+
+  roundness:
+    number;
 }) {
+  const radius =
+    3 +
+    roundness *
+      12;
+
   return (
-    <div className="rounded-[9px] border border-white/[0.06] bg-white/[0.015] p-[6px]">
-      <div className="relative flex h-[28px] items-center justify-center overflow-hidden">
-        {index %
-          3 ===
-        0 ? (
-          <div
-            className="relative h-[18px] w-[28px] overflow-hidden rounded-[7px] border"
-            style={{
-              borderColor:
+    <div
+      className="
+        flex
+        h-[66px]
+
+        flex-col
+
+        justify-between
+
+        rounded-[9px]
+
+        border
+        border-white/[0.06]
+
+        bg-white/[0.015]
+
+        p-[7px]
+      "
+    >
+      <div
+        className="
+          relative
+
+          h-[29px]
+
+          overflow-hidden
+        "
+      >
+        <div
+          className="
+            absolute
+
+            left-[2px]
+            top-[3px]
+
+            h-[20px]
+            w-[25px]
+
+            border
+          "
+          style={{
+            borderRadius:
+              radius,
+
+            borderColor:
+              alpha(
                 primary,
-            }}
-          >
-            <RasterGradient
-              direction="diagonal"
-              className="absolute inset-0 h-full w-full"
-              stops={[
-                {
-                  color:
-                    secondary,
-                  offset:
-                    0,
-                  opacity:
-                    0.25,
-                },
-                {
-                  color:
-                    secondary,
-                  offset:
-                    100,
-                  opacity:
-                    0,
-                },
-              ]}
-            />
-          </div>
-        ) : index %
-            3 ===
-          1 ? (
-          <div className="flex w-full flex-col gap-[4px]">
-            <div
-              className="h-[2px] w-full"
-              style={{
-                backgroundColor:
-                  primary,
-              }}
-            />
+                0.7
+              ),
 
-            <div
-              className="h-[2px] w-[65%]"
-              style={{
-                backgroundColor:
-                  secondary,
-              }}
-            />
-          </div>
-        ) : (
-          <div className="relative h-[24px] w-[24px]">
-            <RasterGlow
-              color={
-                primary
-              }
-              secondaryColor={
-                secondary
-              }
-              opacity={0.48}
-              secondaryOpacity={0.12}
-              className="absolute inset-0 h-full w-full"
-            />
+            backgroundColor:
+              alpha(
+                secondary,
+                0.1
+              ),
+          }}
+        />
 
-            <div
-              className="absolute left-1/2 top-1/2 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                backgroundColor:
-                  primary,
-              }}
-            />
-          </div>
-        )}
+        <div
+          className="
+            absolute
+
+            bottom-[4px]
+            right-[2px]
+
+            h-[3px]
+            w-[24px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              index %
+                  2 ===
+                0
+                ? primary
+                : secondary,
+          }}
+        />
       </div>
 
-      <p className="mt-[4px] truncate text-[8px] text-white/45">
+      <p
+        className="
+          truncate
+
+          text-[7px]
+
+          text-white/28
+        "
+      >
         {label}
       </p>
     </div>
+  );
+}
+
+/* ================================================= */
+/* RELATIONSHIP LABEL                                */
+/* ================================================= */
+
+function RelationshipLabel({
+  mode,
+  propertyName,
+}: {
+  mode:
+    AdditionalRelationshipMode;
+
+  propertyName:
+    string;
+}) {
+  return (
+    <span
+      className="
+        rounded-full
+
+        border
+        border-white/[0.07]
+
+        px-[10px]
+        py-[6px]
+
+        text-[8px]
+        uppercase
+        tracking-[0.12em]
+
+        text-white/30
+      "
+    >
+      {mode ===
+      "presenting"
+        ? `Presenting ${propertyName}`
+        : `Sponsored by ${propertyName}`}
+    </span>
   );
 }

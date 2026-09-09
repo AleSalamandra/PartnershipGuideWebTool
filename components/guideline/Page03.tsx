@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import type {
+  ReactNode,
+} from "react";
 
 import GuidelinePage, {
   useGuidelineThemeStore,
@@ -13,7 +15,8 @@ import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
@@ -35,15 +38,41 @@ type VariantTemplate =
   | "presents-inline"
   | "presents-corner";
 
+type PresentingTemplate =
+  | "x-hero"
+  | "x-stacked"
+  | "x-editorial";
+
 interface VariantSpec {
-  id: string;
-  title: string;
-  template: VariantTemplate;
-  scale: string;
+  id:
+    string;
+
+  title:
+    string;
+
+  template:
+    VariantTemplate;
+
+  scale:
+    string;
+}
+
+interface PresentingVariantSpec {
+  id:
+    string;
+
+  title:
+    string;
+
+  template:
+    PresentingTemplate;
+
+  scale:
+    string;
 }
 
 /* ================================================= */
-/* VARIANTS                                          */
+/* BASE VARIANTS                                     */
 /* ================================================= */
 
 const MODEL_VARIANTS:
@@ -53,26 +82,43 @@ const MODEL_VARIANTS:
   > = {
   axb: [
     {
-      id: "01",
-      title: "Balanced",
+      id:
+        "01",
+
+      title:
+        "Balanced",
+
       template:
         "equal-horizontal",
+
       scale:
         "A 100% · B 100%",
     },
+
     {
-      id: "02",
-      title: "Offset",
+      id:
+        "02",
+
+      title:
+        "Offset",
+
       template:
         "equal-offset",
+
       scale:
         "A 100% · B 100%",
     },
+
     {
-      id: "03",
-      title: "Stacked",
+      id:
+        "03",
+
+      title:
+        "Stacked",
+
       template:
         "equal-stacked",
+
       scale:
         "A 100% · B 100%",
     },
@@ -80,28 +126,43 @@ const MODEL_VARIANTS:
 
   aandb: [
     {
-      id: "01",
+      id:
+        "01",
+
       title:
         "Lead + support",
+
       template:
         "with-horizontal",
+
       scale:
         "A 100% · B 78%",
     },
+
     {
-      id: "02",
-      title: "Stacked",
+      id:
+        "02",
+
+      title:
+        "Stacked",
+
       template:
         "with-stacked",
+
       scale:
         "A 100% · B 72%",
     },
+
     {
-      id: "03",
+      id:
+        "03",
+
       title:
         "Partner corner",
+
       template:
         "with-corner",
+
       scale:
         "A 100% · B 68%",
     },
@@ -109,28 +170,43 @@ const MODEL_VARIANTS:
 
   poweredByA: [
     {
-      id: "01",
+      id:
+        "01",
+
       title:
         "Powered by",
+
       template:
         "powered-stacked",
+
       scale:
         "B 100% · A 62%",
     },
+
     {
-      id: "02",
-      title: "Inline",
+      id:
+        "02",
+
+      title:
+        "Inline",
+
       template:
         "powered-inline",
+
       scale:
         "B 100% · A 58%",
     },
+
     {
-      id: "03",
+      id:
+        "03",
+
       title:
         "Endorsement",
+
       template:
         "powered-corner",
+
       scale:
         "B 100% · A 54%",
     },
@@ -138,33 +214,97 @@ const MODEL_VARIANTS:
 
   presentsB: [
     {
-      id: "01",
+      id:
+        "01",
+
       title:
         "Presents",
+
       template:
         "presents-stacked",
+
       scale:
         "A 62% · B 100%",
     },
+
     {
-      id: "02",
-      title: "Inline",
+      id:
+        "02",
+
+      title:
+        "Inline",
+
       template:
         "presents-inline",
+
       scale:
         "A 58% · B 100%",
     },
+
     {
-      id: "03",
+      id:
+        "03",
+
       title:
         "Presented by",
+
       template:
         "presents-corner",
+
       scale:
         "A 52% · B 100%",
     },
   ],
 };
+
+/* ================================================= */
+/* PRESENTING X VARIANTS                             */
+/* ================================================= */
+
+const PRESENTING_VARIANTS:
+  PresentingVariantSpec[] = [
+  {
+    id:
+      "01",
+
+    title:
+      "Property first",
+
+    template:
+      "x-hero",
+
+    scale:
+      "X 100% · presenting signature 55%",
+  },
+
+  {
+    id:
+      "02",
+
+    title:
+      "Stacked presentation",
+
+    template:
+      "x-stacked",
+
+    scale:
+      "X 100% · presenting signature 50%",
+  },
+
+  {
+    id:
+      "03",
+
+    title:
+      "Editorial lockup",
+
+    template:
+      "x-editorial",
+
+    scale:
+      "X 100% · presenting signature 42%",
+  },
+];
 
 /* ================================================= */
 /* PAGE                                              */
@@ -173,14 +313,19 @@ const MODEL_VARIANTS:
 export default function Page03() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
+    propertyX,
   } =
     useGuidelineStore();
 
   const theme =
     useGuidelineThemeStore(
-      (state) =>
+      (
+        state
+      ) =>
         state.theme
     );
 
@@ -199,18 +344,28 @@ export default function Page03() {
     brandB.name.trim() ||
     "Brand B";
 
-  const variants =
-    MODEL_VARIANTS[
-      model
-    ];
+  const propertyName =
+    propertyX.name.trim() ||
+    "X";
+
+  const isPresenting =
+    additionalRelationship ===
+    "presenting";
+
+  const isSponsored =
+    additionalRelationship ===
+    "sponsored";
 
   return (
     <GuidelinePage>
-      {/* HEADER */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
       <header
         className="
           absolute
+
           left-[90px]
           right-[90px]
           top-[68px]
@@ -226,6 +381,7 @@ export default function Page03() {
               text-[15px]
               uppercase
               tracking-[0.16em]
+
               text-white/30
             "
           >
@@ -245,62 +401,214 @@ export default function Page03() {
           >
             Logo positioning
           </h1>
+
+          {isPresenting && (
+            <p
+              className="
+                mt-[13px]
+
+                text-[13px]
+
+                text-white/35
+              "
+            >
+              {propertyName} becomes the featured identity. The A / B relationship behaves as its presenting signature.
+            </p>
+          )}
+
+          {isSponsored && (
+            <p
+              className="
+                mt-[13px]
+
+                text-[13px]
+
+                text-white/35
+              "
+            >
+              The A / B hierarchy remains unchanged. {propertyName} appears only as a controlled sponsor credit.
+            </p>
+          )}
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
-      </header>
+        <div
+          className="
+            flex
+            flex-col
+            items-end
 
-      {/* VARIANTS */}
+            gap-[12px]
+          "
+        >
+          <PartnershipLockup
+            model={
+              model
+            }
+            brandA={
+              brandA
+            }
+            brandB={
+              brandB
+            }
+          />
 
-      <section
-        className="
-          absolute
-          left-[90px]
-          right-[90px]
-          top-[205px]
-          bottom-[75px]
+          {isPresenting && (
+            <AdditionalHeaderSignature
+              label="Presenting"
+              name={
+                propertyName
+              }
+              logoUrl={
+                propertyX.logoUrl
+              }
+              large
+            />
+          )}
 
-          grid
-          grid-cols-3
-          gap-[20px]
-        "
-      >
-        {variants.map(
-          (variant) => (
-            <VariantCard
-              key={variant.id}
-              variant={
-                variant
+          {isSponsored && (
+            <AdditionalHeaderSignature
+              label="Sponsored by"
+              name={
+                propertyName
               }
-              brandAName={
-                brandAName
-              }
-              brandBName={
-                brandBName
-              }
-              brandALogo={
-                brandA.logoUrl
-              }
-              brandBLogo={
-                brandB.logoUrl
-              }
-              isLight={
-                isLight
+              logoUrl={
+                propertyX.logoUrl
               }
             />
-          )
-        )}
-      </section>
+          )}
+        </div>
+      </header>
+
+      {/* ======================================== */}
+      {/* PRESENTING X                             */}
+      {/* ======================================== */}
+
+      {isPresenting ? (
+        <section
+          className="
+            absolute
+
+            bottom-[75px]
+            left-[90px]
+            right-[90px]
+            top-[225px]
+
+            grid
+            grid-cols-3
+
+            gap-[20px]
+          "
+        >
+          {PRESENTING_VARIANTS.map(
+            (
+              variant
+            ) => (
+              <PresentingVariantCard
+                key={
+                  variant.id
+                }
+                variant={
+                  variant
+                }
+                model={
+                  model
+                }
+                brandAName={
+                  brandAName
+                }
+                brandBName={
+                  brandBName
+                }
+                brandALogo={
+                  brandA.logoUrl
+                }
+                brandBLogo={
+                  brandB.logoUrl
+                }
+                propertyName={
+                  propertyName
+                }
+                propertyLogo={
+                  propertyX.logoUrl
+                }
+                propertyColor={
+                  propertyX.primaryColor
+                }
+                isLight={
+                  isLight
+                }
+              />
+            )
+          )}
+        </section>
+      ) : (
+        /* ====================================== */
+        /* BASE / SPONSORED                       */
+        /* ====================================== */
+
+        <section
+          className="
+            absolute
+
+            bottom-[75px]
+            left-[90px]
+            right-[90px]
+            top-[225px]
+
+            grid
+            grid-cols-3
+
+            gap-[20px]
+          "
+        >
+          {MODEL_VARIANTS[
+            model
+          ].map(
+            (
+              variant
+            ) => (
+              <VariantCard
+                key={
+                  variant.id
+                }
+                variant={
+                  variant
+                }
+                brandAName={
+                  brandAName
+                }
+                brandBName={
+                  brandBName
+                }
+                brandALogo={
+                  brandA.logoUrl
+                }
+                brandBLogo={
+                  brandB.logoUrl
+                }
+                isLight={
+                  isLight
+                }
+                sponsored={
+                  isSponsored
+                }
+                sponsorName={
+                  propertyName
+                }
+                sponsorLogo={
+                  propertyX.logoUrl
+                }
+              />
+            )
+          )}
+        </section>
+      )}
     </GuidelinePage>
   );
 }
 
 /* ================================================= */
-/* VARIANT CARD                                      */
+/* NORMAL VARIANT CARD                               */
 /* ================================================= */
 
 function VariantCard({
@@ -313,6 +621,10 @@ function VariantCard({
   brandBLogo,
 
   isLight,
+
+  sponsored,
+  sponsorName,
+  sponsorLogo,
 }: {
   variant:
     VariantSpec;
@@ -331,6 +643,15 @@ function VariantCard({
 
   isLight:
     boolean;
+
+  sponsored:
+    boolean;
+
+  sponsorName:
+    string;
+
+  sponsorLogo:
+    string | null;
 }) {
   return (
     <article
@@ -353,13 +674,12 @@ function VariantCard({
             : "rgba(255,255,255,0.025)",
       }}
     >
-      {/* HEADER */}
-
       <div
         className="
           flex
           items-start
           justify-between
+
           gap-[18px]
         "
       >
@@ -388,14 +708,13 @@ function VariantCard({
             text-[10px]
             uppercase
             tracking-[0.1em]
+
             text-white/35
           "
         >
           {variant.scale}
         </span>
       </div>
-
-      {/* VISUAL */}
 
       <div className="mt-[22px] min-h-0 flex-1">
         <PositioningSurface
@@ -417,6 +736,17 @@ function VariantCard({
           isLight={
             isLight
           }
+          sponsor={
+            sponsored
+              ? {
+                  name:
+                    sponsorName,
+
+                  logoUrl:
+                    sponsorLogo,
+                }
+              : null
+          }
         />
       </div>
 
@@ -434,7 +764,483 @@ function VariantCard({
 }
 
 /* ================================================= */
-/* POSITIONING SURFACE                               */
+/* PRESENTING CARD                                   */
+/* ================================================= */
+
+function PresentingVariantCard({
+  variant,
+  model,
+
+  brandAName,
+  brandBName,
+
+  brandALogo,
+  brandBLogo,
+
+  propertyName,
+  propertyLogo,
+  propertyColor,
+
+  isLight,
+}: {
+  variant:
+    PresentingVariantSpec;
+
+  model:
+    PartnershipModelId;
+
+  brandAName:
+    string;
+
+  brandBName:
+    string;
+
+  brandALogo:
+    string | null;
+
+  brandBLogo:
+    string | null;
+
+  propertyName:
+    string;
+
+  propertyLogo:
+    string | null;
+
+  propertyColor:
+    string;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <article
+      className="
+        flex
+        h-full
+        flex-col
+
+        rounded-[28px]
+
+        border
+        border-white/[0.08]
+
+        p-[22px]
+      "
+      style={{
+        backgroundColor:
+          isLight
+            ? "#FAFAF8"
+            : "rgba(255,255,255,0.025)",
+      }}
+    >
+      <div
+        className="
+          flex
+          items-start
+          justify-between
+
+          gap-[16px]
+        "
+      >
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-white/25">
+            Variant {variant.id}
+          </p>
+
+          <h2 className="mt-[7px] text-[22px] leading-none oook-medium">
+            {variant.title}
+          </h2>
+        </div>
+
+        <span
+          className="
+            max-w-[180px]
+
+            rounded-full
+
+            border
+            border-white/[0.08]
+
+            px-[10px]
+            py-[6px]
+
+            text-right
+            text-[9px]
+            uppercase
+            tracking-[0.08em]
+
+            text-white/35
+          "
+        >
+          {variant.scale}
+        </span>
+      </div>
+
+      <div className="mt-[22px] min-h-0 flex-1">
+        <PresentingSurface
+          template={
+            variant.template
+          }
+          model={
+            model
+          }
+          brandAName={
+            brandAName
+          }
+          brandBName={
+            brandBName
+          }
+          brandALogo={
+            brandALogo
+          }
+          brandBLogo={
+            brandBLogo
+          }
+          propertyName={
+            propertyName
+          }
+          propertyLogo={
+            propertyLogo
+          }
+          propertyColor={
+            propertyColor
+          }
+          isLight={
+            isLight
+          }
+        />
+      </div>
+
+      <div className="mt-[16px] flex items-center justify-between">
+        <p className="text-[10px] uppercase tracking-[0.14em] text-white/22">
+          Safe area
+        </p>
+
+        <p className="text-[12px] text-white/40">
+          8%
+        </p>
+      </div>
+    </article>
+  );
+}
+
+/* ================================================= */
+/* PRESENTING SURFACE                                */
+/* ================================================= */
+
+function PresentingSurface({
+  template,
+  model,
+
+  brandAName,
+  brandBName,
+
+  brandALogo,
+  brandBLogo,
+
+  propertyName,
+  propertyLogo,
+  propertyColor,
+
+  isLight,
+}: {
+  template:
+    PresentingTemplate;
+
+  model:
+    PartnershipModelId;
+
+  brandAName:
+    string;
+
+  brandBName:
+    string;
+
+  brandALogo:
+    string | null;
+
+  brandBLogo:
+    string | null;
+
+  propertyName:
+    string;
+
+  propertyLogo:
+    string | null;
+
+  propertyColor:
+    string;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <div
+      className="
+        relative
+
+        h-full
+        min-h-[400px]
+
+        overflow-hidden
+
+        rounded-[22px]
+
+        border
+        border-white/[0.07]
+      "
+      style={{
+        backgroundColor:
+          isLight
+            ? "#F1F1EE"
+            : "rgba(0,0,0,0.35)",
+      }}
+    >
+      <CanvasGuides />
+
+      {/* ======================================== */}
+      {/* 01 — PROPERTY FIRST                      */}
+      {/* ======================================== */}
+
+      {template ===
+        "x-hero" && (
+        <>
+          <div
+            className="
+              absolute
+
+              left-1/2
+              top-[27%]
+
+              h-[122px]
+              w-[60%]
+
+              -translate-x-1/2
+            "
+          >
+            <BrandLogo
+              logoUrl={
+                propertyLogo
+              }
+              fallback={
+                propertyName
+              }
+            />
+          </div>
+
+          <div
+            className="
+              absolute
+
+              bottom-[20%]
+              left-1/2
+
+              flex
+
+              -translate-x-1/2
+
+              flex-col
+              items-center
+            "
+          >
+            <p
+              className="
+                mb-[10px]
+
+                text-[9px]
+                uppercase
+                tracking-[0.16em]
+
+                text-white/25
+              "
+            >
+              Presented by
+            </p>
+
+            <PartnershipSignature
+              model={
+                model
+              }
+              brandAName={
+                brandAName
+              }
+              brandBName={
+                brandBName
+              }
+              brandALogo={
+                brandALogo
+              }
+              brandBLogo={
+                brandBLogo
+              }
+              scale="medium"
+            />
+          </div>
+
+          <AccentLine
+            color={
+              propertyColor
+            }
+            className="left-1/2 top-[61%] w-[72px] -translate-x-1/2"
+          />
+        </>
+      )}
+
+      {/* ======================================== */}
+      {/* 02 — STACKED                             */}
+      {/* ======================================== */}
+
+      {template ===
+        "x-stacked" && (
+        <div
+          className="
+            absolute
+
+            left-1/2
+            top-1/2
+
+            flex
+            w-[64%]
+
+            -translate-x-1/2
+            -translate-y-1/2
+
+            flex-col
+            items-center
+          "
+        >
+          <PartnershipSignature
+            model={
+              model
+            }
+            brandAName={
+              brandAName
+            }
+            brandBName={
+              brandBName
+            }
+            brandALogo={
+              brandALogo
+            }
+            brandBLogo={
+              brandBLogo
+            }
+            scale="small"
+          />
+
+          <ConnectorText>
+            present
+          </ConnectorText>
+
+          <div className="h-[116px] w-full">
+            <BrandLogo
+              logoUrl={
+                propertyLogo
+              }
+              fallback={
+                propertyName
+              }
+            />
+          </div>
+
+          <AccentLine
+            color={
+              propertyColor
+            }
+            className="mt-[18px] w-[86px]"
+          />
+        </div>
+      )}
+
+      {/* ======================================== */}
+      {/* 03 — EDITORIAL                           */}
+      {/* ======================================== */}
+
+      {template ===
+        "x-editorial" && (
+        <>
+          <div
+            className="
+              absolute
+
+              left-[11%]
+              top-[15%]
+
+              flex
+              flex-col
+              items-start
+            "
+          >
+            <PartnershipSignature
+              model={
+                model
+              }
+              brandAName={
+                brandAName
+              }
+              brandBName={
+                brandBName
+              }
+              brandALogo={
+                brandALogo
+              }
+              brandBLogo={
+                brandBLogo
+              }
+              scale="small"
+            />
+
+            <p
+              className="
+                mt-[8px]
+
+                text-[8px]
+                uppercase
+                tracking-[0.15em]
+
+                text-white/23
+              "
+            >
+              presents
+            </p>
+          </div>
+
+          <div
+            className="
+              absolute
+
+              bottom-[18%]
+              right-[10%]
+
+              h-[138px]
+              w-[64%]
+            "
+          >
+            <BrandLogo
+              logoUrl={
+                propertyLogo
+              }
+              fallback={
+                propertyName
+              }
+            />
+          </div>
+
+          <AccentLine
+            color={
+              propertyColor
+            }
+            className="bottom-[13%] right-[10%] w-[120px]"
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ================================================= */
+/* BASE POSITIONING SURFACE                          */
 /* ================================================= */
 
 function PositioningSurface({
@@ -447,6 +1253,8 @@ function PositioningSurface({
   brandBLogo,
 
   isLight,
+
+  sponsor,
 }: {
   template:
     VariantTemplate;
@@ -465,6 +1273,15 @@ function PositioningSurface({
 
   isLight:
     boolean;
+
+  sponsor:
+    {
+      name:
+        string;
+
+      logoUrl:
+        string | null;
+    } | null;
 }) {
   return (
     <div
@@ -919,6 +1736,298 @@ function PositioningSurface({
           </div>
         </>
       )}
+
+      {/* ======================================== */}
+      {/* SPONSOR CREDIT                           */}
+      {/* ======================================== */}
+
+      {sponsor && (
+        <SponsorCredit
+          name={
+            sponsor.name
+          }
+          logoUrl={
+            sponsor.logoUrl
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+/* ================================================= */
+/* PARTNERSHIP SIGNATURE                             */
+/* ================================================= */
+
+function PartnershipSignature({
+  model,
+
+  brandAName,
+  brandBName,
+
+  brandALogo,
+  brandBLogo,
+
+  scale,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandAName:
+    string;
+
+  brandBName:
+    string;
+
+  brandALogo:
+    string | null;
+
+  brandBLogo:
+    string | null;
+
+  scale:
+    "small" | "medium";
+}) {
+  const main =
+    scale ===
+    "medium"
+      ? 105
+      : 78;
+
+  const secondary =
+    scale ===
+    "medium"
+      ? 78
+      : 58;
+
+  return (
+    <div className="flex items-center gap-[9px]">
+      {model ===
+      "poweredByA" ? (
+        <>
+          <MiniLogo
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            width={
+              main
+            }
+          />
+
+          <SmallRelationship>
+            powered by
+          </SmallRelationship>
+
+          <MiniLogo
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            width={
+              secondary
+            }
+          />
+        </>
+      ) : model ===
+        "presentsB" ? (
+        <>
+          <MiniLogo
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            width={
+              secondary
+            }
+          />
+
+          <SmallRelationship>
+            presents
+          </SmallRelationship>
+
+          <MiniLogo
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            width={
+              main
+            }
+          />
+        </>
+      ) : model ===
+        "aandb" ? (
+        <>
+          <MiniLogo
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            width={
+              main
+            }
+          />
+
+          <SmallRelationship>
+            with
+          </SmallRelationship>
+
+          <MiniLogo
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            width={
+              secondary
+            }
+          />
+        </>
+      ) : (
+        <>
+          <MiniLogo
+            logoUrl={
+              brandALogo
+            }
+            fallback={
+              brandAName
+            }
+            width={
+              main
+            }
+          />
+
+          <span className="text-[15px] text-white/32">
+            ×
+          </span>
+
+          <MiniLogo
+            logoUrl={
+              brandBLogo
+            }
+            fallback={
+              brandBName
+            }
+            width={
+              main
+            }
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ================================================= */
+/* SPONSOR CREDIT                                    */
+/* ================================================= */
+
+function SponsorCredit({
+  name,
+  logoUrl,
+}: {
+  name:
+    string;
+
+  logoUrl:
+    string | null;
+}) {
+  return (
+    <div
+      className="
+        absolute
+
+        bottom-[10%]
+        right-[10%]
+
+        flex
+        items-center
+
+        gap-[8px]
+      "
+    >
+      <span
+        className="
+          text-[7px]
+          uppercase
+          tracking-[0.13em]
+
+          text-white/18
+        "
+      >
+        Sponsored by
+      </span>
+
+      <div className="h-[23px] w-[72px]">
+        <BrandLogo
+          logoUrl={
+            logoUrl
+          }
+          fallback={
+            name
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* HEADER SIGNATURE                                  */
+/* ================================================= */
+
+function AdditionalHeaderSignature({
+  label,
+  name,
+  logoUrl,
+  large = false,
+}: {
+  label:
+    string;
+
+  name:
+    string;
+
+  logoUrl:
+    string | null;
+
+  large?:
+    boolean;
+}) {
+  return (
+    <div className="flex items-center gap-[9px]">
+      <span className="text-[8px] uppercase tracking-[0.13em] text-white/22">
+        {label}
+      </span>
+
+      <div
+        className={
+          large
+            ? "h-[34px] w-[115px]"
+            : "h-[22px] w-[76px]"
+        }
+      >
+        <BrandLogo
+          logoUrl={
+            logoUrl
+          }
+          fallback={
+            name
+          }
+        />
+      </div>
     </div>
   );
 }
@@ -943,10 +2052,17 @@ function CanvasGuides() {
           border-white/[0.09]
         "
         style={{
-          left: "8%",
-          right: "8%",
-          top: "8%",
-          bottom: "8%",
+          left:
+            "8%",
+
+          right:
+            "8%",
+
+          top:
+            "8%",
+
+          bottom:
+            "8%",
         }}
       />
 
@@ -962,7 +2078,7 @@ function CanvasGuides() {
 }
 
 /* ================================================= */
-/* LOGO FRAME                                        */
+/* OPTICAL LOGO FRAME                                */
 /* ================================================= */
 
 function OpticalLogoFrame({
@@ -1001,6 +2117,7 @@ function OpticalLogoFrame({
       className={`
         relative
         w-full
+
         ${height}
 
         rounded-[16px]
@@ -1035,6 +2152,10 @@ function OpticalLogoFrame({
   );
 }
 
+/* ================================================= */
+/* BASIC LOGO HELPERS                                */
+/* ================================================= */
+
 function BareLogo({
   logoUrl,
   fallback,
@@ -1047,6 +2168,39 @@ function BareLogo({
 }) {
   return (
     <div className="h-[58px] w-full">
+      <BrandLogo
+        logoUrl={
+          logoUrl
+        }
+        fallback={
+          fallback
+        }
+      />
+    </div>
+  );
+}
+
+function MiniLogo({
+  logoUrl,
+  fallback,
+  width,
+}: {
+  logoUrl:
+    string | null;
+
+  fallback:
+    string;
+
+  width:
+    number;
+}) {
+  return (
+    <div
+      className="h-[28px]"
+      style={{
+        width,
+      }}
+    >
       <BrandLogo
         logoUrl={
           logoUrl
@@ -1123,7 +2277,7 @@ function RelationshipWord({
   children,
 }: {
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <div className="flex items-center justify-center text-[30px] text-white/55 oook-light">
@@ -1136,7 +2290,7 @@ function ConnectorText({
   children,
 }: {
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <div className="flex h-[48px] items-center justify-center">
@@ -1144,5 +2298,61 @@ function ConnectorText({
         {children}
       </p>
     </div>
+  );
+}
+
+function SmallRelationship({
+  children,
+}: {
+  children:
+    ReactNode;
+}) {
+  return (
+    <span
+      className="
+        whitespace-nowrap
+
+        text-[7px]
+        uppercase
+        tracking-[0.12em]
+
+        text-white/25
+      "
+    >
+      {children}
+    </span>
+  );
+}
+
+/* ================================================= */
+/* ACCENT                                            */
+/* ================================================= */
+
+function AccentLine({
+  color,
+  className = "",
+}: {
+  color:
+    string;
+
+  className?:
+    string;
+}) {
+  return (
+    <span
+      className={`
+        absolute
+
+        h-[4px]
+
+        rounded-full
+
+        ${className}
+      `}
+      style={{
+        backgroundColor:
+          color,
+      }}
+    />
   );
 }

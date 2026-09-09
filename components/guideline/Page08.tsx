@@ -16,7 +16,8 @@ import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
@@ -46,11 +47,17 @@ interface PaletteConfig {
   description:
     string;
 
-  rules: [
-    string,
-    string,
-    string,
-  ];
+  rules:
+    string[];
+
+  neutralRatio:
+    number;
+
+  primaryRatio:
+    number;
+
+  accentRatio:
+    number;
 }
 
 /* ================================================= */
@@ -58,8 +65,11 @@ interface PaletteConfig {
 /* ================================================= */
 
 function safeColour(
-  value: unknown,
-  fallback: string
+  value:
+    unknown,
+
+  fallback:
+    string
 ) {
   return (
     typeof value ===
@@ -73,7 +83,8 @@ function safeColour(
 }
 
 function hexToRgb(
-  colour: string
+  colour:
+    string
 ) {
   const value =
     parseInt(
@@ -100,8 +111,11 @@ function hexToRgb(
 }
 
 function alpha(
-  colour: string,
-  opacity: number
+  colour:
+    string,
+
+  opacity:
+    number
 ) {
   const {
     r,
@@ -116,24 +130,38 @@ function alpha(
 }
 
 function mixHex(
-  a: string,
-  b: string,
-  ratio = 0.5
+  a:
+    string,
+
+  b:
+    string,
+
+  ratio =
+    0.5
 ) {
   const ca =
-    hexToRgb(a);
+    hexToRgb(
+      a
+    );
 
   const cb =
-    hexToRgb(b);
+    hexToRgb(
+      b
+    );
 
   const mix = (
-    x: number,
-    y: number
+    x:
+      number,
+
+    y:
+      number
   ) =>
     Math.round(
-      x * ratio +
+      x *
+        ratio +
         y *
-          (1 - ratio)
+          (1 -
+            ratio)
     );
 
   return (
@@ -143,33 +171,41 @@ function mixHex(
         ca.r,
         cb.r
       ),
+
       mix(
         ca.g,
         cb.g
       ),
+
       mix(
         ca.b,
         cb.b
       ),
     ]
       .map(
-        (value) =>
+        (
           value
-            .toString(16)
+        ) =>
+          value
+            .toString(
+              16
+            )
             .padStart(
               2,
               "0"
             )
       )
-      .join("")
+      .join(
+        ""
+      )
   );
 }
 
 /* ================================================= */
-/* MODEL CONFIG                                      */
+/* BASE A/B CONFIG                                   */
 /* ================================================= */
 
-function getPaletteConfig(
+function getBasePaletteConfig(
   model:
     PartnershipModelId,
 
@@ -185,7 +221,9 @@ function getPaletteConfig(
   bSecondary:
     string
 ): PaletteConfig {
-  switch (model) {
+  switch (
+    model
+  ) {
     case "axb":
       return {
         collaboration:
@@ -220,6 +258,15 @@ function getPaletteConfig(
           "20% shared collaboration colour",
           "10% controlled brand accent",
         ],
+
+        neutralRatio:
+          70,
+
+        primaryRatio:
+          20,
+
+        accentRatio:
+          10,
       };
 
     case "aandb":
@@ -250,6 +297,15 @@ function getPaletteConfig(
           "20% Brand A colour system",
           "10% Brand B accent",
         ],
+
+        neutralRatio:
+          70,
+
+        primaryRatio:
+          20,
+
+        accentRatio:
+          10,
       };
 
     case "poweredByA":
@@ -280,6 +336,15 @@ function getPaletteConfig(
           "20% Brand B colour system",
           "≤10% Brand A endorsement",
         ],
+
+        neutralRatio:
+          70,
+
+        primaryRatio:
+          20,
+
+        accentRatio:
+          10,
       };
 
     case "presentsB":
@@ -311,8 +376,101 @@ function getPaletteConfig(
           "Brand B colour lives inside content",
           "Avoid merging both into one large surface",
         ],
+
+        neutralRatio:
+          70,
+
+        primaryRatio:
+          20,
+
+        accentRatio:
+          10,
       };
   }
+}
+
+/* ================================================= */
+/* X LAYER                                           */
+/* ================================================= */
+
+function applyAdditionalRelationship(
+  base:
+    PaletteConfig,
+
+  mode:
+    AdditionalRelationshipMode,
+
+  propertyName:
+    string,
+
+  xPrimary:
+    string,
+
+  xSecondary:
+    string
+): PaletteConfig {
+  if (
+    mode ===
+    "presenting"
+  ) {
+    return {
+      collaboration:
+        xPrimary,
+
+      collaborationSecondary:
+        xSecondary,
+
+      accent:
+        base.collaboration,
+
+      accentSecondary:
+        base.accent,
+
+      collaborationLabel:
+        `${propertyName} primary territory`,
+
+      accentLabel:
+        "Partnership supporting accent",
+
+      description:
+        `${propertyName} becomes the dominant non-neutral colour source. The underlying Brand A / Brand B palette remains visible as a supporting presentation layer rather than competing with the property.`,
+
+      rules: [
+        "60% neutral foundation",
+        `25% ${propertyName} colour system`,
+        "15% controlled partnership accent",
+        "Never create three competing brand-colour territories",
+      ],
+
+      neutralRatio:
+        60,
+
+      primaryRatio:
+        25,
+
+      accentRatio:
+        15,
+    };
+  }
+
+  if (
+    mode ===
+    "sponsored"
+  ) {
+    return {
+      ...base,
+
+      description:
+        `${base.description} ${propertyName} is a sponsor only, so its colours do not enter the shared visual territory.`,
+
+      rules: [
+        ...base.rules,
+        `${propertyName} colour is restricted to its own sponsor logo or approved sponsor asset`,
+      ],
+    };
+  }
+
+  return base;
 }
 
 /* ================================================= */
@@ -322,22 +480,32 @@ function getPaletteConfig(
 export default function Page08() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
+    propertyX,
   } =
     useGuidelineStore();
 
   const theme =
     useGuidelineThemeStore(
-      (state) =>
+      (
+        state
+      ) =>
         state.theme
     );
 
   const isLight =
-    theme === "light";
+    theme ===
+    "light";
 
   const model =
     partnershipModel as PartnershipModelId;
+
+  const propertyName =
+    propertyX.name.trim() ||
+    "X";
 
   const aPrimary =
     safeColour(
@@ -363,8 +531,20 @@ export default function Page08() {
       "#64D2FF"
     );
 
-  const config =
-    getPaletteConfig(
+  const xPrimary =
+    safeColour(
+      propertyX.primaryColor,
+      "#8A8A8A"
+    );
+
+  const xSecondary =
+    safeColour(
+      propertyX.secondaryColor,
+      "#B9B9B9"
+    );
+
+  const baseConfig =
+    getBasePaletteConfig(
       model,
       aPrimary,
       aSecondary,
@@ -372,41 +552,146 @@ export default function Page08() {
       bSecondary
     );
 
+  const config =
+    applyAdditionalRelationship(
+      baseConfig,
+      additionalRelationship,
+      propertyName,
+      xPrimary,
+      xSecondary
+    );
+
+  const presenting =
+    additionalRelationship ===
+    "presenting";
+
+  const sponsored =
+    additionalRelationship ===
+    "sponsored";
+
   return (
     <GuidelinePage>
-      {/* HEADER */}
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
 
-      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
+      <header
+        className="
+          absolute
+          left-[70px]
+          right-[70px]
+          top-[46px]
+
+          flex
+          items-start
+          justify-between
+        "
+      >
         <div>
-          <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
+          <p
+            className="
+              text-[13px]
+              uppercase
+              tracking-[0.17em]
+
+              text-white/30
+            "
+          >
             08 / Shared visual territory
           </p>
 
-          <h1 className="mt-[12px] text-[52px] leading-none tracking-[-0.045em] text-white oook-semibold">
+          <h1
+            className="
+              mt-[12px]
+
+              text-[52px]
+              leading-none
+              tracking-[-0.045em]
+
+              text-white
+              oook-semibold
+            "
+          >
             Shared visual territory — colours
           </h1>
 
-          <p className="mt-[13px] max-w-[850px] text-[16px] leading-[1.38] text-white/45">
-            A neutral shared foundation gives both brands room to coexist without creating visual competition.
+          <p
+            className="
+              mt-[13px]
+
+              max-w-[900px]
+
+              text-[16px]
+              leading-[1.38]
+
+              text-white/45
+            "
+          >
+            {presenting
+              ? `${propertyName} actively influences the shared visual territory while the A / B relationship remains visible as a supporting partnership layer.`
+              : sponsored
+                ? `The partnership colour system remains unchanged. ${propertyName} does not contribute colour to shared surfaces.`
+                : "A neutral shared foundation gives both brands room to coexist without creating visual competition."}
           </p>
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+            gap-[10px]
+          "
+        >
+          <PartnershipLockup
+            model={model}
+            brandA={brandA}
+            brandB={brandB}
+          />
+
+          {presenting && (
+            <RelationshipLabel
+              text={`Presenting ${propertyName}`}
+            />
+          )}
+
+          {sponsored && (
+            <RelationshipLabel
+              text={`Sponsored by ${propertyName}`}
+            />
+          )}
+        </div>
       </header>
 
-      {/* LEFT */}
+      {/* ======================================== */}
+      {/* LEFT                                     */}
+      {/* ======================================== */}
 
-      <aside className="absolute left-[70px] top-[190px] w-[310px]">
+      <aside
+        className="
+          absolute
+
+          left-[70px]
+          top-[190px]
+
+          w-[310px]
+        "
+      >
         <Card className="p-[16px]">
           <SectionLabel>
             Core collaboration palette
           </SectionLabel>
 
-          <div className="mt-[12px] grid grid-cols-3 gap-[7px]">
+          <div
+            className="
+              mt-[12px]
+
+              grid
+              grid-cols-3
+
+              gap-[7px]
+            "
+          >
             <Swatch
               colour="#000000"
               label="Black"
@@ -426,7 +711,7 @@ export default function Page08() {
 
         <Card className="mt-[10px] p-[16px]">
           <SectionLabel>
-            Brand accents
+            Identity colours
           </SectionLabel>
 
           <BrandPalette
@@ -448,6 +733,60 @@ export default function Page08() {
               bSecondary
             }
           />
+
+          {presenting && (
+            <BrandPalette
+              label={`Presented · ${propertyName}`}
+              primary={
+                xPrimary
+              }
+              secondary={
+                xSecondary
+              }
+              featured
+            />
+          )}
+
+          {sponsored && (
+            <div
+              className="
+                mt-[12px]
+
+                rounded-[10px]
+
+                border
+                border-white/[0.06]
+
+                px-[10px]
+                py-[9px]
+              "
+            >
+              <p
+                className="
+                  text-[8px]
+                  uppercase
+                  tracking-[0.12em]
+
+                  text-white/25
+                "
+              >
+                Sponsor
+              </p>
+
+              <p
+                className="
+                  mt-[4px]
+
+                  text-[9px]
+                  leading-[1.35]
+
+                  text-white/38
+                "
+              >
+                {propertyName} colours are not part of this palette.
+              </p>
+            </div>
+          )}
         </Card>
 
         <Card className="mt-[10px] p-[16px]">
@@ -455,37 +794,68 @@ export default function Page08() {
             Recommended ratio
           </SectionLabel>
 
-          <div className="mt-[13px] flex h-[10px] overflow-hidden rounded-full">
-            <div className="w-[70%] bg-[#777]" />
+          <div
+            className="
+              mt-[13px]
+
+              flex
+              h-[10px]
+
+              overflow-hidden
+
+              rounded-full
+            "
+          >
+            <div
+              style={{
+                width:
+                  `${config.neutralRatio}%`,
+              }}
+              className="bg-[#777]"
+            />
 
             <div
-              className="w-[20%]"
               style={{
+                width:
+                  `${config.primaryRatio}%`,
+
                 backgroundColor:
                   config.collaboration,
               }}
             />
 
             <div
-              className="w-[10%]"
               style={{
+                width:
+                  `${config.accentRatio}%`,
+
                 backgroundColor:
                   config.accent,
               }}
             />
           </div>
 
-          <div className="mt-[9px] grid grid-cols-3 text-[9px] text-white/38">
+          <div
+            className="
+              mt-[9px]
+
+              grid
+              grid-cols-3
+
+              text-[9px]
+              text-white/38
+            "
+          >
             <span>
-              70% neutral
+              {config.neutralRatio}% neutral
             </span>
 
             <span>
-              20% primary
+              {config.primaryRatio}% primary
             </span>
 
             <span>
-              10% accent
+              {config.accentRatio}% accent
             </span>
           </div>
         </Card>
@@ -495,11 +865,25 @@ export default function Page08() {
             Model logic
           </SectionLabel>
 
-          <p className="mt-[10px] text-[11px] leading-[1.45] text-white/42">
+          <p
+            className="
+              mt-[10px]
+
+              text-[11px]
+              leading-[1.45]
+
+              text-white/42
+            "
+          >
             {config.description}
           </p>
 
-          <div className="mt-[12px] space-y-[7px]">
+          <div
+            className="
+              mt-[12px]
+              space-y-[7px]
+            "
+          >
             {config.rules.map(
               (
                 rule,
@@ -509,12 +893,14 @@ export default function Page08() {
                   key={
                     rule
                   }
-                  className="grid grid-cols-[22px_1fr] gap-[6px]"
+                  className="
+                    grid
+                    grid-cols-[22px_1fr]
+                    gap-[6px]
+                  "
                 >
                   <span className="text-[9px] text-white/20">
-                    0
-                    {index +
-                      1}
+                    0{index + 1}
                   </span>
 
                   <span className="text-[10px] text-white/52">
@@ -527,17 +913,30 @@ export default function Page08() {
         </Card>
       </aside>
 
-      {/* EXAMPLES */}
+      {/* ======================================== */}
+      {/* EXAMPLES TOP                             */}
+      {/* ======================================== */}
 
-      <section className="absolute left-[405px] right-[70px] top-[190px] grid grid-cols-4 gap-[10px]">
+      <section
+        className="
+          absolute
+
+          left-[405px]
+          right-[70px]
+          top-[190px]
+
+          grid
+          grid-cols-4
+
+          gap-[10px]
+        "
+      >
         <ExampleCard
           number="01"
           title="Background"
         >
           <BackgroundExample
-            config={
-              config
-            }
+            config={config}
           />
         </ExampleCard>
 
@@ -546,8 +945,11 @@ export default function Page08() {
           title="Headlines"
         >
           <HeadlineExample
-            config={
-              config
+            config={config}
+            fontFamily={
+              presenting
+                ? propertyX.fontFamily
+                : undefined
             }
           />
         </ExampleCard>
@@ -557,9 +959,7 @@ export default function Page08() {
           title="Overlay"
         >
           <OverlayExample
-            config={
-              config
-            }
+            config={config}
           />
         </ExampleCard>
 
@@ -568,23 +968,36 @@ export default function Page08() {
           title="CTA"
         >
           <CTAExample
-            config={
-              config
-            }
+            config={config}
           />
         </ExampleCard>
       </section>
 
-      <section className="absolute left-[405px] right-[70px] top-[505px] grid grid-cols-3 gap-[10px]">
+      {/* ======================================== */}
+      {/* EXAMPLES BOTTOM                          */}
+      {/* ======================================== */}
+
+      <section
+        className="
+          absolute
+
+          left-[405px]
+          right-[70px]
+          top-[505px]
+
+          grid
+          grid-cols-3
+
+          gap-[10px]
+        "
+      >
         <ExampleCard
           number="05"
           title="Graphics"
           large
         >
           <GraphicsExample
-            config={
-              config
-            }
+            config={config}
           />
         </ExampleCard>
 
@@ -594,11 +1007,14 @@ export default function Page08() {
           large
         >
           <VideoExample
-            config={
-              config
-            }
+            config={config}
             isLight={
               isLight
+            }
+            fontFamily={
+              presenting
+                ? propertyX.fontFamily
+                : undefined
             }
           />
         </ExampleCard>
@@ -610,19 +1026,52 @@ export default function Page08() {
           danger
         >
           <ForbiddenExample
+            mode={
+              additionalRelationship
+            }
             aPrimary={
               aPrimary
             }
             bPrimary={
               bPrimary
             }
+            xPrimary={
+              xPrimary
+            }
           />
         </ExampleCard>
       </section>
 
-      <div className="absolute bottom-[25px] left-[70px] right-[70px] flex justify-between border-t border-white/[0.06] pt-[10px] text-[9px] text-white/25">
+      {/* ======================================== */}
+      {/* FOOTER                                   */}
+      {/* ======================================== */}
+
+      <div
+        className="
+          absolute
+
+          bottom-[25px]
+          left-[70px]
+          right-[70px]
+
+          flex
+          justify-between
+
+          border-t
+          border-white/[0.06]
+
+          pt-[10px]
+
+          text-[9px]
+          text-white/25
+        "
+      >
         <span>
-          Never use both brands’ primary colours simultaneously across large surfaces.
+          {presenting
+            ? "Never create large competing colour territories between Brand A, Brand B and the presented property."
+            : sponsored
+              ? `${propertyName} sponsor colours never replace or modify the collaboration palette.`
+              : "Never use both brands’ primary colours simultaneously across large surfaces."}
         </span>
 
         <span>
@@ -651,9 +1100,12 @@ function Card({
     <div
       className={`
         rounded-[18px]
+
         border
         border-white/[0.07]
+
         bg-white/[0.018]
+
         ${className}
       `}
     >
@@ -669,9 +1121,47 @@ function SectionLabel({
     ReactNode;
 }) {
   return (
-    <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
+    <p
+      className="
+        text-[10px]
+        uppercase
+        tracking-[0.14em]
+
+        text-white/30
+        oook-medium
+      "
+    >
       {children}
     </p>
+  );
+}
+
+function RelationshipLabel({
+  text,
+}: {
+  text:
+    string;
+}) {
+  return (
+    <span
+      className="
+        rounded-full
+
+        border
+        border-white/[0.07]
+
+        px-[10px]
+        py-[6px]
+
+        text-[8px]
+        uppercase
+        tracking-[0.12em]
+
+        text-white/30
+      "
+    >
+      {text}
+    </span>
   );
 }
 
@@ -688,7 +1178,14 @@ function Swatch({
   return (
     <div>
       <div
-        className="h-[46px] rounded-[9px] border border-white/[0.08]"
+        className="
+          h-[46px]
+
+          rounded-[9px]
+
+          border
+          border-white/[0.08]
+        "
         style={{
           backgroundColor:
             colour,
@@ -706,6 +1203,7 @@ function BrandPalette({
   label,
   primary,
   secondary,
+  featured = false,
 }: {
   label:
     string;
@@ -715,25 +1213,52 @@ function BrandPalette({
 
   secondary:
     string;
+
+  featured?:
+    boolean;
 }) {
   return (
-    <div className="mt-[12px]">
-      <p className="text-[9px] text-white/45">
+    <div
+      className={
+        featured
+          ? `
+              mt-[12px]
+
+              rounded-[10px]
+
+              border
+              border-white/[0.08]
+
+              p-[8px]
+            `
+          : "mt-[12px]"
+      }
+    >
+      <p
+        className={
+          featured
+            ? "text-[9px] text-white/65"
+            : "text-[9px] text-white/45"
+        }
+      >
         {label}
       </p>
 
-      <div className="mt-[6px] flex gap-[6px]">
+      <div
+        className="
+          mt-[6px]
+
+          flex
+          gap-[6px]
+        "
+      >
         <ColourChip
-          colour={
-            primary
-          }
+          colour={primary}
           label="Primary"
         />
 
         <ColourChip
-          colour={
-            secondary
-          }
+          colour={secondary}
           label="Secondary"
         />
       </div>
@@ -752,9 +1277,30 @@ function ColourChip({
     string;
 }) {
   return (
-    <div className="flex flex-1 items-center gap-[7px] rounded-[9px] border border-white/[0.06] px-[8px] py-[7px]">
+    <div
+      className="
+        flex
+        flex-1
+
+        items-center
+        gap-[7px]
+
+        rounded-[9px]
+
+        border
+        border-white/[0.06]
+
+        px-[8px]
+        py-[7px]
+      "
+    >
       <div
-        className="h-[13px] w-[13px] rounded-full"
+        className="
+          h-[13px]
+          w-[13px]
+
+          rounded-full
+        "
         style={{
           backgroundColor:
             colour,
@@ -766,7 +1312,16 @@ function ColourChip({
           {label}
         </p>
 
-        <p className="mt-[1px] text-[8px] uppercase text-white/48">
+        <p
+          className="
+            mt-[1px]
+
+            text-[8px]
+            uppercase
+
+            text-white/48
+          "
+        >
           {colour}
         </p>
       </div>
@@ -775,7 +1330,7 @@ function ColourChip({
 }
 
 /* ================================================= */
-/* EXAMPLES                                          */
+/* EXAMPLE CARD                                      */
 /* ================================================= */
 
 function ExampleCard({
@@ -811,6 +1366,7 @@ function ExampleCard({
           className={`
             text-[11px]
             oook-medium
+
             ${
               danger
                 ? "text-white/55"
@@ -825,11 +1381,16 @@ function ExampleCard({
       <div
         className="
           relative
+
           mt-[8px]
+
           overflow-hidden
+
           rounded-[11px]
+
           border
           border-white/[0.06]
+
           bg-[#050506]
         "
         style={{
@@ -845,6 +1406,10 @@ function ExampleCard({
   );
 }
 
+/* ================================================= */
+/* BACKGROUND EXAMPLE                                */
+/* ================================================= */
+
 function BackgroundExample({
   config,
 }: {
@@ -855,7 +1420,21 @@ function BackgroundExample({
     <>
       <div className="absolute inset-0 bg-[#09090A]" />
 
-      <div className="absolute left-[14px] right-[14px] top-[15px] h-[52px] overflow-hidden rounded-[10px]">
+      <div
+        className="
+          absolute
+
+          left-[14px]
+          right-[14px]
+          top-[15px]
+
+          h-[52px]
+
+          overflow-hidden
+
+          rounded-[10px]
+        "
+      >
         <RasterGradient
           direction="horizontal"
           className="h-full w-full"
@@ -863,8 +1442,10 @@ function BackgroundExample({
             {
               color:
                 config.collaboration,
-              offset: 0,
+              offset:
+                0,
             },
+
             {
               color:
                 config.collaborationSecondary,
@@ -875,9 +1456,33 @@ function BackgroundExample({
         />
       </div>
 
-      <div className="absolute bottom-[15px] left-[14px] right-[14px] h-[118px] rounded-[10px] bg-white/[0.035]">
+      <div
+        className="
+          absolute
+
+          bottom-[15px]
+          left-[14px]
+          right-[14px]
+
+          h-[118px]
+
+          rounded-[10px]
+
+          bg-white/[0.035]
+        "
+      >
         <div
-          className="absolute bottom-[10px] left-[10px] h-[5px] w-[55px] rounded-full"
+          className="
+            absolute
+
+            bottom-[10px]
+            left-[10px]
+
+            h-[5px]
+            w-[55px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               config.accent,
@@ -885,7 +1490,17 @@ function BackgroundExample({
         />
 
         <div
-          className="absolute bottom-[10px] left-[72px] h-[5px] w-[28px] rounded-full"
+          className="
+            absolute
+
+            bottom-[10px]
+            left-[72px]
+
+            h-[5px]
+            w-[28px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               config.accentSecondary,
@@ -896,33 +1511,79 @@ function BackgroundExample({
   );
 }
 
+/* ================================================= */
+/* HEADLINE                                          */
+/* ================================================= */
+
 function HeadlineExample({
   config,
+  fontFamily,
 }: {
   config:
     PaletteConfig;
+
+  fontFamily?:
+    string;
 }) {
   return (
     <div className="absolute inset-[18px]">
-      <p className="text-[9px] uppercase tracking-[0.12em] text-white/24">
+      <p
+        className="
+          text-[9px]
+          uppercase
+          tracking-[0.12em]
+
+          text-white/24
+        "
+      >
         Shared headline
       </p>
 
-      <h3 className="mt-[32px] text-[29px] leading-[0.95] tracking-[-0.04em] text-white">
+      <h3
+        className="
+          mt-[32px]
+
+          text-[29px]
+          leading-[0.95]
+          tracking-[-0.04em]
+
+          text-white
+        "
+        style={
+          fontFamily
+            ? {
+                fontFamily,
+              }
+            : undefined
+        }
+      >
         Feel closer
         <br />
         to the moment.
       </h3>
 
-      <div className="mt-[15px] h-[4px] w-[78px] overflow-hidden rounded-full">
+      <div
+        className="
+          mt-[15px]
+
+          h-[4px]
+          w-[78px]
+
+          overflow-hidden
+
+          rounded-full
+        "
+      >
         <RasterGradient
           className="h-full w-full"
           stops={[
             {
               color:
                 config.collaboration,
-              offset: 0,
+              offset:
+                0,
             },
+
             {
               color:
                 config.collaborationSecondary,
@@ -933,12 +1594,25 @@ function HeadlineExample({
         />
       </div>
 
-      <p className="mt-[13px] text-[9px] leading-[1.4] text-white/31">
+      <p
+        className="
+          mt-[13px]
+
+          text-[9px]
+          leading-[1.4]
+
+          text-white/31
+        "
+      >
         Accent colour supports emphasis, never entire paragraphs.
       </p>
     </div>
   );
 }
+
+/* ================================================= */
+/* OVERLAY                                           */
+/* ================================================= */
 
 function OverlayExample({
   config,
@@ -960,12 +1634,39 @@ function OverlayExample({
         centerX={78}
         centerY={18}
         radius={68}
-        className="absolute inset-0 h-full w-full"
+        className="
+          absolute
+          inset-0
+          h-full
+          w-full
+        "
       />
 
-      <div className="absolute bottom-[15px] left-[15px] right-[15px] rounded-[11px] border border-white/[0.09] bg-black/60 p-[12px]">
+      <div
+        className="
+          absolute
+
+          bottom-[15px]
+          left-[15px]
+          right-[15px]
+
+          rounded-[11px]
+
+          border
+          border-white/[0.09]
+
+          bg-black/60
+
+          p-[12px]
+        "
+      >
         <div
-          className="h-[4px] w-[38px] rounded-full"
+          className="
+            h-[4px]
+            w-[38px]
+
+            rounded-full
+          "
           style={{
             backgroundColor:
               config.accent,
@@ -984,6 +1685,10 @@ function OverlayExample({
   );
 }
 
+/* ================================================= */
+/* CTA                                               */
+/* ================================================= */
+
 function CTAExample({
   config,
 }: {
@@ -991,9 +1696,30 @@ function CTAExample({
     PaletteConfig;
 }) {
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
+    <div
+      className="
+        absolute
+        inset-0
+
+        flex
+        items-center
+        justify-center
+      "
+    >
       <div
-        className="flex items-center gap-[9px] rounded-full px-[18px] py-[10px] text-[10px] text-white"
+        className="
+          flex
+          items-center
+          gap-[9px]
+
+          rounded-full
+
+          px-[18px]
+          py-[10px]
+
+          text-[10px]
+          text-white
+        "
         style={{
           backgroundColor:
             config.collaboration,
@@ -1009,7 +1735,16 @@ function CTAExample({
       </div>
 
       <div
-        className="absolute bottom-[28px] h-[4px] w-[38px] rounded-full"
+        className="
+          absolute
+
+          bottom-[28px]
+
+          h-[4px]
+          w-[38px]
+
+          rounded-full
+        "
         style={{
           backgroundColor:
             config.accentSecondary,
@@ -1018,6 +1753,10 @@ function CTAExample({
     </div>
   );
 }
+
+/* ================================================= */
+/* GRAPHICS                                          */
+/* ================================================= */
 
 function GraphicsExample({
   config,
@@ -1028,7 +1767,19 @@ function GraphicsExample({
   return (
     <div className="absolute inset-0">
       <div
-        className="absolute left-[15%] top-[20%] h-[115px] w-[115px] rounded-full border"
+        className="
+          absolute
+
+          left-[15%]
+          top-[20%]
+
+          h-[115px]
+          w-[115px]
+
+          rounded-full
+
+          border
+        "
         style={{
           borderColor:
             alpha(
@@ -1039,7 +1790,19 @@ function GraphicsExample({
       />
 
       <div
-        className="absolute left-[33%] top-[29%] h-[85px] w-[145px] rounded-[26px] border"
+        className="
+          absolute
+
+          left-[33%]
+          top-[29%]
+
+          h-[85px]
+          w-[145px]
+
+          rounded-[26px]
+
+          border
+        "
         style={{
           borderColor:
             alpha(
@@ -1049,7 +1812,18 @@ function GraphicsExample({
         }}
       />
 
-      <div className="absolute bottom-[28px] left-[15%] right-[15%] flex gap-[4px]">
+      <div
+        className="
+          absolute
+
+          bottom-[28px]
+          left-[15%]
+          right-[15%]
+
+          flex
+          gap-[4px]
+        "
+      >
         {[
           30,
           56,
@@ -1064,18 +1838,19 @@ function GraphicsExample({
             index
           ) => (
             <div
-              key={
-                index
-              }
-              className="flex-1 rounded-full"
+              key={index}
+              className="
+                flex-1
+                rounded-full
+              "
               style={{
                 height:
                   `${height}px`,
 
                 backgroundColor:
                   index %
-                    3 ===
-                  0
+                      3 ===
+                    0
                     ? config.accent
                     : index %
                           2 ===
@@ -1094,15 +1869,23 @@ function GraphicsExample({
   );
 }
 
+/* ================================================= */
+/* VIDEO                                             */
+/* ================================================= */
+
 function VideoExample({
   config,
   isLight,
+  fontFamily,
 }: {
   config:
     PaletteConfig;
 
   isLight:
     boolean;
+
+  fontFamily?:
+    string;
 }) {
   return (
     <>
@@ -1118,37 +1901,48 @@ function VideoExample({
 
       <RasterGradient
         direction="vertical"
-        className="absolute inset-0 h-full w-full"
+        className="
+          absolute
+          inset-0
+          h-full
+          w-full
+        "
         stops={
           isLight
             ? [
                 {
                   color:
                     "#FFFFFF",
-                  offset: 0,
-                  opacity: 0.58,
+                  offset:
+                    0,
+                  opacity:
+                    0.58,
                 },
                 {
                   color:
                     "#E8E8E4",
                   offset:
                     100,
-                  opacity: 0.92,
+                  opacity:
+                    0.92,
                 },
               ]
             : [
                 {
                   color:
                     "#FFFFFF",
-                  offset: 0,
-                  opacity: 0.08,
+                  offset:
+                    0,
+                  opacity:
+                    0.08,
                 },
                 {
                   color:
                     "#000000",
                   offset:
                     100,
-                  opacity: 1,
+                  opacity:
+                    1,
                 },
               ]
         }
@@ -1165,17 +1959,60 @@ function VideoExample({
         secondaryOpacity={0.08}
         centerX={84}
         centerY={22}
-        className="absolute -right-[40px] -top-[25px] h-[220px] w-[220px]"
+        className="
+          absolute
+
+          -right-[40px]
+          -top-[25px]
+
+          h-[220px]
+          w-[220px]
+        "
       />
 
-      <div className="absolute bottom-[18px] left-[18px] right-[18px]">
-        <p className="text-[19px] tracking-[-0.025em] text-white/85">
+      <div
+        className="
+          absolute
+
+          bottom-[18px]
+          left-[18px]
+          right-[18px]
+        "
+      >
+        <p
+          className="
+            text-[19px]
+            tracking-[-0.025em]
+
+            text-white/85
+          "
+          style={
+            fontFamily
+              ? {
+                  fontFamily,
+                }
+              : undefined
+          }
+        >
           Live from inside the event
         </p>
 
-        <div className="mt-[8px] flex items-center gap-[6px]">
+        <div
+          className="
+            mt-[8px]
+
+            flex
+            items-center
+            gap-[6px]
+          "
+        >
           <div
-            className="h-[5px] w-[35px] rounded-full"
+            className="
+              h-[5px]
+              w-[35px]
+
+              rounded-full
+            "
             style={{
               backgroundColor:
                 config.collaboration,
@@ -1183,7 +2020,12 @@ function VideoExample({
           />
 
           <div
-            className="h-[5px] w-[18px] rounded-full"
+            className="
+              h-[5px]
+              w-[18px]
+
+              rounded-full
+            "
             style={{
               backgroundColor:
                 config.accentSecondary,
@@ -1195,20 +2037,104 @@ function VideoExample({
   );
 }
 
+/* ================================================= */
+/* DON'T                                             */
+/* ================================================= */
+
 function ForbiddenExample({
+  mode,
   aPrimary,
   bPrimary,
+  xPrimary,
 }: {
+  mode:
+    AdditionalRelationshipMode;
+
   aPrimary:
     string;
 
   bPrimary:
     string;
+
+  xPrimary:
+    string;
 }) {
+  if (
+    mode ===
+    "presenting"
+  ) {
+    return (
+      <>
+        <div
+          className="
+            absolute
+            inset-y-0
+            left-0
+            w-1/3
+          "
+          style={{
+            backgroundColor:
+              aPrimary,
+          }}
+        />
+
+        <div
+          className="
+            absolute
+            inset-y-0
+            left-1/3
+            w-1/3
+          "
+          style={{
+            backgroundColor:
+              bPrimary,
+          }}
+        />
+
+        <div
+          className="
+            absolute
+            inset-y-0
+            right-0
+            w-1/3
+          "
+          style={{
+            backgroundColor:
+              xPrimary,
+          }}
+        />
+
+        <ForbiddenMark />
+
+        <p
+          className="
+            absolute
+
+            bottom-[14px]
+            left-[14px]
+            right-[14px]
+
+            text-center
+            text-[9px]
+
+            text-white/60
+          "
+        >
+          Never create three competing large colour territories.
+        </p>
+      </>
+    );
+  }
+
   return (
     <>
       <div
-        className="absolute inset-y-0 left-0 w-1/2"
+        className="
+          absolute
+          inset-y-0
+          left-0
+          w-1/2
+        "
         style={{
           backgroundColor:
             aPrimary,
@@ -1216,22 +2142,71 @@ function ForbiddenExample({
       />
 
       <div
-        className="absolute inset-y-0 right-0 w-1/2"
+        className="
+          absolute
+          inset-y-0
+          right-0
+          w-1/2
+        "
         style={{
           backgroundColor:
             bPrimary,
         }}
       />
 
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-black/70 text-[22px] text-white">
-          ×
-        </div>
-      </div>
+      <ForbiddenMark />
 
-      <p className="absolute bottom-[14px] left-[14px] right-[14px] text-center text-[9px] text-white/60">
+      <p
+        className="
+          absolute
+
+          bottom-[14px]
+          left-[14px]
+          right-[14px]
+
+          text-center
+          text-[9px]
+
+          text-white/60
+        "
+      >
         Never create two competing large colour territories.
       </p>
     </>
+  );
+}
+
+function ForbiddenMark() {
+  return (
+    <div
+      className="
+        absolute
+        inset-0
+
+        flex
+        items-center
+        justify-center
+      "
+    >
+      <div
+        className="
+          flex
+          h-[42px]
+          w-[42px]
+
+          items-center
+          justify-center
+
+          rounded-full
+
+          bg-black/70
+
+          text-[22px]
+          text-white
+        "
+      >
+        ×
+      </div>
+    </div>
   );
 }

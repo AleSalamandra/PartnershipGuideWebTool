@@ -3,22 +3,21 @@
 import {
   useEffect,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 
 import BrandLogo from "./BrandLogo";
-
 import GuidelinePage from "./GuidelinePage";
-
 import PartnershipLockup from "./PartnershipLockup";
-
 import RasterGradient from "./RasterGradient";
 
 import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
@@ -28,6 +27,7 @@ import {
 
 type VideoLogoSize =
   | "hero"
+  | "property"
   | "primary"
   | "secondary"
   | "credit"
@@ -38,11 +38,18 @@ interface BrandView {
   logoUrl: string | null;
 }
 
+interface PropertyView extends BrandView {
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+}
+
 interface ModelSequence {
   first: "A" | "B";
   second: "A" | "B";
 
   relationship: string;
+
   description: string;
 }
 
@@ -85,20 +92,14 @@ function shuffle<T>(
 
   for (
     let index =
-      result.length -
-      1;
-
-    index >
-    0;
-
-    index -=
-      1
+      result.length - 1;
+    index > 0;
+    index -= 1
   ) {
     const randomIndex =
       Math.floor(
         Math.random() *
-          (index +
-            1)
+          (index + 1)
       );
 
     [
@@ -112,6 +113,20 @@ function shuffle<T>(
 
   return result;
 }
+
+/*
+  We keep image 6 reserved for the two
+  individual A / B brand frames.
+
+  Presenting mode still follows:
+
+  01 X
+  02 Brand 1
+  03 Relationship
+  04 Brand 2
+  05 Full presenting lockup
+  06 Content
+*/
 
 function getRandomFrameImages() {
   const available =
@@ -130,27 +145,17 @@ function getRandomFrameImages() {
     );
 
   return [
-    random[0] ??
-      1,
-
+    random[0] ?? 1,
     RESERVED_BRAND_IMAGE,
-
-    random[1] ??
-      2,
-
+    random[1] ?? 2,
     RESERVED_BRAND_IMAGE,
-
-    random[2] ??
-      3,
-
-    random[3] ??
-      4,
+    random[2] ?? 3,
+    random[3] ?? 4,
   ];
 }
 
 function getSequence(
-  model:
-    PartnershipModelId
+  model: PartnershipModelId
 ): ModelSequence {
   switch (model) {
     case "axb":
@@ -211,9 +216,29 @@ function getSequence(
           "presents",
 
         description:
-          "Brand A opens the platform and introduces Brand B as the featured content identity.",
+          "Brand A establishes the platform and introduces Brand B as the featured partner.",
       };
   }
+}
+
+function getPageDescription(
+  sequence: ModelSequence,
+  mode: AdditionalRelationshipMode,
+  propertyName: string
+) {
+  if (
+    mode === "presenting"
+  ) {
+    return `${propertyName} establishes the opening world first. The partnership is then introduced as the relationship behind the experience before resolving into the complete presenting signature.`;
+  }
+
+  if (
+    mode === "sponsored"
+  ) {
+    return `${sequence.description} Sponsor attribution remains secondary and does not alter the opening narrative or visual language.`;
+  }
+
+  return sequence.description;
 }
 
 /* ================================================= */
@@ -223,8 +248,11 @@ function getSequence(
 export default function Page05() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
+    propertyX,
   } =
     useGuidelineStore();
 
@@ -236,10 +264,18 @@ export default function Page05() {
       model
     );
 
+  const presenting =
+    additionalRelationship ===
+    "presenting";
+
+  const sponsored =
+    additionalRelationship ===
+    "sponsored";
+
   const brandAView:
     BrandView = {
     name:
-      brandA.name ||
+      brandA.name.trim() ||
       "Brand A",
 
     logoUrl:
@@ -250,7 +286,7 @@ export default function Page05() {
   const brandBView:
     BrandView = {
     name:
-      brandB.name ||
+      brandB.name.trim() ||
       "Brand B",
 
     logoUrl:
@@ -258,13 +294,41 @@ export default function Page05() {
       null,
   };
 
+  const propertyView:
+    PropertyView = {
+    name:
+      propertyX.name.trim() ||
+      "X",
+
+    logoUrl:
+      propertyX.logoUrl ??
+      null,
+
+    primaryColor:
+      propertyX.primaryColor,
+
+    secondaryColor:
+      propertyX.secondaryColor,
+
+    fontFamily:
+      propertyX.fontFamily,
+  };
+
+  const firstBrand =
+    sequence.first === "A"
+      ? brandAView
+      : brandBView;
+
+  const secondBrand =
+    sequence.second === "A"
+      ? brandAView
+      : brandBView;
+
   const [
     images,
     setImages,
   ] =
-    useState<
-      number[]
-    >([
+    useState<number[]>([
       1,
       6,
       2,
@@ -279,20 +343,11 @@ export default function Page05() {
         getRandomFrameImages()
       );
     },
-    [model]
+    [
+      model,
+      additionalRelationship,
+    ]
   );
-
-  const firstBrand =
-    sequence.first ===
-    "A"
-      ? brandAView
-      : brandBView;
-
-  const secondBrand =
-    sequence.second ===
-    "A"
-      ? brandAView
-      : brandBView;
 
   return (
     <GuidelinePage>
@@ -303,6 +358,7 @@ export default function Page05() {
       <header
         className="
           absolute
+
           left-[36px]
           right-[36px]
           top-[26px]
@@ -318,6 +374,7 @@ export default function Page05() {
               text-[11px]
               uppercase
               tracking-[0.17em]
+
               text-white/30
             "
           >
@@ -344,25 +401,56 @@ export default function Page05() {
             className="
               mt-[17px]
 
-              max-w-[720px]
+              max-w-[840px]
 
-              text-[16px]
+              text-[15px]
               leading-[1.38]
 
               text-white/45
             "
           >
-            {
-              sequence.description
-            }
+            {getPageDescription(
+              sequence,
+              additionalRelationship,
+              propertyView.name
+            )}
           </p>
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+
+            gap-[10px]
+          "
+        >
+          <PartnershipLockup
+            model={model}
+            brandA={brandA}
+            brandB={brandB}
+          />
+
+          {presenting && (
+            <XHeaderSignature
+              label="Presenting"
+              property={
+                propertyView
+              }
+              large
+            />
+          )}
+
+          {sponsored && (
+            <XHeaderSignature
+              label="Sponsored by"
+              property={
+                propertyView
+              }
+            />
+          )}
+        </div>
       </header>
 
       {/* ======================================== */}
@@ -384,30 +472,57 @@ export default function Page05() {
           gap-y-[56px]
         "
       >
-        {/* 01 */}
+        {/* ====================================== */}
+        {/* FRAME 01                               */}
+        {/* ====================================== */}
 
         <Keyframe
           number="01"
-          title="Atmosphere"
+          title={
+            presenting
+              ? "Presented property"
+              : "Atmosphere"
+          }
           image={
             images[0]
           }
+          mode={
+            additionalRelationship
+          }
+          property={
+            propertyView
+          }
         >
-          <AtmosphereFrame />
+          {presenting ? (
+            <PresentedPropertyOpening
+              property={
+                propertyView
+              }
+            />
+          ) : (
+            <AtmosphereFrame />
+          )}
         </Keyframe>
 
-        {/* 02 */}
+        {/* ====================================== */}
+        {/* FRAME 02                               */}
+        {/* ====================================== */}
 
         <Keyframe
           number="02"
           title={
-            sequence.first ===
-            "A"
+            sequence.first === "A"
               ? "Brand A"
               : "Brand B"
           }
           image={
             images[1]
+          }
+          mode={
+            additionalRelationship
+          }
+          property={
+            propertyView
           }
         >
           <BareHeroLogo
@@ -417,13 +532,21 @@ export default function Page05() {
           />
         </Keyframe>
 
-        {/* 03 */}
+        {/* ====================================== */}
+        {/* FRAME 03                               */}
+        {/* ====================================== */}
 
         <Keyframe
           number="03"
-          title="Relationship"
+          title="Partnership relationship"
           image={
             images[2]
+          }
+          mode={
+            additionalRelationship
+          }
+          property={
+            propertyView
           }
         >
           <RelationshipFrame
@@ -433,18 +556,25 @@ export default function Page05() {
           />
         </Keyframe>
 
-        {/* 04 */}
+        {/* ====================================== */}
+        {/* FRAME 04                               */}
+        {/* ====================================== */}
 
         <Keyframe
           number="04"
           title={
-            sequence.second ===
-            "A"
+            sequence.second === "A"
               ? "Brand A"
               : "Brand B"
           }
           image={
             images[3]
+          }
+          mode={
+            additionalRelationship
+          }
+          property={
+            propertyView
           }
         >
           <BareHeroLogo
@@ -454,29 +584,65 @@ export default function Page05() {
           />
         </Keyframe>
 
-        {/* 05 */}
+        {/* ====================================== */}
+        {/* FRAME 05                               */}
+        {/* ====================================== */}
 
         <Keyframe
           number="05"
-          title="Final lockup"
+          title={
+            presenting
+              ? "Complete presenting signature"
+              : "Final lockup"
+          }
           image={
             images[4]
           }
+          mode={
+            additionalRelationship
+          }
+          property={
+            propertyView
+          }
         >
-          <FinalLockup
-            model={
-              model
-            }
-            brandA={
-              brandAView
-            }
-            brandB={
-              brandBView
-            }
-          />
+          {presenting ? (
+            <CompletePresentingLockup
+              model={
+                model
+              }
+              brandA={
+                brandAView
+              }
+              brandB={
+                brandBView
+              }
+              property={
+                propertyView
+              }
+            />
+          ) : (
+            <FinalLockup
+              model={
+                model
+              }
+              brandA={
+                brandAView
+              }
+              brandB={
+                brandBView
+              }
+              sponsor={
+                sponsored
+                  ? propertyView
+                  : null
+              }
+            />
+          )}
         </Keyframe>
 
-        {/* 06 */}
+        {/* ====================================== */}
+        {/* FRAME 06                               */}
+        {/* ====================================== */}
 
         <Keyframe
           number="06"
@@ -484,18 +650,46 @@ export default function Page05() {
           image={
             images[5]
           }
+          mode={
+            additionalRelationship
+          }
+          property={
+            propertyView
+          }
         >
-          <ContentStart
-            model={
-              model
-            }
-            brandA={
-              brandAView
-            }
-            brandB={
-              brandBView
-            }
-          />
+          {presenting ? (
+            <PresentedContentStart
+              model={
+                model
+              }
+              brandA={
+                brandAView
+              }
+              brandB={
+                brandBView
+              }
+              property={
+                propertyView
+              }
+            />
+          ) : (
+            <ContentStart
+              model={
+                model
+              }
+              brandA={
+                brandAView
+              }
+              brandB={
+                brandBView
+              }
+              sponsor={
+                sponsored
+                  ? propertyView
+                  : null
+              }
+            />
+          )}
         </Keyframe>
 
         {/* ====================================== */}
@@ -503,7 +697,11 @@ export default function Page05() {
         {/* ====================================== */}
 
         <MotionCue
-          label="→ fade in"
+          label={
+            presenting
+              ? "→ introduce"
+              : "→ fade in"
+          }
           style={{
             left:
               "32.95%",
@@ -514,7 +712,11 @@ export default function Page05() {
         />
 
         <MotionCue
-          label="→ introduce"
+          label={
+            presenting
+              ? "→ connect"
+              : "→ introduce"
+          }
           style={{
             left:
               "67.05%",
@@ -525,7 +727,11 @@ export default function Page05() {
         />
 
         <MotionCue
-          label="↓ reveal"
+          label={
+            presenting
+              ? "↓ reveal"
+              : "↓ reveal"
+          }
           style={{
             left:
               "50%",
@@ -536,7 +742,11 @@ export default function Page05() {
         />
 
         <MotionCue
-          label="→ merge"
+          label={
+            presenting
+              ? "→ resolve"
+              : "→ merge"
+          }
           style={{
             left:
               "32.95%",
@@ -580,7 +790,11 @@ export default function Page05() {
         </p>
 
         <p className="text-[9px] text-white/23">
-          Image · Noise · Glass · Refraction
+          {presenting
+            ? "Property first · Partnership reveal · Presenting signature · Content"
+            : sponsored
+              ? "Partnership identity · Content · Sponsor attribution"
+              : "Image · Noise · Glass · Refraction"}
         </p>
       </div>
     </GuidelinePage>
@@ -595,16 +809,19 @@ function Keyframe({
   number,
   title,
   image,
+  mode,
+  property,
   children,
 }: {
-  number:
-    string;
+  number: string;
+  title: string;
+  image: number;
 
-  title:
-    string;
+  mode:
+    AdditionalRelationshipMode;
 
-  image:
-    number;
+  property:
+    PropertyView;
 
   children:
     ReactNode;
@@ -633,7 +850,14 @@ function Keyframe({
           }
         />
 
-        <FrameAtmosphere />
+        <FrameAtmosphere
+          mode={
+            mode
+          }
+          property={
+            property
+          }
+        />
 
         {children}
       </div>
@@ -656,11 +880,15 @@ function Keyframe({
             text-white/22
           "
         >
-          Key frame{" "}
-          {number}
+          Key frame {number}
         </p>
 
-        <p className="text-[8px] text-white/20">
+        <p
+          className="
+            text-[8px]
+            text-white/20
+          "
+        >
           {title}
         </p>
       </div>
@@ -675,8 +903,7 @@ function Keyframe({
 function FrameBackground({
   image,
 }: {
-  image:
-    number;
+  image: number;
 }) {
   const [
     extensionIndex,
@@ -703,15 +930,14 @@ function FrameBackground({
       className="
         absolute
         inset-0
+
         overflow-hidden
       "
     >
       <img
         src={`/images/image${image}.${extension}`}
         alt=""
-        draggable={
-          false
-        }
+        draggable={false}
         onError={() => {
           if (
             extensionIndex <
@@ -720,8 +946,7 @@ function FrameBackground({
           ) {
             setExtensionIndex(
               (current) =>
-                current +
-                1
+                current + 1
             );
           }
         }}
@@ -743,19 +968,22 @@ function FrameBackground({
 }
 
 /* ================================================= */
-/* SAFE ATMOSPHERE                                   */
+/* FRAME ATMOSPHERE                                  */
 /* ================================================= */
 
-function FrameAtmosphere() {
+function FrameAtmosphere({
+  mode,
+  property,
+}: {
+  mode:
+    AdditionalRelationshipMode;
+
+  property:
+    PropertyView;
+}) {
   return (
     <>
-      {/*
-        No CSS gradient.
-        No blend mode.
-        No blur.
-
-        This gets exported as a normal image.
-      */}
+      {/* Base treatment */}
 
       <RasterGradient
         direction="vertical"
@@ -775,7 +1003,7 @@ function FrameAtmosphere() {
               0,
 
             opacity:
-              0.03,
+              0.025,
           },
 
           {
@@ -783,7 +1011,7 @@ function FrameAtmosphere() {
               "#FFFFFF",
 
             offset:
-              42,
+              38,
 
             opacity:
               0,
@@ -797,10 +1025,60 @@ function FrameAtmosphere() {
               100,
 
             opacity:
-              0.3,
+              0.32,
           },
         ]}
       />
+
+      {/* Presenting X actively affects atmosphere */}
+
+      {mode ===
+        "presenting" && (
+        <RasterGradient
+          direction="diagonal"
+          className="
+            absolute
+            inset-0
+
+            h-full
+            w-full
+          "
+          stops={[
+            {
+              color:
+                property.primaryColor,
+
+              offset:
+                0,
+
+              opacity:
+                0.16,
+            },
+
+            {
+              color:
+                property.secondaryColor,
+
+              offset:
+                48,
+
+              opacity:
+                0.07,
+            },
+
+            {
+              color:
+                property.secondaryColor,
+
+              offset:
+                100,
+
+              opacity:
+                0,
+            },
+          ]}
+        />
+      )}
 
       <ScanLines />
     </>
@@ -840,6 +1118,7 @@ function ScanLines() {
             }
             className="
               absolute
+
               left-0
               right-0
 
@@ -850,8 +1129,8 @@ function ScanLines() {
             style={{
               top:
                 `${
-                  (index /
-                    count) *
+                  index /
+                  count *
                   100
                 }%`,
             }}
@@ -863,7 +1142,7 @@ function ScanLines() {
 }
 
 /* ================================================= */
-/* FRAME 01                                          */
+/* FRAME 01 — NORMAL                                 */
 /* ================================================= */
 
 function AtmosphereFrame() {
@@ -906,7 +1185,124 @@ function AtmosphereFrame() {
 }
 
 /* ================================================= */
-/* HERO LOGO                                         */
+/* FRAME 01 — PRESENTING X                           */
+/* ================================================= */
+
+function PresentedPropertyOpening({
+  property,
+}: {
+  property:
+    PropertyView;
+}) {
+  return (
+    <div
+      className="
+        absolute
+        inset-0
+
+        flex
+        flex-col
+
+        items-center
+        justify-center
+      "
+    >
+      {/* Small context */}
+
+      <p
+        className="
+          mb-[12px]
+
+          text-[7px]
+          uppercase
+          tracking-[0.16em]
+
+          text-white/25
+        "
+      >
+        Presented property
+      </p>
+
+      {/* X is the hero from the first frame */}
+
+      <div
+        className="
+          h-[72px]
+          w-[235px]
+        "
+      >
+        <BrandLogo
+          logoUrl={
+            property.logoUrl
+          }
+          fallback={
+            property.name
+          }
+        />
+      </div>
+
+      {/* X colour signature */}
+
+      <div
+        className="
+          mt-[15px]
+
+          flex
+          items-center
+          gap-[5px]
+        "
+      >
+        <div
+          className="
+            h-[4px]
+            w-[58px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.primaryColor,
+          }}
+        />
+
+        <div
+          className="
+            h-[4px]
+            w-[24px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.secondaryColor,
+          }}
+        />
+      </div>
+
+      {/* Optional property-language descriptor */}
+
+      <p
+        className="
+          mt-[12px]
+
+          text-[8px]
+          tracking-[0.03em]
+
+          text-white/27
+        "
+        style={{
+          fontFamily:
+            property.fontFamily,
+        }}
+      >
+        Enter the world of {property.name}
+      </p>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* INDIVIDUAL BRAND                                  */
 /* ================================================= */
 
 function BareHeroLogo({
@@ -926,13 +1322,6 @@ function BareHeroLogo({
         justify-center
       "
     >
-      {/*
-        Deliberately NO halo.
-
-        The uploaded logo remains completely clean
-        and therefore exports identically.
-      */}
-
       <VideoLogo
         brand={
           brand
@@ -974,19 +1363,173 @@ function RelationshipFrame({
           oook-light
         "
       >
-        {
-          relationship
-        }
+        {relationship}
       </p>
     </div>
   );
 }
 
 /* ================================================= */
-/* FINAL LOCKUP                                      */
+/* FRAME 05 — PRESENTING LOCKUP                      */
+/* ================================================= */
+
+function CompletePresentingLockup({
+  model,
+  brandA,
+  brandB,
+  property,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  property:
+    PropertyView;
+}) {
+  return (
+    <div
+      className="
+        absolute
+        inset-0
+
+        flex
+        flex-col
+
+        items-center
+        justify-center
+      "
+    >
+      {/* A / B partnership */}
+
+      <PresenterSignature
+        model={
+          model
+        }
+        brandA={
+          brandA
+        }
+        brandB={
+          brandB
+        }
+        size="medium"
+      />
+
+      {/* Present relationship */}
+
+      <p
+        className="
+          my-[8px]
+
+          text-[7px]
+          uppercase
+          tracking-[0.16em]
+
+          text-white/26
+        "
+      >
+        present
+      </p>
+
+      {/* X receives the largest mark */}
+
+      <VideoLogo
+        brand={
+          property
+        }
+        size="property"
+      />
+
+      <div
+        className="
+          mt-[10px]
+
+          flex
+          gap-[4px]
+        "
+      >
+        <span
+          className="
+            h-[4px]
+            w-[50px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.primaryColor,
+          }}
+        />
+
+        <span
+          className="
+            h-[4px]
+            w-[20px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.secondaryColor,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* FINAL LOCKUP — NONE / SPONSORED                   */
 /* ================================================= */
 
 function FinalLockup({
+  model,
+  brandA,
+  brandB,
+  sponsor,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  sponsor:
+    PropertyView | null;
+}) {
+  return (
+    <>
+      <BaseFinalLockup
+        model={
+          model
+        }
+        brandA={
+          brandA
+        }
+        brandB={
+          brandB
+        }
+      />
+
+      {sponsor && (
+        <SponsorBug
+          property={
+            sponsor
+          }
+        />
+      )}
+    </>
+  );
+}
+
+function BaseFinalLockup({
   model,
   brandA,
   brandB,
@@ -1001,8 +1544,7 @@ function FinalLockup({
     BrandView;
 }) {
   if (
-    model ===
-    "axb"
+    model === "axb"
   ) {
     return (
       <CenteredLockup>
@@ -1028,8 +1570,7 @@ function FinalLockup({
   }
 
   if (
-    model ===
-    "aandb"
+    model === "aandb"
   ) {
     return (
       <CenteredLockup>
@@ -1055,8 +1596,7 @@ function FinalLockup({
   }
 
   if (
-    model ===
-    "poweredByA"
+    model === "poweredByA"
   ) {
     return (
       <CenteredLockup>
@@ -1123,21 +1663,20 @@ function CenteredLockup({
         gap-[16px]
       "
     >
-      {
-        children
-      }
+      {children}
     </div>
   );
 }
 
 /* ================================================= */
-/* CONTENT START                                     */
+/* FRAME 06 — PRESENTED CONTENT                      */
 /* ================================================= */
 
-function ContentStart({
+function PresentedContentStart({
   model,
   brandA,
   brandB,
+  property,
 }: {
   model:
     PartnershipModelId;
@@ -1147,6 +1686,197 @@ function ContentStart({
 
   brandB:
     BrandView;
+
+  property:
+    PropertyView;
+}) {
+  return (
+    <>
+      {/* TOP PRESENTER BAR */}
+
+      <VideoGlass
+        className="
+          absolute
+
+          left-[18px]
+          right-[18px]
+          top-[16px]
+
+          flex
+          items-center
+          justify-between
+        "
+      >
+        <PresenterSignature
+          model={
+            model
+          }
+          brandA={
+            brandA
+          }
+          brandB={
+            brandB
+          }
+          size="small"
+        />
+
+        <div
+          className="
+            flex
+            items-center
+            gap-[6px]
+          "
+        >
+          <span
+            className="
+              text-[6px]
+              uppercase
+              tracking-[0.12em]
+
+              text-white/20
+            "
+          >
+            presenting
+          </span>
+
+          <MiniLogo
+            brand={
+              property
+            }
+            width={68}
+          />
+        </div>
+      </VideoGlass>
+
+      {/* MAIN PROPERTY CONTENT IDENTITY */}
+
+      <div
+        className="
+          absolute
+
+          left-[22px]
+          top-[42%]
+
+          h-[56px]
+          w-[42%]
+
+          -translate-y-1/2
+        "
+      >
+        <BrandLogo
+          logoUrl={
+            property.logoUrl
+          }
+          fallback={
+            property.name
+          }
+        />
+      </div>
+
+      {/* PROPERTY COLOUR */}
+
+      <div
+        className="
+          absolute
+
+          bottom-[18px]
+          left-[22px]
+
+          flex
+          gap-[4px]
+        "
+      >
+        <span
+          className="
+            h-[4px]
+            w-[46px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.primaryColor,
+          }}
+        />
+
+        <span
+          className="
+            h-[4px]
+            w-[20px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.secondaryColor,
+          }}
+        />
+      </div>
+
+      {/* CONTENT INFO */}
+
+      <VideoGlass
+        className="
+          absolute
+
+          bottom-[16px]
+          right-[18px]
+
+          w-[42%]
+        "
+      >
+        <p
+          className="
+            text-[7px]
+            uppercase
+            tracking-[0.11em]
+
+            text-white/25
+          "
+        >
+          Live
+        </p>
+
+        <p
+          className="
+            mt-[2px]
+
+            text-[10px]
+            text-white/60
+          "
+          style={{
+            fontFamily:
+              property.fontFamily,
+          }}
+        >
+          {property.name} content
+        </p>
+      </VideoGlass>
+    </>
+  );
+}
+
+/* ================================================= */
+/* FRAME 06 — NORMAL CONTENT                         */
+/* ================================================= */
+
+function ContentStart({
+  model,
+  brandA,
+  brandB,
+  sponsor,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  sponsor:
+    PropertyView | null;
 }) {
   return (
     <>
@@ -1163,11 +1893,16 @@ function ContentStart({
           justify-between
         "
       >
-        <p className="text-[8px] text-white/55">
+        <p
+          className="
+            text-[8px]
+            text-white/55
+          "
+        >
           Shared experience
         </p>
 
-        <HeaderIdentity
+        <PresenterSignature
           model={
             model
           }
@@ -1177,6 +1912,7 @@ function ContentStart({
           brandB={
             brandB
           }
+          size="small"
         />
       </VideoGlass>
 
@@ -1219,30 +1955,40 @@ function ContentStart({
           </p>
         </div>
 
-        <HeaderIdentity
-          model={
-            model
-          }
-          brandA={
-            brandA
-          }
-          brandB={
-            brandB
-          }
-        />
+        {sponsor ? (
+          <SponsorInline
+            property={
+              sponsor
+            }
+          />
+        ) : (
+          <PresenterSignature
+            model={
+              model
+            }
+            brandA={
+              brandA
+            }
+            brandB={
+              brandB
+            }
+            size="small"
+          />
+        )}
       </VideoGlass>
     </>
   );
 }
 
 /* ================================================= */
-/* HEADER IDENTITY                                   */
+/* PRESENTER SIGNATURE                               */
 /* ================================================= */
 
-function HeaderIdentity({
+function PresenterSignature({
   model,
   brandA,
   brandB,
+  size,
 }: {
   model:
     PartnershipModelId;
@@ -1252,105 +1998,302 @@ function HeaderIdentity({
 
   brandB:
     BrandView;
+
+  size:
+    "small" | "medium";
+}) {
+  const lead =
+    size === "medium"
+      ? 82
+      : 55;
+
+  const support =
+    size === "medium"
+      ? 58
+      : 38;
+
+  if (
+    model === "axb"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+          gap-[6px]
+        "
+      >
+        <MiniLogo
+          brand={
+            brandA
+          }
+          width={
+            lead
+          }
+        />
+
+        <Symbol>
+          ×
+        </Symbol>
+
+        <MiniLogo
+          brand={
+            brandB
+          }
+          width={
+            lead
+          }
+        />
+      </div>
+    );
+  }
+
+  if (
+    model === "aandb"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+          gap-[6px]
+        "
+      >
+        <MiniLogo
+          brand={
+            brandA
+          }
+          width={
+            lead
+          }
+        />
+
+        <RelationshipText>
+          with
+        </RelationshipText>
+
+        <MiniLogo
+          brand={
+            brandB
+          }
+          width={
+            support
+          }
+        />
+      </div>
+    );
+  }
+
+  if (
+    model === "poweredByA"
+  ) {
+    return (
+      <div
+        className="
+          flex
+          items-center
+          gap-[6px]
+        "
+      >
+        <MiniLogo
+          brand={
+            brandB
+          }
+          width={
+            lead
+          }
+        />
+
+        <RelationshipText>
+          powered by
+        </RelationshipText>
+
+        <MiniLogo
+          brand={
+            brandA
+          }
+          width={
+            support
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="
+        flex
+        items-center
+        gap-[6px]
+      "
+    >
+      <MiniLogo
+        brand={
+          brandA
+        }
+        width={
+          support
+        }
+      />
+
+      <RelationshipText>
+        presents
+      </RelationshipText>
+
+      <MiniLogo
+        brand={
+          brandB
+        }
+        width={
+          lead
+        }
+      />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* SPONSOR                                           */
+/* ================================================= */
+
+function SponsorBug({
+  property,
+}: {
+  property:
+    PropertyView;
+}) {
+  return (
+    <div
+      className="
+        absolute
+
+        bottom-[18px]
+        right-[18px]
+
+        flex
+        items-center
+        gap-[6px]
+      "
+    >
+      <span
+        className="
+          text-[6px]
+          uppercase
+          tracking-[0.12em]
+
+          text-white/20
+        "
+      >
+        Sponsored by
+      </span>
+
+      <MiniLogo
+        brand={
+          property
+        }
+        width={52}
+      />
+    </div>
+  );
+}
+
+function SponsorInline({
+  property,
+}: {
+  property:
+    PropertyView;
 }) {
   return (
     <div
       className="
         flex
         items-center
-        gap-[7px]
+        gap-[5px]
       "
     >
-      {model ===
-      "poweredByA" ? (
-        <>
-          <VideoLogo
-            brand={
-              brandB
-            }
-            size="footer"
-          />
+      <span
+        className="
+          text-[6px]
+          uppercase
+          tracking-[0.11em]
 
-          <RelationshipText>
-            powered by
-          </RelationshipText>
+          text-white/18
+        "
+      >
+        Sponsored by
+      </span>
 
-          <VideoLogo
-            brand={
-              brandA
-            }
-            size="credit"
-          />
-        </>
-      ) : model ===
-        "presentsB" ? (
-        <>
-          <VideoLogo
-            brand={
-              brandA
-            }
-            size="credit"
-          />
-
-          <RelationshipText>
-            presents
-          </RelationshipText>
-
-          <VideoLogo
-            brand={
-              brandB
-            }
-            size="footer"
-          />
-        </>
-      ) : model ===
-        "aandb" ? (
-        <>
-          <VideoLogo
-            brand={
-              brandA
-            }
-            size="footer"
-          />
-
-          <RelationshipText>
-            with
-          </RelationshipText>
-
-          <VideoLogo
-            brand={
-              brandB
-            }
-            size="credit"
-          />
-        </>
-      ) : (
-        <>
-          <VideoLogo
-            brand={
-              brandA
-            }
-            size="footer"
-          />
-
-          <Symbol>
-            ×
-          </Symbol>
-
-          <VideoLogo
-            brand={
-              brandB
-            }
-            size="footer"
-          />
-        </>
-      )}
+      <MiniLogo
+        brand={
+          property
+        }
+        width={48}
+      />
     </div>
   );
 }
 
 /* ================================================= */
-/* LOGO                                              */
+/* X HEADER                                          */
+/* ================================================= */
+
+function XHeaderSignature({
+  label,
+  property,
+  large = false,
+}: {
+  label:
+    string;
+
+  property:
+    PropertyView;
+
+  large?:
+    boolean;
+}) {
+  return (
+    <div
+      className="
+        flex
+        items-center
+        gap-[8px]
+      "
+    >
+      <span
+        className="
+          text-[7px]
+          uppercase
+          tracking-[0.13em]
+
+          text-white/22
+        "
+      >
+        {label}
+      </span>
+
+      <div
+        className={
+          large
+            ? "h-[32px] w-[108px]"
+            : "h-[21px] w-[70px]"
+        }
+      >
+        <BrandLogo
+          logoUrl={
+            property.logoUrl
+          }
+          fallback={
+            property.name
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* VIDEO LOGO                                        */
 /* ================================================= */
 
 function VideoLogo({
@@ -1370,6 +2313,9 @@ function VideoLogo({
     > = {
     hero:
       178,
+
+    property:
+      205,
 
     primary:
       130,
@@ -1391,6 +2337,9 @@ function VideoLogo({
     > = {
     hero:
       56,
+
+    property:
+      66,
 
     primary:
       42,
@@ -1416,19 +2365,58 @@ function VideoLogo({
       "
       style={{
         width:
-          widths[
-            size
-          ],
+          widths[size],
 
         height:
-          heights[
-            size
-          ],
+          heights[size],
 
-        /*
-          Absolutely no drop-shadow.
-          This is intentional.
-        */
+        filter:
+          "none",
+      }}
+    >
+      <BrandLogo
+        logoUrl={
+          brand.logoUrl
+        }
+        fallback={
+          brand.name
+        }
+      />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* MINI LOGO                                         */
+/* ================================================= */
+
+function MiniLogo({
+  brand,
+  width,
+}: {
+  brand:
+    BrandView;
+
+  width:
+    number;
+}) {
+  return (
+    <div
+      className="
+        flex
+        shrink-0
+
+        items-center
+        justify-center
+      "
+      style={{
+        width,
+
+        height:
+          Math.max(
+            15,
+            width / 3
+          ),
 
         filter:
           "none",
@@ -1476,12 +2464,6 @@ function VideoGlass({
         ${className}
       `}
     >
-      {/*
-        No backdrop-filter.
-        The transparency alone gives enough
-        glass appearance and exports reliably.
-      */}
-
       {children}
     </div>
   );
@@ -1507,9 +2489,7 @@ function Symbol({
         text-white/38
       "
     >
-      {
-        children
-      }
+      {children}
     </span>
   );
 }
@@ -1534,9 +2514,7 @@ function RelationshipText({
         text-white/28
       "
     >
-      {
-        children
-      }
+      {children}
     </span>
   );
 }
@@ -1553,7 +2531,7 @@ function MotionCue({
     string;
 
   style:
-    React.CSSProperties;
+    CSSProperties;
 }) {
   return (
     <div

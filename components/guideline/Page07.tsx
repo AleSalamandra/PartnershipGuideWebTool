@@ -13,12 +13,14 @@ import GuidelinePage, {
 } from "./GuidelinePage";
 
 import PartnershipLockup from "./PartnershipLockup";
+import RasterGradient from "./RasterGradient";
 
 import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
@@ -31,9 +33,14 @@ interface BrandView {
   logoUrl: string | null;
 }
 
+interface PropertyView extends BrandView {
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+}
+
 interface ClosingConfig {
   description: string;
-
   signature: string;
   overlay: string;
   cta: string;
@@ -41,7 +48,7 @@ interface ClosingConfig {
 }
 
 /* ================================================= */
-/* IMAGE CONFIG                                      */
+/* IMAGES                                            */
 /* ================================================= */
 
 const IMAGE_EXTENSIONS = [
@@ -51,8 +58,21 @@ const IMAGE_EXTENSIONS = [
   "webp",
 ];
 
+const IMAGE_NUMBERS = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+];
+
 /* ================================================= */
-/* MODEL CONFIG                                      */
+/* BASE MODEL CONFIG                                 */
 /* ================================================= */
 
 function getClosingConfig(
@@ -135,6 +155,12 @@ function getClosingConfig(
   }
 }
 
+function shuffledImages() {
+  return [...IMAGE_NUMBERS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 4);
+}
+
 /* ================================================= */
 /* PAGE                                              */
 /* ================================================= */
@@ -142,15 +168,16 @@ function getClosingConfig(
 export default function Page07() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
-  } =
-    useGuidelineStore();
+    propertyX,
+  } = useGuidelineStore();
 
   const theme =
     useGuidelineThemeStore(
-      (state) =>
-        state.theme
+      (state) => state.theme
     );
 
   const isLight =
@@ -164,10 +191,17 @@ export default function Page07() {
       model
     );
 
-  const a:
-    BrandView = {
+  const presenting =
+    additionalRelationship ===
+    "presenting";
+
+  const sponsored =
+    additionalRelationship ===
+    "sponsored";
+
+  const a: BrandView = {
     name:
-      brandA.name ||
+      brandA.name.trim() ||
       "Brand A",
 
     logoUrl:
@@ -175,10 +209,9 @@ export default function Page07() {
       null,
   };
 
-  const b:
-    BrandView = {
+  const b: BrandView = {
     name:
-      brandB.name ||
+      brandB.name.trim() ||
       "Brand B",
 
     logoUrl:
@@ -186,48 +219,53 @@ export default function Page07() {
       null,
   };
 
+  const x: PropertyView = {
+    name:
+      propertyX.name.trim() ||
+      "X",
+
+    logoUrl:
+      propertyX.logoUrl ??
+      null,
+
+    primaryColor:
+      propertyX.primaryColor,
+
+    secondaryColor:
+      propertyX.secondaryColor,
+
+    fontFamily:
+      propertyX.fontFamily,
+  };
+
   const [
     images,
     setImages,
-  ] =
-    useState([
-      2,
-      5,
-      7,
-      9,
-    ]);
+  ] = useState([
+    2,
+    5,
+    7,
+    9,
+  ]);
 
   useEffect(
     () => {
-      const source = [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-      ];
-
-      const shuffled =
-        [...source].sort(
-          () =>
-            Math.random() -
-            0.5
-        );
-
       setImages(
-        shuffled.slice(
-          0,
-          4
-        )
+        shuffledImages()
       );
     },
-    [model]
+    [
+      model,
+      additionalRelationship,
+    ]
   );
+
+  const description =
+    presenting
+      ? `${x.name} receives the main content sign-off. Brand A and Brand B remain visible as the presenting relationship behind the property.`
+      : sponsored
+        ? `${config.description} ${x.name} is added only as a restrained sponsor attribution.`
+        : config.description;
 
   return (
     <GuidelinePage>
@@ -270,7 +308,6 @@ export default function Page07() {
               tracking-[-0.05em]
 
               text-white
-
               oook-semibold
             "
           >
@@ -280,8 +317,7 @@ export default function Page07() {
           <p
             className="
               mt-[16px]
-
-              max-w-[820px]
+              max-w-[860px]
 
               text-[15px]
               leading-[1.4]
@@ -289,15 +325,39 @@ export default function Page07() {
               text-white/40
             "
           >
-            {config.description}
+            {description}
           </p>
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+            gap-[10px]
+          "
+        >
+          <PartnershipLockup
+            model={model}
+            brandA={brandA}
+            brandB={brandB}
+          />
+
+          {presenting && (
+            <XHeaderSignature
+              label="Presenting"
+              property={x}
+              large
+            />
+          )}
+
+          {sponsored && (
+            <XHeaderSignature
+              label="Sponsored by"
+              property={x}
+            />
+          )}
+        </div>
       </header>
 
       {/* ======================================== */}
@@ -325,13 +385,21 @@ export default function Page07() {
           number="01"
           title="Final signature"
           description={
-            config.signature
+            presenting
+              ? `${x.name} + presenting signature`
+              : sponsored
+                ? `${config.signature} + sponsor`
+                : config.signature
           }
         >
           <FinalSignature
             model={model}
+            mode={
+              additionalRelationship
+            }
             brandA={a}
             brandB={b}
+            property={x}
             image={
               images[0]
             }
@@ -345,13 +413,21 @@ export default function Page07() {
           number="02"
           title="Over footage"
           description={
-            config.overlay
+            presenting
+              ? `${x.name} persistent content sign-off`
+              : sponsored
+                ? `${config.overlay} + sponsor credit`
+                : config.overlay
           }
         >
           <OverFootage
             model={model}
+            mode={
+              additionalRelationship
+            }
             brandA={a}
             brandB={b}
+            property={x}
             image={
               images[1]
             }
@@ -365,13 +441,21 @@ export default function Page07() {
           number="03"
           title="CTA end card"
           description={
-            config.cta
+            presenting
+              ? `${x.name}-led CTA`
+              : sponsored
+                ? `${config.cta} + sponsor credit`
+                : config.cta
           }
         >
           <CTAEndCard
             model={model}
+            mode={
+              additionalRelationship
+            }
             brandA={a}
             brandB={b}
+            property={x}
             image={
               images[2]
             }
@@ -385,13 +469,21 @@ export default function Page07() {
           number="04"
           title="Minimal closing"
           description={
-            config.minimal
+            presenting
+              ? `${x.name} presented by A / B`
+              : sponsored
+                ? `${config.minimal} + sponsor`
+                : config.minimal
           }
         >
           <MinimalClosing
             model={model}
+            mode={
+              additionalRelationship
+            }
             brandA={a}
             brandB={b}
+            property={x}
             image={
               images[3]
             }
@@ -419,24 +511,14 @@ export default function Page07() {
           justify-between
         "
       >
-        <p
-          className="
-            text-[9px]
-
-            text-white/22
-          "
-        >
+        <p className="text-[9px] text-white/22">
           Closing layouts may adapt to duration, platform and campaign requirements.
         </p>
 
-        <p
-          className="
-            text-[9px]
-
-            text-white/22
-          "
-        >
-          Sign-off · CTA · Credits · Ownership · Clear space
+        <p className="text-[9px] text-white/22">
+          {presenting
+            ? "Property sign-off · Presenter signature · CTA · Ownership"
+            : "Sign-off · CTA · Credits · Ownership · Clear space"}
         </p>
       </div>
     </GuidelinePage>
@@ -456,9 +538,7 @@ function ClosingCard({
   number: string;
   title: string;
   description: string;
-
-  children:
-    ReactNode;
+  children: ReactNode;
 }) {
   return (
     <article
@@ -499,7 +579,6 @@ function ClosingCard({
             tracking-[-0.025em]
 
             text-white/72
-
             oook-medium
           "
         >
@@ -520,8 +599,7 @@ function ClosingCard({
         <p
           className="
             mt-[9px]
-
-            max-w-[92px]
+            max-w-[98px]
 
             text-[9px]
             leading-[1.38]
@@ -536,9 +614,7 @@ function ClosingCard({
       <div
         className="
           relative
-
           min-h-0
-
           overflow-hidden
 
           rounded-[22px]
@@ -561,14 +637,22 @@ function ClosingCard({
 
 function ClosingBackground({
   image,
+  mode,
+  property,
 }: {
-  image: number;
+  image:
+    number;
+
+  mode:
+    AdditionalRelationshipMode;
+
+  property:
+    PropertyView;
 }) {
   const [
     extension,
     setExtension,
-  ] =
-    useState(0);
+  ] = useState(0);
 
   useEffect(
     () => {
@@ -583,7 +667,6 @@ function ClosingBackground({
         className="
           absolute
           inset-0
-
           overflow-hidden
         "
         style={{
@@ -612,23 +695,85 @@ function ClosingBackground({
             w-full
 
             scale-[1.035]
-
             object-cover
           "
         />
       </div>
 
-      <div
+      <RasterGradient
+        direction="vertical"
         className="
           absolute
           inset-0
-
-          bg-gradient-to-b
-          from-transparent
-          via-transparent
-          to-black/38
+          h-full
+          w-full
         "
+        stops={[
+          {
+            color:
+              "#FFFFFF",
+            offset:
+              0,
+            opacity:
+              0.02,
+          },
+          {
+            color:
+              "#000000",
+            offset:
+              55,
+            opacity:
+              0,
+          },
+          {
+            color:
+              "#000000",
+            offset:
+              100,
+            opacity:
+              0.38,
+          },
+        ]}
       />
+
+      {mode ===
+        "presenting" && (
+        <RasterGradient
+          direction="diagonal"
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+          "
+          stops={[
+            {
+              color:
+                property.primaryColor,
+              offset:
+                0,
+              opacity:
+                0.16,
+            },
+            {
+              color:
+                property.secondaryColor,
+              offset:
+                48,
+              opacity:
+                0.07,
+            },
+            {
+              color:
+                property.secondaryColor,
+              offset:
+                100,
+              opacity:
+                0,
+            },
+          ]}
+        />
+      )}
     </>
   );
 }
@@ -639,19 +784,29 @@ function ClosingBackground({
 
 function FinalSignature({
   model,
+  mode,
+
   brandA,
   brandB,
+  property,
+
   image,
   isLight,
 }: {
   model:
     PartnershipModelId;
 
+  mode:
+    AdditionalRelationshipMode;
+
   brandA:
     BrandView;
 
   brandB:
     BrandView;
+
+  property:
+    PropertyView;
 
   image:
     number;
@@ -663,26 +818,48 @@ function FinalSignature({
     <>
       <ClosingBackground
         image={image}
+        mode={mode}
+        property={property}
       />
 
-      <div
-        className="
-          absolute
-          inset-0
-
-          flex
-          items-center
-          justify-center
-        "
-      >
-        <ClosingLockup
+      {mode ===
+      "presenting" ? (
+        <PropertyClosingLockup
           model={model}
           brandA={brandA}
           brandB={brandB}
-          isLight={isLight}
+          property={property}
           large
         />
-      </div>
+      ) : (
+        <>
+          <div
+            className="
+              absolute
+              inset-0
+
+              flex
+              items-center
+              justify-center
+            "
+          >
+            <ClosingLockup
+              model={model}
+              brandA={brandA}
+              brandB={brandB}
+              large
+            />
+          </div>
+
+          {mode ===
+            "sponsored" && (
+            <SponsorCredit
+              property={property}
+              isLight={isLight}
+            />
+          )}
+        </>
+      )}
     </>
   );
 }
@@ -693,13 +870,20 @@ function FinalSignature({
 
 function OverFootage({
   model,
+  mode,
+
   brandA,
   brandB,
+  property,
+
   image,
   isLight,
 }: {
   model:
     PartnershipModelId;
+
+  mode:
+    AdditionalRelationshipMode;
 
   brandA:
     BrandView;
@@ -707,19 +891,29 @@ function OverFootage({
   brandB:
     BrandView;
 
+  property:
+    PropertyView;
+
   image:
     number;
 
   isLight:
     boolean;
 }) {
+  const presenting =
+    mode ===
+    "presenting";
+
   return (
     <>
       <ClosingBackground
         image={image}
+        mode={mode}
+        property={property}
       />
 
-      <div
+      <SafeClosingPanel
+        isLight={isLight}
         className="
           absolute
 
@@ -728,40 +922,74 @@ function OverFootage({
           right-[14px]
 
           flex
-          min-h-[52px]
+          min-h-[55px]
 
           items-center
           justify-between
 
-          rounded-[11px]
-
-          border
-          border-white/[0.09]
-
-          bg-black/55
-
           px-[12px]
-
-          backdrop-blur-[12px]
         "
       >
-        <ClosingLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-          isLight={isLight}
-        />
+        {presenting ? (
+          <>
+            <ClosingLogo
+              brand={property}
+              width={105}
+            />
 
-        <p
-          className="
-            text-[7px]
+            <div
+              className="
+                flex
+                items-center
+                gap-[10px]
+              "
+            >
+              <span
+                className="
+                  text-[7px]
+                  uppercase
+                  tracking-[0.12em]
 
-            text-white/25
-          "
-        >
-          Thank you for watching
-        </p>
-      </div>
+                  text-white/22
+                "
+              >
+                presented by
+              </span>
+
+              <PresenterSignature
+                model={model}
+                brandA={brandA}
+                brandB={brandB}
+                small
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <ClosingLockup
+              model={model}
+              brandA={brandA}
+              brandB={brandB}
+            />
+
+            {mode ===
+            "sponsored" ? (
+              <SponsorInline
+                property={property}
+              />
+            ) : (
+              <p
+                className="
+                  text-[7px]
+                  text-white/25
+                "
+              >
+                Thank you for watching
+              </p>
+            )}
+          </>
+        )}
+      </SafeClosingPanel>
     </>
   );
 }
@@ -772,13 +1000,20 @@ function OverFootage({
 
 function CTAEndCard({
   model,
+  mode,
+
   brandA,
   brandB,
+  property,
+
   image,
   isLight,
 }: {
   model:
     PartnershipModelId;
+
+  mode:
+    AdditionalRelationshipMode;
 
   brandA:
     BrandView;
@@ -786,12 +1021,19 @@ function CTAEndCard({
   brandB:
     BrandView;
 
+  property:
+    PropertyView;
+
   image:
     number;
 
   isLight:
     boolean;
 }) {
+  const presenting =
+    mode ===
+    "presenting";
+
   const primary =
     model ===
     "poweredByA"
@@ -803,53 +1045,55 @@ function CTAEndCard({
       ? brandB
       : brandA;
 
-  const eyebrowColour =
-    isLight
-      ? "rgba(10,10,10,.42)"
-      : "rgba(255,255,255,.28)";
-
-  const titleColour =
-    isLight
-      ? "rgba(10,10,10,.82)"
-      : "rgba(255,255,255,.76)";
-
   return (
     <>
       <ClosingBackground
         image={image}
+        mode={mode}
+        property={property}
       />
 
-      <div
+      <SafeClosingPanel
+        isLight={isLight}
         className="
           absolute
 
           bottom-[24px]
           left-[24px]
 
-          w-[48%]
-
-          rounded-[13px]
-
-          border
-          border-white/[0.09]
-
-          bg-black/55
+          w-[50%]
 
           p-[13px]
-
-          backdrop-blur-[12px]
         "
       >
+        {presenting && (
+          <div
+            className="
+              mb-[10px]
+
+              h-[28px]
+              w-[100px]
+            "
+          >
+            <BrandLogo
+              logoUrl={
+                property.logoUrl
+              }
+              fallback={
+                property.name
+              }
+            />
+          </div>
+        )}
+
         <p
           className="
             text-[7px]
             uppercase
             tracking-[0.12em]
+
+            text-white/28
           "
-          style={{
-            color:
-              eyebrowColour,
-          }}
         >
           Continue the experience
         </p>
@@ -859,15 +1103,22 @@ function CTAEndCard({
             mt-[5px]
 
             text-[14px]
+            text-white/76
 
             oook-medium
           "
-          style={{
-            color:
-              titleColour,
-          }}
+          style={
+            presenting
+              ? {
+                  fontFamily:
+                    property.fontFamily,
+                }
+              : undefined
+          }
         >
-          Discover more
+          {presenting
+            ? `Explore ${property.name}`
+            : "Discover more"}
         </p>
 
         <button
@@ -877,54 +1128,104 @@ function CTAEndCard({
 
             rounded-full
 
-            border
-            border-white/[0.11]
-
-            bg-white
-
             px-[11px]
             py-[6px]
 
             text-[7px]
-
-            text-black
           "
+          style={
+            presenting
+              ? {
+                  backgroundColor:
+                    property.primaryColor,
+                  color:
+                    "#FFFFFF",
+                }
+              : {
+                  backgroundColor:
+                    "#FFFFFF",
+                  color:
+                    "#000000",
+                }
+          }
         >
           Visit experience →
         </button>
-      </div>
+      </SafeClosingPanel>
 
-      <div
-        className="
-          absolute
+      {presenting ? (
+        <div
+          className="
+            absolute
 
-          right-[20px]
-          top-[20px]
-        "
-      >
-        <ClosingLogo
-          brand={secondary}
-          width={80}
-          isLight={isLight}
-          floating
-        />
-      </div>
+            right-[20px]
+            top-[20px]
 
-      <div
-        className="
-          absolute
+            flex
+            flex-col
+            items-end
+          "
+        >
+          <p
+            className="
+              mb-[6px]
 
-          bottom-[18px]
-          right-[20px]
-        "
-      >
-        <ClosingLogo
-          brand={primary}
-          width={100}
-          isLight={isLight}
-          floating
-        />
-      </div>
+              text-[6px]
+              uppercase
+              tracking-[0.12em]
+
+              text-white/20
+            "
+          >
+            Presented by
+          </p>
+
+          <PresenterSignature
+            model={model}
+            brandA={brandA}
+            brandB={brandB}
+            small
+          />
+        </div>
+      ) : (
+        <>
+          <div
+            className="
+              absolute
+
+              right-[20px]
+              top-[20px]
+            "
+          >
+            <ClosingLogo
+              brand={secondary}
+              width={80}
+            />
+          </div>
+
+          <div
+            className="
+              absolute
+
+              bottom-[18px]
+              right-[20px]
+            "
+          >
+            <ClosingLogo
+              brand={primary}
+              width={100}
+            />
+          </div>
+
+          {mode ===
+            "sponsored" && (
+            <SponsorCredit
+              property={property}
+              isLight={isLight}
+            />
+          )}
+        </>
+      )}
     </>
   );
 }
@@ -935,19 +1236,29 @@ function CTAEndCard({
 
 function MinimalClosing({
   model,
+  mode,
+
   brandA,
   brandB,
+  property,
+
   image,
   isLight,
 }: {
   model:
     PartnershipModelId;
 
+  mode:
+    AdditionalRelationshipMode;
+
   brandA:
     BrandView;
 
   brandB:
     BrandView;
+
+  property:
+    PropertyView;
 
   image:
     number;
@@ -959,26 +1270,48 @@ function MinimalClosing({
     <>
       <ClosingBackground
         image={image}
+        mode={mode}
+        property={property}
       />
 
-      <div
-        className="
-          absolute
-          inset-0
-
-          flex
-          items-center
-          justify-center
-        "
-      >
-        <ClosingLockup
+      {mode ===
+      "presenting" ? (
+        <PropertyClosingLockup
           model={model}
           brandA={brandA}
           brandB={brandB}
-          isLight={isLight}
+          property={property}
           minimal
         />
-      </div>
+      ) : (
+        <>
+          <div
+            className="
+              absolute
+              inset-0
+
+              flex
+              items-center
+              justify-center
+            "
+          >
+            <ClosingLockup
+              model={model}
+              brandA={brandA}
+              brandB={brandB}
+              minimal
+            />
+          </div>
+
+          {mode ===
+            "sponsored" && (
+            <SponsorCredit
+              property={property}
+              isLight={isLight}
+            />
+          )}
+        </>
+      )}
 
       <div
         className="
@@ -1000,14 +1333,15 @@ function MinimalClosing({
 }
 
 /* ================================================= */
-/* LOCKUP                                            */
+/* PROPERTY CLOSING                                  */
 /* ================================================= */
 
-function ClosingLockup({
+function PropertyClosingLockup({
   model,
   brandA,
   brandB,
-  isLight,
+  property,
+
   large = false,
   minimal = false,
 }: {
@@ -1020,11 +1354,144 @@ function ClosingLockup({
   brandB:
     BrandView;
 
-  isLight:
+  property:
+    PropertyView;
+
+  large?:
     boolean;
 
-  large?: boolean;
-  minimal?: boolean;
+  minimal?:
+    boolean;
+}) {
+  const width =
+    large
+      ? 240
+      : minimal
+        ? 175
+        : 190;
+
+  return (
+    <div
+      className="
+        absolute
+        inset-0
+
+        flex
+        flex-col
+
+        items-center
+        justify-center
+      "
+    >
+      <div
+        style={{
+          width,
+          height:
+            width / 3,
+        }}
+      >
+        <BrandLogo
+          logoUrl={
+            property.logoUrl
+          }
+          fallback={
+            property.name
+          }
+        />
+      </div>
+
+      <div
+        className="
+          mt-[13px]
+
+          flex
+          items-center
+          gap-[9px]
+        "
+      >
+        <span
+          className="
+            text-[7px]
+            uppercase
+            tracking-[0.13em]
+
+            text-white/23
+          "
+        >
+          Presented by
+        </span>
+
+        <PresenterSignature
+          model={model}
+          brandA={brandA}
+          brandB={brandB}
+          small
+        />
+      </div>
+
+      <div
+        className="
+          mt-[11px]
+
+          flex
+          gap-[4px]
+        "
+      >
+        <span
+          className="
+            h-[4px]
+            w-[46px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.primaryColor,
+          }}
+        />
+
+        <span
+          className="
+            h-[4px]
+            w-[19px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              property.secondaryColor,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* BASE LOCKUP                                       */
+/* ================================================= */
+
+function ClosingLockup({
+  model,
+  brandA,
+  brandB,
+  large = false,
+  minimal = false,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  large?:
+    boolean;
+
+  minimal?:
+    boolean;
 }) {
   const equalWidth =
     large
@@ -1037,20 +1504,10 @@ function ClosingLockup({
     model === "axb"
   ) {
     return (
-      <div
-        className="
-          flex
-          items-center
-          justify-center
-
-          gap-[13px]
-        "
-      >
+      <div className="flex items-center justify-center gap-[13px]">
         <ClosingLogo
           brand={brandA}
           width={equalWidth}
-          isLight={isLight}
-          floating
         />
 
         <Symbol>
@@ -1060,8 +1517,6 @@ function ClosingLockup({
         <ClosingLogo
           brand={brandB}
           width={equalWidth}
-          isLight={isLight}
-          floating
         />
       </div>
     );
@@ -1071,15 +1526,7 @@ function ClosingLockup({
     model === "aandb"
   ) {
     return (
-      <div
-        className="
-          flex
-          items-center
-          justify-center
-
-          gap-[11px]
-        "
-      >
+      <div className="flex items-center justify-center gap-[11px]">
         <ClosingLogo
           brand={brandA}
           width={
@@ -1089,8 +1536,6 @@ function ClosingLockup({
                 ? 110
                 : 78
           }
-          isLight={isLight}
-          floating
         />
 
         <Relationship>
@@ -1106,8 +1551,6 @@ function ClosingLockup({
                 ? 58
                 : 42
           }
-          isLight={isLight}
-          floating
         />
       </div>
     );
@@ -1118,15 +1561,7 @@ function ClosingLockup({
     "poweredByA"
   ) {
     return (
-      <div
-        className="
-          flex
-          items-center
-          justify-center
-
-          gap-[11px]
-        "
-      >
+      <div className="flex items-center justify-center gap-[11px]">
         <ClosingLogo
           brand={brandB}
           width={
@@ -1136,8 +1571,6 @@ function ClosingLockup({
                 ? 118
                 : 82
           }
-          isLight={isLight}
-          floating
         />
 
         <Relationship>
@@ -1153,23 +1586,13 @@ function ClosingLockup({
                 ? 50
                 : 34
           }
-          isLight={isLight}
-          floating
         />
       </div>
     );
   }
 
   return (
-    <div
-      className="
-        flex
-        items-center
-        justify-center
-
-        gap-[11px]
-      "
-    >
+    <div className="flex items-center justify-center gap-[11px]">
       <ClosingLogo
         brand={brandA}
         width={
@@ -1179,8 +1602,6 @@ function ClosingLockup({
               ? 62
               : 38
         }
-        isLight={isLight}
-        floating
       />
 
       <Relationship>
@@ -1196,9 +1617,293 @@ function ClosingLockup({
               ? 108
               : 78
         }
-        isLight={isLight}
-        floating
       />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* PRESENTER SIGNATURE                               */
+/* ================================================= */
+
+function PresenterSignature({
+  model,
+  brandA,
+  brandB,
+  small = false,
+}: {
+  model:
+    PartnershipModelId;
+
+  brandA:
+    BrandView;
+
+  brandB:
+    BrandView;
+
+  small?:
+    boolean;
+}) {
+  const lead =
+    small
+      ? 54
+      : 72;
+
+  const support =
+    small
+      ? 36
+      : 48;
+
+  if (
+    model === "axb"
+  ) {
+    return (
+      <div className="flex items-center gap-[5px]">
+        <ClosingLogo
+          brand={brandA}
+          width={lead}
+        />
+
+        <Symbol>
+          ×
+        </Symbol>
+
+        <ClosingLogo
+          brand={brandB}
+          width={lead}
+        />
+      </div>
+    );
+  }
+
+  if (
+    model === "aandb"
+  ) {
+    return (
+      <div className="flex items-center gap-[5px]">
+        <ClosingLogo
+          brand={brandA}
+          width={lead}
+        />
+
+        <Relationship>
+          with
+        </Relationship>
+
+        <ClosingLogo
+          brand={brandB}
+          width={support}
+        />
+      </div>
+    );
+  }
+
+  if (
+    model ===
+    "poweredByA"
+  ) {
+    return (
+      <div className="flex items-center gap-[5px]">
+        <ClosingLogo
+          brand={brandB}
+          width={lead}
+        />
+
+        <Relationship>
+          powered by
+        </Relationship>
+
+        <ClosingLogo
+          brand={brandA}
+          width={support}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-[5px]">
+      <ClosingLogo
+        brand={brandA}
+        width={support}
+      />
+
+      <Relationship>
+        presents
+      </Relationship>
+
+      <ClosingLogo
+        brand={brandB}
+        width={lead}
+      />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* SAFE PANEL                                        */
+/* ================================================= */
+
+function SafeClosingPanel({
+  children,
+  isLight,
+  className = "",
+}: {
+  children:
+    ReactNode;
+
+  isLight:
+    boolean;
+
+  className?:
+    string;
+}) {
+  return (
+    <div
+      className={`
+        rounded-[11px]
+        border
+        ${className}
+      `}
+      style={{
+        backgroundColor:
+          isLight
+            ? "rgba(250,250,248,.88)"
+            : "rgba(0,0,0,.62)",
+
+        borderColor:
+          isLight
+            ? "rgba(10,10,10,.09)"
+            : "rgba(255,255,255,.09)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ================================================= */
+/* SPONSOR                                           */
+/* ================================================= */
+
+function SponsorCredit({
+  property,
+}: {
+  property:
+    PropertyView;
+
+  isLight:
+    boolean;
+}) {
+  return (
+    <div
+      className="
+        absolute
+
+        bottom-[13px]
+        right-[14px]
+
+        flex
+        items-center
+        gap-[6px]
+      "
+    >
+      <span
+        className="
+          text-[6px]
+          uppercase
+          tracking-[0.12em]
+
+          text-white/18
+        "
+      >
+        Sponsored by
+      </span>
+
+      <ClosingLogo
+        brand={property}
+        width={52}
+      />
+    </div>
+  );
+}
+
+function SponsorInline({
+  property,
+}: {
+  property:
+    PropertyView;
+}) {
+  return (
+    <div className="flex items-center gap-[5px]">
+      <span
+        className="
+          text-[6px]
+          uppercase
+          tracking-[0.11em]
+
+          text-white/18
+        "
+      >
+        Sponsored by
+      </span>
+
+      <ClosingLogo
+        brand={property}
+        width={50}
+      />
+    </div>
+  );
+}
+
+/* ================================================= */
+/* HEADER X                                          */
+/* ================================================= */
+
+function XHeaderSignature({
+  label,
+  property,
+  large = false,
+}: {
+  label:
+    string;
+
+  property:
+    PropertyView;
+
+  large?:
+    boolean;
+}) {
+  return (
+    <div className="flex items-center gap-[8px]">
+      <span
+        className="
+          text-[7px]
+          uppercase
+          tracking-[0.13em]
+
+          text-white/22
+        "
+      >
+        {label}
+      </span>
+
+      <div
+        className={
+          large
+            ? "h-[32px] w-[108px]"
+            : "h-[21px] w-[70px]"
+        }
+      >
+        <BrandLogo
+          logoUrl={
+            property.logoUrl
+          }
+          fallback={
+            property.name
+          }
+        />
+      </div>
     </div>
   );
 }
@@ -1210,46 +1915,13 @@ function ClosingLockup({
 function ClosingLogo({
   brand,
   width,
-  isLight,
-  floating = false,
 }: {
   brand:
     BrandView;
 
   width:
     number;
-
-  isLight:
-    boolean;
-
-  floating?:
-    boolean;
 }) {
-  const shadow =
-    !floating
-      ? "none"
-      : isLight
-        ? `
-          drop-shadow(
-            0 8px 22px
-            rgba(255,255,255,.90)
-          )
-          drop-shadow(
-            0 0 7px
-            rgba(255,255,255,.58)
-          )
-        `
-        : `
-          drop-shadow(
-            0 8px 22px
-            rgba(0,0,0,.62)
-          )
-          drop-shadow(
-            0 2px 5px
-            rgba(0,0,0,.64)
-          )
-        `;
-
   return (
     <div
       className="
@@ -1269,7 +1941,7 @@ function ClosingLogo({
           ),
 
         filter:
-          shadow,
+          "none",
       }}
     >
       <BrandLogo
@@ -1300,7 +1972,6 @@ function Symbol({
         shrink-0
 
         text-[15px]
-
         text-white/38
       "
     >
@@ -1319,7 +1990,6 @@ function Relationship({
     <span
       className="
         shrink-0
-
         whitespace-nowrap
 
         text-[7px]

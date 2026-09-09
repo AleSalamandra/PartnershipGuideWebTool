@@ -4,6 +4,7 @@ import type {
   ReactNode,
 } from "react";
 
+import BrandLogo from "./BrandLogo";
 import GuidelinePage from "./GuidelinePage";
 import PartnershipLockup from "./PartnershipLockup";
 import RasterGlow from "./RasterGlow";
@@ -12,7 +13,8 @@ import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
-import {
+import type {
+  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
@@ -20,41 +22,54 @@ import {
 /* TYPES                                             */
 /* ================================================= */
 
-type TypeOwner =
+type TypographyOwner =
   | "A"
   | "B"
+  | "X"
   | "common";
 
 interface TypographyConfig {
   headlineOwner:
-    TypeOwner;
+    TypographyOwner;
 
   contentOwner:
-    TypeOwner;
+    TypographyOwner;
 
   uiOwner:
-    TypeOwner;
+    TypographyOwner;
 
   description:
     string;
 
-  rules: [
-    string,
-    string,
-    string,
-  ];
+  rules:
+    string[];
+}
+
+interface ColourPair {
+  primary:
+    string;
+
+  secondary:
+    string;
 }
 
 /* ================================================= */
-/* HELPERS                                           */
+/* CONSTANTS                                         */
 /* ================================================= */
 
 const COMMON_FONT =
   '"oook-variable", sans-serif';
 
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
+
 function safeColour(
-  value: unknown,
-  fallback: string
+  value:
+    unknown,
+
+  fallback:
+    string
 ) {
   return (
     typeof value ===
@@ -68,7 +83,8 @@ function safeColour(
 }
 
 function cleanFontName(
-  value: string
+  value:
+    string
 ) {
   return value
     .replace(
@@ -81,11 +97,17 @@ function cleanFontName(
     .trim();
 }
 
-function getConfig(
+/* ================================================= */
+/* BASE MODEL CONFIG                                 */
+/* ================================================= */
+
+function getBaseConfig(
   model:
     PartnershipModelId
 ): TypographyConfig {
-  switch (model) {
+  switch (
+    model
+  ) {
     case "axb":
       return {
         headlineOwner:
@@ -174,24 +196,104 @@ function getConfig(
 }
 
 /* ================================================= */
+/* ADDITIONAL RELATIONSHIP                           */
+/* ================================================= */
+
+function applyAdditionalRelationship(
+  base:
+    TypographyConfig,
+
+  mode:
+    AdditionalRelationshipMode,
+
+  propertyName:
+    string
+): TypographyConfig {
+  if (
+    mode ===
+    "presenting"
+  ) {
+    return {
+      headlineOwner:
+        "X",
+
+      contentOwner:
+        "X",
+
+      /*
+        The presented property owns authored content,
+        but the underlying partnership still owns
+        functional navigation / platform UI.
+      */
+
+      uiOwner:
+        base.uiOwner,
+
+      description:
+        `${propertyName} becomes the principal editorial voice inside the featured content. The underlying Brand A / Brand B system remains responsible for platform UI, navigation and presenting signatures.`,
+
+      rules: [
+        `${propertyName} leads hero and content typography`,
+        "Partnership typography remains visible in UI and presenter layers",
+        "Never combine A, B and X fonts inside one sentence",
+        "Metadata may remain neutral when ownership is unclear",
+      ],
+    };
+  }
+
+  if (
+    mode ===
+    "sponsored"
+  ) {
+    return {
+      ...base,
+
+      description:
+        `${base.description} Sponsor typography does not enter the shared typographic system.`,
+
+      rules: [
+        ...base.rules,
+        `${propertyName} typography is restricted to approved sponsor artwork only`,
+      ],
+    };
+  }
+
+  return base;
+}
+
+/* ================================================= */
 /* PAGE                                              */
 /* ================================================= */
 
 export default function Page09() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
+    propertyX,
   } =
     useGuidelineStore();
 
   const model =
     partnershipModel as PartnershipModelId;
 
-  const config =
-    getConfig(
-      model
-    );
+  const propertyName =
+    propertyX.name.trim() ||
+    "X";
+
+  const presenting =
+    additionalRelationship ===
+    "presenting";
+
+  const sponsored =
+    additionalRelationship ===
+    "sponsored";
+
+  /* ------------------------------------------------ */
+  /* FONTS                                            */
+  /* ------------------------------------------------ */
 
   const aFont =
     brandA.fontFamily ||
@@ -201,101 +303,151 @@ export default function Page09() {
     brandB.fontFamily ||
     COMMON_FONT;
 
-  const aPrimary =
-    safeColour(
-      brandA.primaryColor,
-      "#FF453A"
+  const xFont =
+    propertyX.fontFamily ||
+    COMMON_FONT;
+
+  /* ------------------------------------------------ */
+  /* COLOURS                                          */
+  /* ------------------------------------------------ */
+
+  const aColours:
+    ColourPair = {
+    primary:
+      safeColour(
+        brandA.primaryColor,
+        "#FF453A"
+      ),
+
+    secondary:
+      safeColour(
+        brandA.secondaryColor,
+        "#FF8A80"
+      ),
+  };
+
+  const bColours:
+    ColourPair = {
+    primary:
+      safeColour(
+        brandB.primaryColor,
+        "#3478F6"
+      ),
+
+    secondary:
+      safeColour(
+        brandB.secondaryColor,
+        "#64D2FF"
+      ),
+  };
+
+  const xColours:
+    ColourPair = {
+    primary:
+      safeColour(
+        propertyX.primaryColor,
+        "#8A8A8A"
+      ),
+
+    secondary:
+      safeColour(
+        propertyX.secondaryColor,
+        "#B9B9B9"
+      ),
+  };
+
+  const commonColours:
+    ColourPair = {
+    primary:
+      "#8A8A8A",
+
+    secondary:
+      "#B9B9B9",
+  };
+
+  /* ------------------------------------------------ */
+  /* CONFIG                                           */
+  /* ------------------------------------------------ */
+
+  const baseConfig =
+    getBaseConfig(
+      model
     );
 
-  const aSecondary =
-    safeColour(
-      brandA.secondaryColor,
-      "#FF8A80"
+  const config =
+    applyAdditionalRelationship(
+      baseConfig,
+      additionalRelationship,
+      propertyName
     );
 
-  const bPrimary =
-    safeColour(
-      brandB.primaryColor,
-      "#3478F6"
-    );
-
-  const bSecondary =
-    safeColour(
-      brandB.secondaryColor,
-      "#64D2FF"
-    );
+  /* ------------------------------------------------ */
+  /* RESOLVERS                                        */
+  /* ------------------------------------------------ */
 
   const getFont = (
     owner:
-      TypeOwner
+      TypographyOwner
   ) => {
     if (
-      owner ===
-      "A"
+      owner === "A"
     ) {
       return aFont;
     }
 
     if (
-      owner ===
-      "B"
+      owner === "B"
     ) {
       return bFont;
+    }
+
+    if (
+      owner === "X"
+    ) {
+      return xFont;
     }
 
     return COMMON_FONT;
   };
 
-  const getPrimary = (
+  const getColours = (
     owner:
-      TypeOwner
-  ) => {
+      TypographyOwner
+  ): ColourPair => {
     if (
-      owner ===
-      "A"
+      owner === "A"
     ) {
-      return aPrimary;
+      return aColours;
     }
 
     if (
-      owner ===
-      "B"
+      owner === "B"
     ) {
-      return bPrimary;
+      return bColours;
     }
 
-    return "#8A8A8A";
+    if (
+      owner === "X"
+    ) {
+      return xColours;
+    }
+
+    return commonColours;
   };
 
-  const getSecondary = (
-    owner:
-      TypeOwner
-  ) => {
-    if (
-      owner ===
-      "A"
-    ) {
-      return aSecondary;
-    }
-
-    if (
-      owner ===
-      "B"
-    ) {
-      return bSecondary;
-    }
-
-    return "#B9B9B9";
-  };
-
-  const headlinePrimary =
-    getPrimary(
+  const headlineColours =
+    getColours(
       config.headlineOwner
     );
 
-  const headlineSecondary =
-    getSecondary(
-      config.headlineOwner
+  const contentColours =
+    getColours(
+      config.contentOwner
+    );
+
+  const uiColours =
+    getColours(
+      config.uiOwner
     );
 
   return (
@@ -307,6 +459,7 @@ export default function Page09() {
       <header
         className="
           absolute
+
           left-[70px]
           right-[70px]
           top-[46px]
@@ -349,7 +502,7 @@ export default function Page09() {
             className="
               mt-[13px]
 
-              max-w-[870px]
+              max-w-[900px]
 
               text-[16px]
               leading-[1.38]
@@ -357,15 +510,54 @@ export default function Page09() {
               text-white/45
             "
           >
-            Typography establishes who is speaking, what belongs to the platform and what belongs to the featured content.
+            {presenting
+              ? `${propertyName} becomes the principal editorial voice of the presented content, while the partnership retains its functional and presenting typography.`
+              : sponsored
+                ? `The partnership typography remains unchanged. ${propertyName} does not introduce an additional typographic voice into the system.`
+                : "Typography establishes who is speaking, what belongs to the platform and what belongs to the featured content."}
           </p>
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+
+            gap-[10px]
+          "
+        >
+          <PartnershipLockup
+            model={model}
+            brandA={brandA}
+            brandB={brandB}
+          />
+
+          {presenting && (
+            <XSignature
+              label="Presenting"
+              name={
+                propertyName
+              }
+              logoUrl={
+                propertyX.logoUrl
+              }
+              large
+            />
+          )}
+
+          {sponsored && (
+            <XSignature
+              label="Sponsored by"
+              name={
+                propertyName
+              }
+              logoUrl={
+                propertyX.logoUrl
+              }
+            />
+          )}
+        </div>
       </header>
 
       {/* ======================================== */}
@@ -375,6 +567,7 @@ export default function Page09() {
       <aside
         className="
           absolute
+
           left-[70px]
           top-[190px]
 
@@ -392,10 +585,10 @@ export default function Page09() {
               aFont
             }
             colour={
-              aPrimary
+              aColours.primary
             }
             secondary={
-              aSecondary
+              aColours.secondary
             }
           />
 
@@ -405,26 +598,48 @@ export default function Page09() {
               bFont
             }
             colour={
-              bPrimary
+              bColours.primary
             }
             secondary={
-              bSecondary
+              bColours.secondary
             }
           />
+
+          {presenting && (
+            <FontRow
+              label={
+                propertyName
+              }
+              family={
+                xFont
+              }
+              colour={
+                xColours.primary
+              }
+              secondary={
+                xColours.secondary
+              }
+              featured
+            />
+          )}
 
           <FontRow
             label="Common"
             family={
               COMMON_FONT
             }
-            colour="#8A8A8A"
-            secondary="#B9B9B9"
+            colour={
+              commonColours.primary
+            }
+            secondary={
+              commonColours.secondary
+            }
           />
         </Card>
 
         <Card className="mt-[10px] p-[16px]">
           <SectionLabel>
-            Partnership logic
+            Typographic logic
           </SectionLabel>
 
           <p
@@ -437,12 +652,16 @@ export default function Page09() {
               text-white/42
             "
           >
-            {
-              config.description
-            }
+            {config.description}
           </p>
 
-          <div className="mt-[13px] space-y-[8px]">
+          <div
+            className="
+              mt-[13px]
+
+              space-y-[8px]
+            "
+          >
             {config.rules.map(
               (
                 rule,
@@ -455,13 +674,13 @@ export default function Page09() {
                   className="
                     grid
                     grid-cols-[22px_1fr]
+
                     gap-[7px]
                   "
                 >
                   <span className="text-[9px] text-white/20">
                     0
-                    {index +
-                      1}
+                    {index + 1}
                   </span>
 
                   <span
@@ -472,9 +691,7 @@ export default function Page09() {
                       text-white/52
                     "
                   >
-                    {
-                      rule
-                    }
+                    {rule}
                   </span>
                 </div>
               )
@@ -492,12 +709,18 @@ export default function Page09() {
             value={
               config.headlineOwner
             }
+            propertyName={
+              propertyName
+            }
           />
 
           <OwnershipRow
             label="Content"
             value={
               config.contentOwner
+            }
+            propertyName={
+              propertyName
             }
           />
 
@@ -506,7 +729,34 @@ export default function Page09() {
             value={
               config.uiOwner
             }
+            propertyName={
+              propertyName
+            }
           />
+
+          {sponsored && (
+            <div
+              className="
+                mt-[13px]
+
+                border-t
+                border-white/[0.06]
+
+                pt-[10px]
+              "
+            >
+              <p
+                className="
+                  text-[8px]
+                  leading-[1.4]
+
+                  text-white/25
+                "
+              >
+                Sponsor typography has no ownership role.
+              </p>
+            </div>
+          )}
         </Card>
       </aside>
 
@@ -534,18 +784,12 @@ export default function Page09() {
             p-[22px]
           "
         >
-          {/*
-            Safe glow.
-            This is an SVG image rather than a
-            CSS blurred circle.
-          */}
-
           <RasterGlow
             color={
-              headlineSecondary
+              headlineColours.secondary
             }
             secondaryColor={
-              headlinePrimary
+              headlineColours.primary
             }
             opacity={
               0.18
@@ -554,22 +798,22 @@ export default function Page09() {
               0.055
             }
             centerX={
-              70
+              72
             }
             centerY={
-              24
+              22
             }
             radius={
-              72
+              70
             }
             className="
               absolute
 
-              -right-[90px]
-              -top-[100px]
+              -right-[80px]
+              -top-[90px]
 
-              h-[320px]
-              w-[360px]
+              h-[300px]
+              w-[340px]
             "
           />
 
@@ -585,7 +829,9 @@ export default function Page09() {
               text-white/25
             "
           >
-            Shared headline system
+            {presenting
+              ? `${propertyName} headline system`
+              : "Shared headline system"}
           </p>
 
           <h2
@@ -635,7 +881,7 @@ export default function Page09() {
               "
               style={{
                 backgroundColor:
-                  headlinePrimary,
+                  headlineColours.primary,
               }}
             />
 
@@ -648,7 +894,7 @@ export default function Page09() {
               "
               style={{
                 backgroundColor:
-                  headlineSecondary,
+                  headlineColours.secondary,
               }}
             />
           </div>
@@ -703,14 +949,15 @@ export default function Page09() {
             )
           }
           primary={
-            getPrimary(
-              config.contentOwner
-            )
+            contentColours.primary
           }
           secondary={
-            getSecondary(
-              config.contentOwner
-            )
+            contentColours.secondary
+          }
+          copy={
+            presenting
+              ? `${propertyName} content`
+              : "Every angle matters."
           }
         />
 
@@ -719,18 +966,19 @@ export default function Page09() {
           title="Lower third"
           family={
             getFont(
-              config.uiOwner
+              config.contentOwner
             )
           }
           primary={
-            getPrimary(
-              config.uiOwner
-            )
+            contentColours.primary
           }
           secondary={
-            getSecondary(
-              config.uiOwner
-            )
+            contentColours.secondary
+          }
+          copy={
+            presenting
+              ? `${propertyName} live`
+              : "Every angle matters."
           }
         />
 
@@ -743,20 +991,17 @@ export default function Page09() {
             )
           }
           primary={
-            getPrimary(
-              config.uiOwner
-            )
+            uiColours.primary
           }
           secondary={
-            getSecondary(
-              config.uiOwner
-            )
+            uiColours.secondary
           }
+          copy="Explore experience"
         />
       </section>
 
       {/* ======================================== */}
-      {/* DO / DON'T                               */}
+      {/* RULES                                    */}
       {/* ======================================== */}
 
       <section
@@ -776,12 +1021,22 @@ export default function Page09() {
         <RuleCard
           good
           title="DO"
-          text="Use one typographic voice per communication layer."
+          text={
+            presenting
+              ? `Use ${propertyName} typography for authored content and the partnership system for functional layers.`
+              : "Use one typographic voice per communication layer."
+          }
         />
 
         <RuleCard
           title="DON'T"
-          text="Mix both brand typefaces inside the same sentence or UI component."
+          text={
+            presenting
+              ? "Mix Brand A, Brand B and X typefaces inside the same communication layer."
+              : sponsored
+                ? "Adopt sponsor typography as part of the core visual system."
+                : "Mix both brand typefaces inside the same sentence or UI component."
+          }
         />
       </section>
     </GuidelinePage>
@@ -789,7 +1044,7 @@ export default function Page09() {
 }
 
 /* ================================================= */
-/* CARD                                              */
+/* COMPONENTS                                        */
 /* ================================================= */
 
 function Card({
@@ -815,16 +1070,10 @@ function Card({
         ${className}
       `}
     >
-      {
-        children
-      }
+      {children}
     </div>
   );
 }
-
-/* ================================================= */
-/* SECTION LABEL                                     */
-/* ================================================= */
 
 function SectionLabel({
   children,
@@ -844,9 +1093,7 @@ function SectionLabel({
         oook-medium
       "
     >
-      {
-        children
-      }
+      {children}
     </p>
   );
 }
@@ -860,6 +1107,7 @@ function FontRow({
   family,
   colour,
   secondary,
+  featured = false,
 }: {
   label:
     string;
@@ -872,10 +1120,13 @@ function FontRow({
 
   secondary:
     string;
+
+  featured?:
+    boolean;
 }) {
   return (
     <div
-      className="
+      className={`
         mt-[13px]
 
         grid
@@ -883,7 +1134,20 @@ function FontRow({
 
         items-center
         gap-[10px]
-      "
+
+        ${
+          featured
+            ? `
+                rounded-[10px]
+
+                border
+                border-white/[0.07]
+
+                p-[7px]
+              `
+            : ""
+        }
+      `}
     >
       <div
         className="
@@ -909,12 +1173,28 @@ function FontRow({
         Aa
       </div>
 
-      <div>
-        <p className="text-[9px] text-white/55">
+      <div className="min-w-0">
+        <p
+          className={
+            featured
+              ? "truncate text-[9px] text-white/72"
+              : "truncate text-[9px] text-white/55"
+          }
+        >
           {label}
         </p>
 
-        <p className="mt-[2px] truncate text-[8px] text-white/25">
+        <p
+          className="
+            mt-[2px]
+
+            truncate
+
+            text-[8px]
+
+            text-white/25
+          "
+        >
           {cleanFontName(
             family
           )}
@@ -959,21 +1239,25 @@ function FontRow({
 function OwnershipRow({
   label,
   value,
+  propertyName,
 }: {
   label:
     string;
 
   value:
-    TypeOwner;
+    TypographyOwner;
+
+  propertyName:
+    string;
 }) {
   const display =
-    value ===
-    "A"
+    value === "A"
       ? "Brand A"
-      : value ===
-          "B"
+      : value === "B"
         ? "Brand B"
-        : "Common";
+        : value === "X"
+          ? propertyName
+          : "Common";
 
   return (
     <div
@@ -982,6 +1266,7 @@ function OwnershipRow({
 
         flex
         justify-between
+
         gap-[10px]
       "
     >
@@ -989,7 +1274,17 @@ function OwnershipRow({
         {label}
       </span>
 
-      <span className="text-[10px] text-white/58">
+      <span
+        className="
+          max-w-[170px]
+
+          truncate
+
+          text-[10px]
+
+          text-white/58
+        "
+      >
         {display}
       </span>
     </div>
@@ -1006,6 +1301,7 @@ function TypeApplication({
   family,
   primary,
   secondary,
+  copy,
 }: {
   number:
     string;
@@ -1021,10 +1317,19 @@ function TypeApplication({
 
   secondary:
     string;
+
+  copy:
+    string;
 }) {
   return (
     <Card className="h-[190px] p-[14px]">
-      <div className="flex items-center justify-between">
+      <div
+        className="
+          flex
+          items-center
+          justify-between
+        "
+      >
         <p className="text-[9px] text-white/24">
           {number}
         </p>
@@ -1038,6 +1343,8 @@ function TypeApplication({
         className="
           mt-[35px]
 
+          max-w-[290px]
+
           text-[28px]
           leading-[0.95]
           tracking-[-0.04em]
@@ -1049,12 +1356,17 @@ function TypeApplication({
             family,
         }}
       >
-        Every angle
-        <br />
-        matters.
+        {copy}
       </p>
 
-      <div className="mt-[15px] flex gap-[4px]">
+      <div
+        className="
+          mt-[15px]
+
+          flex
+          gap-[4px]
+        "
+      >
         <div
           className="
             h-[4px]
@@ -1107,9 +1419,11 @@ function RuleCard({
     <Card
       className="
         flex
+
         min-h-[72px]
 
         items-center
+
         gap-[12px]
 
         px-[14px]
@@ -1121,6 +1435,8 @@ function RuleCard({
 
           h-[25px]
           w-[25px]
+
+          shrink-0
 
           items-center
           justify-center
@@ -1144,10 +1460,75 @@ function RuleCard({
           {title}
         </p>
 
-        <p className="mt-[2px] text-[9px] text-white/30">
+        <p
+          className="
+            mt-[2px]
+
+            text-[9px]
+            leading-[1.35]
+
+            text-white/30
+          "
+        >
           {text}
         </p>
       </div>
     </Card>
+  );
+}
+
+/* ================================================= */
+/* X SIGNATURE                                       */
+/* ================================================= */
+
+function XSignature({
+  label,
+  name,
+  logoUrl,
+  large = false,
+}: {
+  label:
+    string;
+
+  name:
+    string;
+
+  logoUrl:
+    string | null;
+
+  large?:
+    boolean;
+}) {
+  return (
+    <div className="flex items-center gap-[8px]">
+      <span
+        className="
+          text-[7px]
+          uppercase
+          tracking-[0.13em]
+
+          text-white/22
+        "
+      >
+        {label}
+      </span>
+
+      <div
+        className={
+          large
+            ? "h-[32px] w-[108px]"
+            : "h-[21px] w-[70px]"
+        }
+      >
+        <BrandLogo
+          logoUrl={
+            logoUrl
+          }
+          fallback={
+            name
+          }
+        />
+      </div>
+    </div>
   );
 }

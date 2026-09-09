@@ -12,36 +12,77 @@ import {
   brandCharacterTraits,
 } from "@/data/brandCharacterTraits";
 
-import { useGuidelineStore } from "@/store/guidelineStore";
-import { PartnershipModelId } from "@/types/guideline";
+import {
+  useGuidelineStore,
+} from "@/store/guidelineStore";
 
-/* ------------------------------------------------ */
-/* TYPES                                            */
-/* ------------------------------------------------ */
+import type {
+  AdditionalRelationshipMode,
+  PartnershipModelId,
+} from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
 
 interface MotionProfile {
-  tempo: number;
-  expression: number;
-  softness: number;
-  spatiality: number;
-  sequence: number;
-  amplitude: number;
-  precision: number;
+  pace:
+    number;
+
+  energy:
+    number;
+
+  elasticity:
+    number;
+
+  continuity:
+    number;
+
+  depth:
+    number;
+
+  precision:
+    number;
+
+  amplitude:
+    number;
 }
 
-interface MotionRecipe {
-  label: string;
-  duration: string;
-  easing: string;
-  property: string;
+interface MotionSpec {
+  duration:
+    number;
+
+  stagger:
+    number;
+
+  easing:
+    string;
+
+  transition:
+    string;
+
+  depth:
+    string;
 }
 
-/* ------------------------------------------------ */
-/* HELPERS                                          */
-/* ------------------------------------------------ */
+interface MotionColours {
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  support:
+    string;
+}
+
+/* ================================================= */
+/* HELPERS                                           */
+/* ================================================= */
 
 function clamp(
-  value: number
+  value:
+    number
 ) {
   return Math.min(
     1,
@@ -53,18 +94,27 @@ function clamp(
 }
 
 function safeColour(
-  value: unknown,
-  fallback: string
+  value:
+    unknown,
+
+  fallback:
+    string
 ) {
-  return typeof value === "string" &&
-    /^#[0-9A-Fa-f]{6}$/.test(value)
+  return (
+    typeof value ===
+      "string" &&
+    /^#[0-9A-Fa-f]{6}$/.test(
+      value
+    )
+  )
     ? value
     : fallback;
 }
 
 function getTraits(
-  brand: unknown
-) {
+  brand:
+    unknown
+): BrandCharacterTraitId[] {
   const value =
     brand as {
       characterTraits?:
@@ -78,201 +128,361 @@ function getTraits(
     : [];
 }
 
-function buildMotionProfile(
+/* ================================================= */
+/* MOTION PROFILE                                    */
+/* ================================================= */
+
+function buildProfile(
   traits:
     BrandCharacterTraitId[]
 ): MotionProfile {
-  const p:
+  const profile:
     MotionProfile = {
-    tempo: 0.5,
-    expression: 0.35,
-    softness: 0.55,
-    spatiality: 0.35,
-    sequence: 0.45,
-    amplitude: 0.35,
-    precision: 0.6,
+    pace:
+      0.46,
+
+    energy:
+      0.34,
+
+    elasticity:
+      0.18,
+
+    continuity:
+      0.56,
+
+    depth:
+      0.38,
+
+    precision:
+      0.62,
+
+    amplitude:
+      0.32,
   };
 
   traits.forEach(
-    (trait) => {
-      switch (trait) {
+    (
+      trait
+    ) => {
+      switch (
+        trait
+      ) {
         case "classic":
-          p.tempo -= 0.08;
-          p.expression -= 0.1;
-          p.precision += 0.2;
+          profile.pace -=
+            0.08;
+
+          profile.precision +=
+            0.2;
+
+          profile.elasticity -=
+            0.08;
           break;
 
         case "elegant":
-          p.tempo -= 0.12;
-          p.softness += 0.25;
-          p.amplitude -= 0.12;
+          profile.pace -=
+            0.12;
+
+          profile.continuity +=
+            0.2;
+
+          profile.amplitude -=
+            0.08;
           break;
 
         case "premium":
-          p.tempo -= 0.1;
-          p.expression -= 0.08;
-          p.softness += 0.12;
+          profile.pace -=
+            0.08;
+
+          profile.depth +=
+            0.16;
+
+          profile.continuity +=
+            0.12;
           break;
 
         case "minimal":
-          p.expression -= 0.25;
-          p.amplitude -= 0.2;
-          p.precision += 0.12;
+          profile.energy -=
+            0.16;
+
+          profile.amplitude -=
+            0.18;
+
+          profile.precision +=
+            0.16;
           break;
 
         case "editorial":
-          p.sequence += 0.3;
-          p.precision += 0.12;
+          profile.precision +=
+            0.12;
+
+          profile.continuity +=
+            0.08;
           break;
 
         case "technical":
-          p.tempo += 0.18;
-          p.precision += 0.3;
-          p.expression -= 0.1;
+          profile.precision +=
+            0.3;
+
+          profile.elasticity -=
+            0.12;
+
+          profile.depth +=
+            0.08;
           break;
 
         case "precise":
-          p.precision += 0.34;
-          p.amplitude -= 0.12;
+          profile.precision +=
+            0.34;
+
+          profile.elasticity -=
+            0.14;
+
+          profile.amplitude -=
+            0.1;
           break;
 
         case "futuristic":
-          p.spatiality += 0.32;
-          p.expression += 0.12;
-          break;
+          profile.depth +=
+            0.3;
 
-        case "experimental":
-          p.expression += 0.34;
-          p.sequence += 0.12;
-          p.amplitude += 0.14;
-          break;
+          profile.continuity +=
+            0.16;
 
-        case "disruptive":
-          p.tempo += 0.18;
-          p.expression += 0.28;
-          p.amplitude += 0.3;
-          p.softness -= 0.14;
+          profile.pace +=
+            0.08;
           break;
 
         case "bold":
-          p.expression += 0.2;
-          p.amplitude += 0.24;
+          profile.energy +=
+            0.2;
+
+          profile.amplitude +=
+            0.14;
           break;
 
         case "dynamic":
-          p.tempo += 0.3;
-          p.amplitude += 0.17;
+          profile.pace +=
+            0.25;
+
+          profile.energy +=
+            0.3;
+
+          profile.amplitude +=
+            0.12;
           break;
 
         case "energetic":
-          p.tempo += 0.35;
-          p.expression += 0.28;
-          p.sequence += 0.2;
-          break;
+          profile.pace +=
+            0.34;
 
-        case "playful":
-          p.expression += 0.24;
-          p.softness += 0.22;
-          p.sequence += 0.12;
-          break;
+          profile.energy +=
+            0.42;
 
-        case "youthful":
-          p.tempo += 0.22;
-          p.expression += 0.16;
-          break;
-
-        case "friendly":
-          p.softness += 0.28;
-          p.amplitude -= 0.05;
-          break;
-
-        case "organic":
-          p.softness += 0.3;
-          p.spatiality += 0.1;
-          p.precision -= 0.08;
-          break;
-
-        case "immersive":
-          p.spatiality += 0.42;
-          p.expression += 0.12;
-          break;
-
-        case "cinematic":
-          p.tempo -= 0.18;
-          p.expression += 0.16;
-          p.spatiality += 0.24;
-          p.sequence += 0.16;
+          profile.amplitude +=
+            0.2;
           break;
 
         case "sporty":
-          p.tempo += 0.4;
-          p.amplitude += 0.22;
-          p.precision += 0.08;
+          profile.pace +=
+            0.3;
+
+          profile.energy +=
+            0.34;
+
+          profile.precision +=
+            0.08;
+          break;
+
+        case "friendly":
+          profile.elasticity +=
+            0.18;
+
+          profile.continuity +=
+            0.1;
+          break;
+
+        case "organic":
+          profile.elasticity +=
+            0.26;
+
+          profile.continuity +=
+            0.2;
+
+          profile.precision -=
+            0.12;
+          break;
+
+        case "immersive":
+          profile.depth +=
+            0.36;
+
+          profile.continuity +=
+            0.18;
+          break;
+
+        case "cinematic":
+          profile.depth +=
+            0.3;
+
+          profile.pace -=
+            0.08;
+
+          profile.continuity +=
+            0.18;
+          break;
+
+        case "youthful":
+          profile.pace +=
+            0.18;
+
+          profile.energy +=
+            0.16;
+
+          profile.elasticity +=
+            0.12;
+          break;
+
+        case "playful":
+          profile.elasticity +=
+            0.42;
+
+          profile.energy +=
+            0.18;
+
+          profile.amplitude +=
+            0.28;
+          break;
+
+        case "experimental":
+          profile.elasticity +=
+            0.2;
+
+          profile.depth +=
+            0.16;
+
+          profile.amplitude +=
+            0.3;
+
+          profile.precision -=
+            0.12;
+          break;
+
+        case "disruptive":
+          profile.pace +=
+            0.26;
+
+          profile.energy +=
+            0.28;
+
+          profile.amplitude +=
+            0.34;
+
+          profile.continuity -=
+            0.18;
           break;
       }
     }
   );
 
-  Object.keys(p).forEach(
-    (key) => {
-      const k =
+  Object.keys(
+    profile
+  ).forEach(
+    (
+      key
+    ) => {
+      const property =
         key as keyof MotionProfile;
 
-      p[k] =
+      profile[
+        property
+      ] =
         clamp(
-          p[k]
+          profile[
+            property
+          ]
         );
     }
   );
 
-  return p;
+  return profile;
 }
 
+/* ================================================= */
+/* BLEND                                             */
+/* ================================================= */
+
 function blend(
-  a: MotionProfile,
-  b: MotionProfile,
-  weight: number
+  a:
+    MotionProfile,
+
+  b:
+    MotionProfile,
+
+  weight:
+    number
 ): MotionProfile {
   const inverse =
-    1 - weight;
+    1 -
+    weight;
 
   return {
-    tempo:
-      a.tempo * weight +
-      b.tempo * inverse,
+    pace:
+      a.pace *
+        weight +
+      b.pace *
+        inverse,
 
-    expression:
-      a.expression * weight +
-      b.expression * inverse,
+    energy:
+      a.energy *
+        weight +
+      b.energy *
+        inverse,
 
-    softness:
-      a.softness * weight +
-      b.softness * inverse,
+    elasticity:
+      a.elasticity *
+        weight +
+      b.elasticity *
+        inverse,
 
-    spatiality:
-      a.spatiality * weight +
-      b.spatiality * inverse,
+    continuity:
+      a.continuity *
+        weight +
+      b.continuity *
+        inverse,
 
-    sequence:
-      a.sequence * weight +
-      b.sequence * inverse,
-
-    amplitude:
-      a.amplitude * weight +
-      b.amplitude * inverse,
+    depth:
+      a.depth *
+        weight +
+      b.depth *
+        inverse,
 
     precision:
-      a.precision * weight +
-      b.precision * inverse,
+      a.precision *
+        weight +
+      b.precision *
+        inverse,
+
+    amplitude:
+      a.amplitude *
+        weight +
+      b.amplitude *
+        inverse,
   };
 }
 
-function getProfile(
-  model: PartnershipModelId,
-  a: MotionProfile,
-  b: MotionProfile
+function getBaseProfile(
+  model:
+    PartnershipModelId,
+
+  a:
+    MotionProfile,
+
+  b:
+    MotionProfile
 ) {
-  switch (model) {
+  switch (
+    model
+  ) {
     case "axb":
       return blend(
         a,
@@ -300,126 +510,186 @@ function getProfile(
   }
 }
 
-/* ------------------------------------------------ */
-/* MODEL TEXT                                       */
-/* ------------------------------------------------ */
+function applyXProfile(
+  base:
+    MotionProfile,
 
-function getModelText(
-  model: PartnershipModelId,
-  aName: string,
-  bName: string
+  x:
+    MotionProfile,
+
+  mode:
+    AdditionalRelationshipMode
 ) {
-  switch (model) {
-    case "axb":
-      return {
-        title:
-          "Shared choreography",
-
-        body:
-          "Both personalities blend into one rhythm. Neither brand creates an independent motion layer.",
-
-        rules: [
-          "50 / 50 motion personality",
-          "One timing and easing system",
-          "Shared focal choreography",
-        ],
-      };
-
-    case "aandb":
-      return {
-        title:
-          `${aName}-led choreography`,
-
-        body:
-          `${aName} establishes timing and rhythm. ${bName} follows the same motion grammar with reduced prominence.`,
-
-        rules: [
-          "Brand A initiates",
-          "Brand B follows",
-          "One shared easing logic",
-        ],
-      };
-
-    case "poweredByA":
-      return {
-        title:
-          `${bName}-owned motion`,
-
-        body:
-          `${bName} controls consumer-facing movement. ${aName} remains almost static outside endorsement moments.`,
-
-        rules: [
-          "Brand B owns motion",
-          "Brand A stays functional",
-          "No competing expressive system",
-        ],
-      };
-
-    case "presentsB":
-    default:
-      return {
-        title:
-          "Container → content",
-
-        body:
-          `${aName} animates the platform first. ${bName} expression begins only once the content territory is established.`,
-
-        rules: [
-          "Brand A controls platform transitions",
-          "Brand B owns content motion",
-          "Container always precedes content",
-        ],
-      };
+  if (
+    mode ===
+    "presenting"
+  ) {
+    return blend(
+      base,
+      x,
+      0.55
+    );
   }
+
+  return base;
 }
 
-/* ------------------------------------------------ */
-/* PAGE                                             */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* MOTION SPEC                                       */
+/* ================================================= */
+
+function getMotionSpec(
+  profile:
+    MotionProfile
+): MotionSpec {
+  const duration =
+    Math.round(
+      720 -
+      profile.pace *
+        410
+    );
+
+  const stagger =
+    Math.round(
+      125 -
+      profile.energy *
+        75
+    );
+
+  const easing =
+    profile.elasticity >
+    0.65
+      ? "Spring / expressive"
+      : profile.precision >
+          0.72
+        ? "Sharp ease-out"
+        : profile.continuity >
+            0.66
+          ? "Smooth ease-in-out"
+          : "Balanced ease-out";
+
+  const transition =
+    profile.continuity >
+    0.68
+      ? "Continuous"
+      : profile.energy >
+          0.7
+        ? "Fast cut + resolve"
+        : "Structured";
+
+  const depth =
+    profile.depth >
+    0.7
+      ? "Strong spatial depth"
+      : profile.depth >
+          0.45
+        ? "Layered depth"
+        : "Mostly planar";
+
+  return {
+    duration,
+    stagger,
+    easing,
+    transition,
+    depth,
+  };
+}
+
+/* ================================================= */
+/* PAGE                                              */
+/* ================================================= */
 
 export default function Page11() {
   const {
     partnershipModel,
+    additionalRelationship,
+
     brandA,
     brandB,
-  } = useGuidelineStore();
+    propertyX,
+  } =
+    useGuidelineStore();
 
   const model =
     partnershipModel as PartnershipModelId;
 
+  const presenting =
+    additionalRelationship ===
+    "presenting";
+
+  const sponsored =
+    additionalRelationship ===
+    "sponsored";
+
+  const propertyName =
+    propertyX.name.trim() ||
+    "X";
+
+  /* ------------------------------------------------ */
+  /* TRAITS                                           */
+  /* ------------------------------------------------ */
+
   const aTraits =
-    getTraits(brandA);
+    getTraits(
+      brandA
+    );
 
   const bTraits =
-    getTraits(brandB);
+    getTraits(
+      brandB
+    );
+
+  const xTraits =
+    getTraits(
+      propertyX
+    );
+
+  /* ------------------------------------------------ */
+  /* PROFILES                                         */
+  /* ------------------------------------------------ */
 
   const aProfile =
-    buildMotionProfile(
+    buildProfile(
       aTraits
     );
 
   const bProfile =
-    buildMotionProfile(
+    buildProfile(
       bTraits
     );
 
-  const profile =
-    getProfile(
+  const xProfile =
+    buildProfile(
+      xTraits
+    );
+
+  const baseProfile =
+    getBaseProfile(
       model,
       aProfile,
       bProfile
     );
 
+  const profile =
+    applyXProfile(
+      baseProfile,
+      xProfile,
+      additionalRelationship
+    );
+
+  const spec =
+    getMotionSpec(
+      profile
+    );
+
+  /* ------------------------------------------------ */
+  /* COLOURS                                          */
+  /* ------------------------------------------------ */
+
   const aPrimary =
     safeColour(
       brandA.primaryColor,
       "#FF453A"
-    );
-
-  const aSecondary =
-    safeColour(
-      brandA.secondaryColor,
-      "#FF8A80"
     );
 
   const bPrimary =
@@ -428,346 +698,561 @@ export default function Page11() {
       "#3478F6"
     );
 
-  const bSecondary =
+  const xPrimary =
     safeColour(
-      brandB.secondaryColor,
-      "#64D2FF"
+      propertyX.primaryColor,
+      "#8A8A8A"
     );
 
-  const leadPrimary =
-    model === "poweredByA"
+  const xSecondary =
+    safeColour(
+      propertyX.secondaryColor,
+      "#B9B9B9"
+    );
+
+  const partnershipLead =
+    model ===
+    "poweredByA"
       ? bPrimary
       : aPrimary;
 
-  const leadSecondary =
-    model === "poweredByA"
-      ? bSecondary
-      : aSecondary;
-
-  const supportPrimary =
-    model === "poweredByA"
+  const partnershipSupport =
+    model ===
+    "poweredByA"
       ? aPrimary
       : bPrimary;
 
-  const supportSecondary =
-    model === "poweredByA"
-      ? aSecondary
-      : bSecondary;
+  const colours:
+    MotionColours =
+    presenting
+      ? {
+          primary:
+            xPrimary,
 
-  const aName =
-    brandA.name?.trim() ||
-    "Brand A";
+          secondary:
+            xSecondary,
 
-  const bName =
-    brandB.name?.trim() ||
-    "Brand B";
+          support:
+            partnershipLead,
+        }
+      : {
+          primary:
+            partnershipLead,
 
-  const text =
-    getModelText(
-      model,
-      aName,
-      bName
-    );
+          secondary:
+            partnershipSupport,
 
-  const recipes:
-    MotionRecipe[] = [
-    {
-      label:
-        "Interaction",
-
-      duration:
-        `${Math.round(
-          150 -
-          profile.tempo * 60
-        )} ms`,
-
-      easing:
-        profile.softness > 0.65
-          ? "Soft ease-out"
-          : "Crisp ease-out",
-
-      property:
-        "Opacity / colour",
-    },
-
-    {
-      label:
-        "Transition",
-
-      duration:
-        `${Math.round(
-          360 -
-          profile.tempo * 110
-        )} ms`,
-
-      easing:
-        profile.softness > 0.65
-          ? "Smooth in-out"
-          : "Controlled ease-out",
-
-      property:
-        "Translate + opacity",
-    },
-
-    {
-      label:
-        "Brand moment",
-
-      duration:
-        `${Math.round(
-          480 +
-          profile.expression * 140
-        )} ms`,
-
-      easing:
-        profile.expression > 0.65
-          ? "Expressive settle"
-          : "Smooth in-out",
-
-      property:
-        profile.spatiality > 0.6
-          ? "Scale + depth"
-          : "Transform + opacity",
-    },
-  ];
+          support:
+            "#8A8A8A",
+        };
 
   return (
     <GuidelinePage>
-      <header className="absolute left-[70px] right-[70px] top-[46px] flex items-start justify-between">
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
+
+      <header
+        className="
+          absolute
+
+          left-[70px]
+          right-[70px]
+          top-[46px]
+
+          flex
+          items-start
+          justify-between
+        "
+      >
         <div>
-          <p className="text-[13px] uppercase tracking-[0.17em] text-white/30">
+          <p
+            className="
+              text-[13px]
+              uppercase
+              tracking-[0.17em]
+
+              text-white/30
+            "
+          >
             11 / Shared visual territory
           </p>
 
-          <h1 className="mt-[12px] text-[52px] leading-none tracking-[-0.045em] text-white oook-semibold">
+          <h1
+            className="
+              mt-[12px]
+
+              text-[52px]
+              leading-none
+              tracking-[-0.045em]
+
+              text-white
+
+              oook-semibold
+            "
+          >
             Shared visual territory — motion language
           </h1>
 
-          <p className="mt-[13px] max-w-[850px] text-[16px] leading-[1.38] text-white/45">
-            Motion translates brand character into tempo, easing, spatial behaviour and choreography.
+          <p
+            className="
+              mt-[13px]
+
+              max-w-[900px]
+
+              text-[16px]
+              leading-[1.38]
+
+              text-white/45
+            "
+          >
+            {presenting
+              ? `${propertyName} actively influences pace, easing, spatial behaviour and expressive movement while the partnership continues to define hierarchy and authorship.`
+              : sponsored
+                ? `${propertyName} does not influence motion behaviour. Sponsor appearances use restrained, functional transitions only.`
+                : "Motion translates brand character into timing, easing, spatial behaviour and transition rhythm across the experience."}
           </p>
         </div>
 
-        <PartnershipLockup
-          model={model}
-          brandA={brandA}
-          brandB={brandB}
-        />
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+
+            gap-[10px]
+          "
+        >
+          <PartnershipLockup
+            model={
+              model
+            }
+            brandA={
+              brandA
+            }
+            brandB={
+              brandB
+            }
+          />
+
+          {additionalRelationship !==
+            "none" && (
+            <RelationshipLabel
+              mode={
+                additionalRelationship
+              }
+              propertyName={
+                propertyName
+              }
+            />
+          )}
+        </div>
       </header>
 
-      {/* LEFT */}
+      {/* ======================================== */}
+      {/* LEFT                                     */}
+      {/* ======================================== */}
 
-      <aside className="absolute left-[70px] top-[190px] w-[300px]">
+      <aside
+        className="
+          absolute
+
+          left-[70px]
+          top-[190px]
+
+          w-[300px]
+        "
+      >
         <Card className="p-[16px]">
           <SectionLabel>
-            Motion personality
+            Motion character
           </SectionLabel>
 
-          <h3 className="mt-[10px] text-[21px] tracking-[-0.03em] text-white/82 oook-medium">
-            {profile.tempo > 0.7
-              ? "Fast"
-              : profile.tempo < 0.38
-                ? "Measured"
-                : "Responsive"}
-            {" · "}
-            {profile.softness > 0.68
-              ? "Fluid"
-              : profile.precision > 0.7
-                ? "Precise"
-                : "Controlled"}
-            {" · "}
-            {profile.spatiality > 0.62
-              ? "Spatial"
-              : "Subtle"}
-          </h3>
+          <CharacterGroup
+            label="Brand A"
+            traits={
+              aTraits
+            }
+            colour={
+              aPrimary
+            }
+          />
 
-          <div className="mt-[15px] grid grid-cols-2 gap-x-[14px] gap-y-[11px]">
+          <CharacterGroup
+            label="Brand B"
+            traits={
+              bTraits
+            }
+            colour={
+              bPrimary
+            }
+          />
+
+          {presenting && (
+            <CharacterGroup
+              label={
+                propertyName
+              }
+              traits={
+                xTraits
+              }
+              colour={
+                xPrimary
+              }
+              featured
+            />
+          )}
+
+          {sponsored && (
+            <p
+              className="
+                mt-[13px]
+
+                border-t
+                border-white/[0.06]
+
+                pt-[10px]
+
+                text-[8px]
+                leading-[1.4]
+
+                text-white/24
+              "
+            >
+              Sponsor personality is excluded from motion generation.
+            </p>
+          )}
+        </Card>
+
+        <Card className="mt-[10px] p-[16px]">
+          <SectionLabel>
+            Resulting motion
+          </SectionLabel>
+
+          <div
+            className="
+              mt-[13px]
+
+              grid
+              grid-cols-2
+
+              gap-x-[14px]
+              gap-y-[11px]
+            "
+          >
             <Metric
-              label="Tempo"
-              value={profile.tempo}
+              label="Pace"
+              value={
+                profile.pace
+              }
               left="Slow"
               right="Fast"
             />
 
             <Metric
-              label="Expression"
-              value={profile.expression}
-              left="Quiet"
-              right="Expressive"
+              label="Energy"
+              value={
+                profile.energy
+              }
+              left="Calm"
+              right="Active"
             />
 
             <Metric
-              label="Path"
-              value={profile.softness}
+              label="Easing"
+              value={
+                profile.elasticity
+              }
               left="Direct"
+              right="Elastic"
+            />
+
+            <Metric
+              label="Continuity"
+              value={
+                profile.continuity
+              }
+              left="Cut"
               right="Fluid"
             />
 
             <Metric
-              label="Space"
-              value={profile.spatiality}
+              label="Depth"
+              value={
+                profile.depth
+              }
               left="Flat"
               right="Spatial"
             />
 
             <Metric
-              label="Sequence"
-              value={profile.sequence}
-              left="Together"
-              right="Staggered"
-            />
-
-            <Metric
               label="Amplitude"
-              value={profile.amplitude}
+              value={
+                profile.amplitude
+              }
               left="Subtle"
-              right="Strong"
+              right="Expressive"
             />
           </div>
         </Card>
 
         <Card className="mt-[10px] p-[16px]">
           <SectionLabel>
-            Partnership choreography
+            Base specification
           </SectionLabel>
 
-          <p className="mt-[9px] text-[13px] text-white/65 oook-medium">
-            {text.title}
-          </p>
+          <SpecRow
+            label="Duration"
+            value={`${spec.duration} ms`}
+          />
 
-          <p className="mt-[7px] text-[10px] leading-[1.42] text-white/35">
-            {text.body}
-          </p>
+          <SpecRow
+            label="Stagger"
+            value={`${spec.stagger} ms`}
+          />
 
-          <div className="mt-[12px] space-y-[7px]">
-            {text.rules.map(
-              (rule, index) => (
-                <div
-                  key={rule}
-                  className="grid grid-cols-[22px_1fr] gap-[7px]"
-                >
-                  <span className="text-[8px] text-white/18">
-                    0{index + 1}
-                  </span>
+          <SpecRow
+            label="Easing"
+            value={
+              spec.easing
+            }
+          />
 
-                  <span className="text-[10px] text-white/50">
-                    {rule}
-                  </span>
-                </div>
-              )
-            )}
-          </div>
+          <SpecRow
+            label="Transitions"
+            value={
+              spec.transition
+            }
+          />
+
+          <SpecRow
+            label="Depth"
+            value={
+              spec.depth
+            }
+          />
+
+          {presenting && (
+            <p
+              className="
+                mt-[11px]
+
+                border-t
+                border-white/[0.06]
+
+                pt-[9px]
+
+                text-[8px]
+                leading-[1.4]
+
+                text-white/23
+              "
+            >
+              55% partnership motion + 45% {propertyName}.
+            </p>
+          )}
         </Card>
       </aside>
 
-      {/* DO DON'T */}
+      {/* ======================================== */}
+      {/* MOTION APPLICATIONS                      */}
+      {/* ======================================== */}
 
-      <section className="absolute left-[395px] right-[70px] top-[190px] grid grid-cols-2 gap-[12px]">
-        <Comparison
-          good
-          title="DO"
-          description="Use one dominant motion event and a controlled supporting sequence."
+      <section
+        className="
+          absolute
+
+          bottom-[66px]
+          left-[395px]
+          right-[70px]
+          top-[190px]
+
+          grid
+          grid-cols-2
+          grid-rows-2
+
+          gap-[12px]
+        "
+      >
+        <MotionCard
+          number="01"
+          title="Identity entrance"
+          description={
+            presenting
+              ? `${propertyName} establishes the content world before the presenting signature resolves.`
+              : "Primary identity enters according to the partnership hierarchy."
+          }
         >
-          <MotionExample
-            profile={profile}
-            primary={leadPrimary}
-            secondary={leadSecondary}
-            support={supportPrimary}
-            supportSecondary={supportSecondary}
+          <MotionDiagram
+            type="entrance"
+            profile={
+              profile
+            }
+            primary={
+              colours.primary
+            }
+            secondary={
+              colours.secondary
+            }
+            support={
+              colours.support
+            }
           />
-        </Comparison>
+        </MotionCard>
 
-        <Comparison
-          title="DON'T"
-          description="Avoid simultaneous competing motion paths, timings and focal events."
+        <MotionCard
+          number="02"
+          title="Content transition"
+          description={
+            presenting
+              ? `${propertyName} character may drive spatial and expressive transitions.`
+              : "Transitions connect branded and content states without decorative motion."
+          }
         >
-          <BadMotion
-            aPrimary={aPrimary}
-            aSecondary={aSecondary}
-            bPrimary={bPrimary}
-            bSecondary={bSecondary}
+          <MotionDiagram
+            type="transition"
+            profile={
+              profile
+            }
+            primary={
+              colours.primary
+            }
+            secondary={
+              colours.secondary
+            }
+            support={
+              colours.support
+            }
           />
-        </Comparison>
+        </MotionCard>
+
+        <MotionCard
+          number="03"
+          title="UI response"
+          description={
+            presenting
+              ? "Functional UI remains controlled even when X has an expressive content language."
+              : "UI feedback is faster and quieter than narrative motion."
+          }
+        >
+          <MotionDiagram
+            type="ui"
+            profile={{
+              ...profile,
+
+              amplitude:
+                Math.min(
+                  profile.amplitude,
+                  0.38
+                ),
+
+              energy:
+                Math.min(
+                  profile.energy,
+                  0.5
+                ),
+            }}
+            primary={
+              colours.primary
+            }
+            secondary={
+              colours.secondary
+            }
+            support={
+              colours.support
+            }
+          />
+        </MotionCard>
+
+        <MotionCard
+          number="04"
+          title="Closing"
+          description={
+            presenting
+              ? `${propertyName} receives the content payoff before the presenter relationship settles.`
+              : sponsored
+                ? "Core identity closes first; sponsor credit follows with a simple fade."
+                : "Motion resolves into a stable final signature."
+          }
+        >
+          <ClosingDiagram
+            profile={
+              profile
+            }
+            primary={
+              colours.primary
+            }
+            secondary={
+              colours.secondary
+            }
+            support={
+              colours.support
+            }
+            sponsored={
+              sponsored
+            }
+          />
+        </MotionCard>
       </section>
 
-      {/* RECIPES */}
+      {/* ======================================== */}
+      {/* FOOTER                                   */}
+      {/* ======================================== */}
 
-      <section className="absolute left-[395px] right-[70px] top-[565px]">
-        <SectionLabel>
-          Motion recipes
-        </SectionLabel>
+      <footer
+        className="
+          absolute
 
-        <div className="mt-[8px] grid grid-cols-3 gap-[10px]">
-          {recipes.map(
-            (recipe, index) => (
-              <RecipeCard
-                key={recipe.label}
-                recipe={recipe}
-                primary={
-                  index === 2
-                    ? supportPrimary
-                    : leadPrimary
-                }
-                secondary={
-                  index === 2
-                    ? supportSecondary
-                    : leadSecondary
-                }
-              />
-            )
-          )}
-        </div>
-      </section>
+          bottom-[27px]
+          left-[70px]
+          right-[70px]
 
-      {/* CHARACTER */}
+          flex
+          items-center
+          justify-between
 
-      <section className="absolute left-[395px] right-[70px] top-[730px] grid grid-cols-2 gap-[10px]">
-        <CharacterSummary
-          label="Brand A motion character"
-          traits={aTraits}
-          primary={aPrimary}
-          secondary={aSecondary}
-        />
+          border-t
+          border-white/[0.06]
 
-        <CharacterSummary
-          label="Brand B motion character"
-          traits={bTraits}
-          primary={bPrimary}
-          secondary={bSecondary}
-        />
-      </section>
+          pt-[9px]
+        "
+      >
+        <p className="text-[9px] text-white/23">
+          Motion should communicate hierarchy and continuity before decoration.
+        </p>
 
-      <div className="absolute bottom-[24px] left-[70px] right-[70px] flex justify-between border-t border-white/[0.06] pt-[9px] text-[9px] text-white/24">
-        <span>
-          Reduced motion: replace large translation and parallax with opacity and state change.
-        </span>
-
-        <span>
-          Secondary colours may trail motion — never create a second focal event.
-        </span>
-      </div>
+        <p className="text-[9px] text-white/23">
+          Pace · Easing · Stagger · Depth · Continuity · Response
+        </p>
+      </footer>
     </GuidelinePage>
   );
 }
 
-/* ------------------------------------------------ */
-/* COMPONENTS                                       */
-/* ------------------------------------------------ */
+/* ================================================= */
+/* UI                                                */
+/* ================================================= */
 
 function Card({
   children,
   className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+  children:
+    ReactNode;
+
+  className?:
+    string;
 }) {
   return (
     <div
       className={`
         rounded-[18px]
+
         border
         border-white/[0.07]
+
         bg-white/[0.018]
+
         ${className}
       `}
     >
@@ -779,14 +1264,161 @@ function Card({
 function SectionLabel({
   children,
 }: {
-  children: ReactNode;
+  children:
+    ReactNode;
 }) {
   return (
-    <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 oook-medium">
+    <p
+      className="
+        text-[10px]
+        uppercase
+        tracking-[0.14em]
+
+        text-white/30
+
+        oook-medium
+      "
+    >
       {children}
     </p>
   );
 }
+
+/* ================================================= */
+/* CHARACTER                                         */
+/* ================================================= */
+
+function CharacterGroup({
+  label,
+  traits,
+  colour,
+  featured = false,
+}: {
+  label:
+    string;
+
+  traits:
+    BrandCharacterTraitId[];
+
+  colour:
+    string;
+
+  featured?:
+    boolean;
+}) {
+  return (
+    <div
+      className={`
+        mt-[13px]
+
+        ${
+          featured
+            ? `
+                rounded-[10px]
+
+                border
+                border-white/[0.07]
+
+                p-[8px]
+              `
+            : ""
+        }
+      `}
+    >
+      <div
+        className="
+          flex
+          items-center
+          gap-[7px]
+        "
+      >
+        <span
+          className="
+            h-[4px]
+            w-[25px]
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              colour,
+          }}
+        />
+
+        <p
+          className={
+            featured
+              ? "truncate text-[10px] text-white/70"
+              : "truncate text-[10px] text-white/52"
+          }
+        >
+          {label}
+        </p>
+      </div>
+
+      <div
+        className="
+          mt-[7px]
+
+          flex
+          flex-wrap
+
+          gap-[4px]
+        "
+      >
+        {traits.length >
+        0 ? (
+          traits.map(
+            (
+              id
+            ) => {
+              const trait =
+                brandCharacterTraits.find(
+                  (
+                    item
+                  ) =>
+                    item.id ===
+                    id
+                );
+
+              return (
+                <span
+                  key={
+                    id
+                  }
+                  className="
+                    rounded-full
+
+                    border
+                    border-white/[0.07]
+
+                    px-[6px]
+                    py-[3px]
+
+                    text-[7px]
+
+                    text-white/34
+                  "
+                >
+                  {trait?.label ??
+                    id}
+                </span>
+              );
+            }
+          )
+        ) : (
+          <span className="text-[8px] text-white/20">
+            Neutral
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* METRIC                                            */
+/* ================================================= */
 
 function Metric({
   label,
@@ -794,370 +1426,754 @@ function Metric({
   left,
   right,
 }: {
-  label: string;
-  value: number;
-  left: string;
-  right: string;
+  label:
+    string;
+
+  value:
+    number;
+
+  left:
+    string;
+
+  right:
+    string;
 }) {
   return (
     <div>
-      <p className="text-[8px] uppercase tracking-[0.1em] text-white/25">
+      <p
+        className="
+          text-[8px]
+          uppercase
+          tracking-[0.1em]
+
+          text-white/26
+        "
+      >
         {label}
       </p>
 
-      <div className="mt-[5px] h-[4px] rounded-full bg-white/[0.07]">
+      <div
+        className="
+          mt-[5px]
+
+          h-[4px]
+
+          overflow-hidden
+
+          rounded-full
+
+          bg-white/[0.07]
+        "
+      >
         <div
-          className="h-full rounded-full bg-white/50"
+          className="
+            h-full
+
+            rounded-full
+
+            bg-white/50
+          "
           style={{
             width:
               `${Math.round(
-                value * 100
+                value *
+                  100
               )}%`,
           }}
         />
       </div>
 
-      <div className="mt-[4px] flex justify-between text-[7px] text-white/18">
-        <span>{left}</span>
-        <span>{right}</span>
+      <div
+        className="
+          mt-[4px]
+
+          flex
+          justify-between
+
+          text-[7px]
+
+          text-white/18
+        "
+      >
+        <span>
+          {left}
+        </span>
+
+        <span>
+          {right}
+        </span>
       </div>
     </div>
   );
 }
 
-function Comparison({
-  good = false,
+/* ================================================= */
+/* SPEC                                              */
+/* ================================================= */
+
+function SpecRow({
+  label,
+  value,
+}: {
+  label:
+    string;
+
+  value:
+    string;
+}) {
+  return (
+    <div
+      className="
+        mt-[9px]
+
+        flex
+        items-start
+        justify-between
+
+        gap-[12px]
+      "
+    >
+      <span className="text-[8px] text-white/24">
+        {label}
+      </span>
+
+      <span
+        className="
+          max-w-[170px]
+
+          text-right
+
+          text-[9px]
+          leading-[1.3]
+
+          text-white/55
+        "
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/* ================================================= */
+/* MOTION CARD                                       */
+/* ================================================= */
+
+function MotionCard({
+  number,
   title,
   description,
   children,
 }: {
-  good?: boolean;
-  title: string;
-  description: string;
-  children: ReactNode;
+  number:
+    string;
+
+  title:
+    string;
+
+  description:
+    string;
+
+  children:
+    ReactNode;
 }) {
   return (
-    <Card className="p-[13px]">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-[8px]">
-          <span
-            className={`
-              flex h-[24px] w-[24px]
-              items-center justify-center
-              rounded-full
-              text-[11px]
+    <Card
+      className="
+        grid
+        min-h-0
 
-              ${
-                good
-                  ? "bg-white text-black"
-                  : "border border-white/12 text-white/40"
-              }
-            `}
-          >
-            {good
-              ? "✓"
-              : "×"}
-          </span>
+        grid-cols-[105px_minmax(0,1fr)]
 
-          <span className="text-[14px] text-white/72 oook-medium">
-            {title}
-          </span>
-        </div>
+        gap-[12px]
 
-        <p className="max-w-[285px] text-right text-[9px] leading-[1.35] text-white/34">
+        p-[12px]
+      "
+    >
+      <div
+        className="
+          flex
+          flex-col
+          justify-center
+        "
+      >
+        <p
+          className="
+            text-[8px]
+            uppercase
+            tracking-[0.14em]
+
+            text-white/20
+          "
+        >
+          {number}
+        </p>
+
+        <h3
+          className="
+            mt-[7px]
+
+            text-[15px]
+            leading-[1.05]
+
+            text-white/68
+
+            oook-medium
+          "
+        >
+          {title}
+        </h3>
+
+        <div
+          className="
+            mt-[9px]
+
+            h-px
+            w-[36px]
+
+            bg-white/[0.12]
+          "
+        />
+
+        <p
+          className="
+            mt-[8px]
+
+            text-[8px]
+            leading-[1.35]
+
+            text-white/27
+          "
+        >
           {description}
         </p>
       </div>
 
-      <div className="relative mt-[10px] h-[295px] overflow-hidden rounded-[13px] border border-white/[0.06] bg-[#050506]">
+      <div
+        className="
+          relative
+
+          min-h-0
+
+          overflow-hidden
+
+          rounded-[12px]
+
+          border
+          border-white/[0.06]
+
+          bg-[#050506]
+        "
+      >
         {children}
       </div>
     </Card>
   );
 }
 
-function MotionExample({
+/* ================================================= */
+/* MOTION DIAGRAM                                    */
+/* ================================================= */
+
+function MotionDiagram({
+  type,
   profile,
   primary,
   secondary,
   support,
-  supportSecondary,
 }: {
-  profile: MotionProfile;
-  primary: string;
-  secondary: string;
-  support: string;
-  supportSecondary: string;
+  type:
+    "entrance" |
+    "transition" |
+    "ui";
+
+  profile:
+    MotionProfile;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  support:
+    string;
 }) {
-  const points = [
-    [12, 72],
-    [34, 55],
-    [58, 37],
-    [82, 21],
-  ];
+  const displacement =
+    30 +
+    profile.amplitude *
+      75;
+
+  const curve =
+    20 +
+    profile.elasticity *
+      60;
+
+  const dotSize =
+    type ===
+    "ui"
+      ? 24
+      : 36;
 
   return (
     <>
-      <svg
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="absolute inset-0 h-full w-full"
-      >
-        <path
-          d={
-            profile.softness > 0.6
-              ? "M12 72 C30 70 29 51 44 50 C63 48 66 28 82 21"
-              : "M12 72 L34 55 L58 37 L82 21"
-          }
-          fill="none"
-          stroke={secondary}
-          strokeOpacity="0.55"
-          strokeWidth="0.5"
-          strokeDasharray="2 2"
-        />
+      {/* TRACK */}
 
-        <path
-          d="M12 77 C39 72 57 52 84 37"
-          fill="none"
-          stroke={supportSecondary}
-          strokeOpacity="0.25"
-          strokeWidth="0.4"
-        />
-      </svg>
+      <div
+        className="
+          absolute
 
-      {points.map(
-        ([left, top], index) => (
+          left-[12%]
+          right-[12%]
+          top-1/2
+
+          h-px
+
+          -translate-y-1/2
+
+          bg-white/[0.08]
+        "
+      />
+
+      {/* START */}
+
+      <div
+        className="
+          absolute
+
+          top-1/2
+
+          -translate-y-1/2
+
+          rounded-full
+
+          border
+        "
+        style={{
+          left:
+            "12%",
+
+          width:
+            dotSize,
+
+          height:
+            dotSize,
+
+          borderColor:
+            primary,
+
+          opacity:
+            0.25,
+        }}
+      />
+
+      {/* INTERMEDIATE GHOSTS */}
+
+      <div
+        className="
+          absolute
+
+          top-1/2
+
+          -translate-y-1/2
+
+          rounded-full
+
+          border
+        "
+        style={{
+          left:
+            `${30 +
+            profile.continuity *
+              8}%`,
+
+          width:
+            dotSize,
+
+          height:
+            dotSize,
+
+          borderColor:
+            secondary,
+
+          opacity:
+            0.34,
+        }}
+      />
+
+      <div
+        className="
+          absolute
+
+          top-1/2
+
+          -translate-y-1/2
+
+          rounded-full
+
+          border
+        "
+        style={{
+          left:
+            `${51 +
+            profile.continuity *
+              8}%`,
+
+          width:
+            dotSize,
+
+          height:
+            dotSize,
+
+          borderColor:
+            support,
+
+          opacity:
+            0.5,
+        }}
+      />
+
+      {/* END */}
+
+      <div
+        className="
+          absolute
+
+          right-[12%]
+          top-1/2
+
+          -translate-y-1/2
+
+          border
+        "
+        style={{
+          width:
+            dotSize +
+            profile.energy *
+              12,
+
+          height:
+            dotSize +
+            profile.energy *
+              12,
+
+          borderRadius:
+            curve,
+
+          borderColor:
+            primary,
+
+          backgroundColor:
+            primary,
+
+          opacity:
+            0.82,
+
+          transform:
+            `translateY(-50%) translateX(${
+              type ===
+              "transition"
+                ? displacement *
+                  0.08
+                : 0
+            }px)`,
+        }}
+      />
+
+      {/* SPATIAL INDICATOR */}
+
+      {profile.depth >
+        0.45 && (
+        <>
           <div
-            key={index}
-            className="absolute h-[38px] w-[38px] rounded-[11px] border"
+            className="
+              absolute
+
+              left-[43%]
+              top-[25%]
+
+              h-[34px]
+              w-[34px]
+
+              rounded-full
+
+              border
+            "
             style={{
-              left:
-                `${left}%`,
-
-              top:
-                `${top}%`,
-
-              transform:
-                `translate(-50%,-50%) scale(${
-                  0.65 +
-                  index * 0.12
-                })`,
+              borderColor:
+                secondary,
 
               opacity:
-                0.25 +
-                index * 0.23,
-
-              borderColor:
-                index ===
-                points.length - 1
-                  ? primary
-                  : secondary,
-
-              backgroundColor:
-                `${primary}18`,
+                0.2,
             }}
           />
-        )
+
+          <div
+            className="
+              absolute
+
+              left-[47%]
+              top-[31%]
+
+              h-[22px]
+              w-[22px]
+
+              rounded-full
+
+              border
+            "
+            style={{
+              borderColor:
+                secondary,
+
+              opacity:
+                0.42,
+            }}
+          />
+        </>
       )}
 
-      <div className="absolute bottom-[18px] left-[18px] flex items-center gap-[7px]">
-        <div
-          className="h-[5px] w-[35px] rounded-full"
-          style={{
-            backgroundColor:
-              primary,
-          }}
-        />
+      {/* LABELS */}
 
-        <div
-          className="h-[5px] w-[18px] rounded-full"
-          style={{
-            backgroundColor:
-              secondary,
-          }}
-        />
+      <p
+        className="
+          absolute
 
-        <div
-          className="ml-[8px] h-[4px] w-[12px] rounded-full"
-          style={{
-            backgroundColor:
-              support,
-          }}
-        />
+          bottom-[13px]
+          left-[12%]
 
-        <span className="text-[8px] text-white/28">
-          controlled stagger
-        </span>
-      </div>
+          text-[7px]
+          uppercase
+          tracking-[0.12em]
+
+          text-white/18
+        "
+      >
+        start
+      </p>
+
+      <p
+        className="
+          absolute
+
+          bottom-[13px]
+          right-[12%]
+
+          text-[7px]
+          uppercase
+          tracking-[0.12em]
+
+          text-white/18
+        "
+      >
+        resolve
+      </p>
     </>
   );
 }
 
-function BadMotion({
-  aPrimary,
-  aSecondary,
-  bPrimary,
-  bSecondary,
+/* ================================================= */
+/* CLOSING DIAGRAM                                   */
+/* ================================================= */
+
+function ClosingDiagram({
+  profile,
+  primary,
+  secondary,
+  support,
+  sponsored,
 }: {
-  aPrimary: string;
-  aSecondary: string;
-  bPrimary: string;
-  bSecondary: string;
+  profile:
+    MotionProfile;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  support:
+    string;
+
+  sponsored:
+    boolean;
 }) {
   return (
     <>
-      <svg
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="absolute inset-0 h-full w-full"
-      >
-        <path
-          d="M5 80 C30 5 45 95 92 20"
-          fill="none"
-          stroke={aPrimary}
-          strokeWidth=".7"
-        />
+      <div
+        className="
+          absolute
 
-        <path
-          d="M7 20 C35 98 62 8 94 75"
-          fill="none"
-          stroke={bPrimary}
-          strokeWidth=".7"
-        />
+          left-[13%]
+          top-1/2
 
-        <path
-          d="M12 45 C35 30 61 85 91 35"
-          fill="none"
-          stroke={aSecondary}
-          strokeWidth=".5"
-        />
+          h-[48px]
+          w-[120px]
 
-        <path
-          d="M6 60 C40 20 64 55 95 10"
-          fill="none"
-          stroke={bSecondary}
-          strokeWidth=".5"
-        />
-      </svg>
+          -translate-y-1/2
 
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-black/70 text-[21px] text-white">
-          ×
-        </span>
-      </div>
+          rounded-[12px]
+
+          border
+        "
+        style={{
+          borderColor:
+            secondary,
+
+          opacity:
+            0.32,
+        }}
+      />
+
+      <div
+        className="
+          absolute
+
+          left-1/2
+          top-1/2
+
+          h-[62px]
+          w-[180px]
+
+          -translate-x-1/2
+          -translate-y-1/2
+
+          border
+        "
+        style={{
+          borderRadius:
+            8 +
+            profile.elasticity *
+              24,
+
+          borderColor:
+            primary,
+
+          backgroundColor:
+            primary,
+
+          opacity:
+            0.72,
+        }}
+      />
+
+      <div
+        className="
+          absolute
+
+          right-[13%]
+          top-1/2
+
+          h-[34px]
+          w-[78px]
+
+          -translate-y-1/2
+
+          rounded-[9px]
+
+          border
+        "
+        style={{
+          borderColor:
+            support,
+
+          opacity:
+            0.4,
+        }}
+      />
+
+      <div
+        className="
+          absolute
+
+          left-[20%]
+          right-[20%]
+          top-[73%]
+
+          h-px
+
+          bg-white/[0.06]
+        "
+      />
+
+      {sponsored && (
+        <div
+          className="
+            absolute
+
+            bottom-[13px]
+            right-[13px]
+
+            flex
+            items-center
+            gap-[6px]
+          "
+        >
+          <span
+            className="
+              text-[6px]
+              uppercase
+              tracking-[0.12em]
+
+              text-white/17
+            "
+          >
+            then
+          </span>
+
+          <span
+            className="
+              text-[7px]
+              uppercase
+              tracking-[0.12em]
+
+              text-white/32
+            "
+          >
+            sponsor fade
+          </span>
+        </div>
+      )}
     </>
   );
 }
 
-function RecipeCard({
-  recipe,
-  primary,
-  secondary,
+/* ================================================= */
+/* RELATIONSHIP LABEL                                */
+/* ================================================= */
+
+function RelationshipLabel({
+  mode,
+  propertyName,
 }: {
-  recipe: MotionRecipe;
-  primary: string;
-  secondary: string;
+  mode:
+    AdditionalRelationshipMode;
+
+  propertyName:
+    string;
 }) {
   return (
-    <Card className="p-[13px]">
-      <div className="flex justify-between">
-        <p className="text-[12px] text-white/70 oook-medium">
-          {recipe.label}
-        </p>
+    <span
+      className="
+        rounded-full
 
-        <p className="text-[11px] text-white/42">
-          {recipe.duration}
-        </p>
-      </div>
+        border
+        border-white/[0.07]
 
-      <div className="mt-[10px] flex gap-[4px]">
-        <span
-          className="h-[3px] w-[65px] rounded-full"
-          style={{
-            backgroundColor:
-              primary,
-          }}
-        />
+        px-[10px]
+        py-[6px]
 
-        <span
-          className="h-[3px] w-[25px] rounded-full"
-          style={{
-            backgroundColor:
-              secondary,
-          }}
-        />
-      </div>
+        text-[8px]
+        uppercase
+        tracking-[0.12em]
 
-      <p className="mt-[8px] text-[8px] uppercase tracking-[0.09em] text-white/22">
-        Easing
-      </p>
-
-      <p className="mt-[2px] text-[9px] text-white/48">
-        {recipe.easing}
-      </p>
-
-      <p className="mt-[7px] text-[8px] uppercase tracking-[0.09em] text-white/22">
-        Properties
-      </p>
-
-      <p className="mt-[2px] text-[9px] text-white/48">
-        {recipe.property}
-      </p>
-    </Card>
-  );
-}
-
-function CharacterSummary({
-  label,
-  traits,
-  primary,
-  secondary,
-}: {
-  label: string;
-  traits:
-    BrandCharacterTraitId[];
-  primary: string;
-  secondary: string;
-}) {
-  return (
-    <Card className="min-h-[95px] p-[12px]">
-      <div className="flex items-center gap-[5px]">
-        <span
-          className="h-[4px] w-[24px] rounded-full"
-          style={{
-            backgroundColor:
-              primary,
-          }}
-        />
-
-        <span
-          className="h-[4px] w-[12px] rounded-full"
-          style={{
-            backgroundColor:
-              secondary,
-          }}
-        />
-
-        <span className="ml-[4px] text-[9px] uppercase tracking-[0.1em] text-white/30">
-          {label}
-        </span>
-      </div>
-
-      <p className="mt-[9px] text-[9px] text-white/37">
-        {traits.length
-          ? traits
-              .map(
-                (id) =>
-                  brandCharacterTraits.find(
-                    (item) =>
-                      item.id ===
-                      id
-                  )?.label
-              )
-              .filter(Boolean)
-              .join(" · ")
-          : "Neutral responsive motion"}
-      </p>
-    </Card>
+        text-white/30
+      "
+    >
+      {mode ===
+      "presenting"
+        ? `Presenting ${propertyName}`
+        : `Sponsored by ${propertyName}`}
+    </span>
   );
 }
