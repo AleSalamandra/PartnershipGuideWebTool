@@ -118,10 +118,6 @@ export default function Page07() {
 
   return (
     <GuidelinePage>
-      {/* ======================================== */}
-      {/* HEADER                                   */}
-      {/* ======================================== */}
-
       <header className="absolute left-[44px] right-[44px] top-[38px] flex items-start justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-white/28">
@@ -149,10 +145,6 @@ export default function Page07() {
           }
         />
       </header>
-
-      {/* ======================================== */}
-      {/* CLOSING APPLICATIONS                    */}
-      {/* ======================================== */}
 
       <section className="absolute bottom-[70px] left-[44px] right-[44px] top-[220px] grid grid-cols-2 grid-rows-2 gap-x-[26px] gap-y-[22px]">
         {CLOSING_FRAMES.map(
@@ -305,15 +297,17 @@ function ClosingVisual({
           : brandA;
 
   /*
-    Final signature + Minimal closing
-    use a clean neutral background.
-
-    Credits + CTA keep colour footage.
+    01 Final signature  → solid
+    02 Credits          → solid
+    03 CTA              → colour footage
+    04 Minimal closing  → solid
   */
 
   const useSolidBackground =
     type ===
       0 ||
+    type ===
+      1 ||
     type ===
       3;
 
@@ -355,7 +349,7 @@ function ClosingVisual({
       )}
 
       {/* ======================================== */}
-      {/* FINAL SIGNATURE                          */}
+      {/* 01 FINAL SIGNATURE                       */}
       {/* ======================================== */}
 
       {type ===
@@ -370,12 +364,12 @@ function ClosingVisual({
       )}
 
       {/* ======================================== */}
-      {/* CREDITS                                  */}
+      {/* 02 CREDITS                               */}
       {/* ======================================== */}
 
       {type ===
         1 && (
-        <CreditsApplication
+        <CreditsRoll
           model={
             model
           }
@@ -395,7 +389,7 @@ function ClosingVisual({
       )}
 
       {/* ======================================== */}
-      {/* CTA                                      */}
+      {/* 03 CTA                                   */}
       {/* ======================================== */}
 
       {type ===
@@ -423,7 +417,7 @@ function ClosingVisual({
       )}
 
       {/* ======================================== */}
-      {/* MINIMAL CLOSING                          */}
+      {/* 04 MINIMAL CLOSING                       */}
       {/* ======================================== */}
 
       {type ===
@@ -456,6 +450,8 @@ function ClosingVisual({
       {relationship ===
         "sponsored" &&
         type !==
+          1 &&
+        type !==
           3 && (
           <div className="absolute bottom-[12px] right-[12px] z-20 flex items-center gap-[7px]">
             <span className="text-[5px] uppercase tracking-[0.12em] text-white/26">
@@ -479,10 +475,10 @@ function ClosingVisual({
 }
 
 /* ================================================= */
-/* CREDITS                                           */
+/* CREDIT ROLL                                       */
 /* ================================================= */
 
-function CreditsApplication({
+function CreditsRoll({
   model,
   brandA,
   brandB,
@@ -511,75 +507,219 @@ function CreditsApplication({
     string;
 }) {
   return (
-    <div className="absolute bottom-[14px] left-[14px] right-[14px] rounded-[12px] border border-white/[0.09] bg-black/60 px-[14px] py-[11px]">
-      <div className="flex items-end justify-between gap-[24px]">
+    <div
+      className="
+        absolute
+        inset-0
+
+        flex
+        items-center
+        justify-center
+
+        overflow-hidden
+      "
+    >
+      <div
+        className="
+          flex
+          w-[78%]
+
+          flex-col
+          items-center
+
+          text-center
+        "
+      >
         {/* ====================================== */}
-        {/* CREDITS                                */}
+        {/* KNOWN BRAND HIERARCHY                  */}
         {/* ====================================== */}
 
-        <div>
-          <p className="text-[6px] uppercase tracking-[0.14em] text-white/28">
-            Credits
-          </p>
+        {relationship ===
+        "presenting" ? (
+          <>
+            <p
+              className="
+                text-[4px]
+                uppercase
+                tracking-[0.18em]
 
-          <div className="mt-[7px] flex gap-[22px]">
-            <CreditItem
-              role="Content"
-              name={
-                brandB.name
-              }
-            />
+                text-white/30
+              "
+            >
+              Featuring
+            </p>
 
-            <CreditItem
-              role="Technology & production"
-              name={
-                brandA.name
-              }
-            />
-
-            {relationship !==
-              "none" && (
-              <CreditItem
-                role={
-                  relationship ===
-                  "presenting"
-                    ? "Presented property"
-                    : "Sponsor"
+            <div className="mt-[4px] h-[27px] w-[125px]">
+              <BrandLogo
+                logoUrl={
+                  propertyX.logoUrl
                 }
-                name={
+                fallback={
                   propertyX.name
                 }
               />
-            )}
+            </div>
+
+            <p
+              className="
+                mt-[7px]
+
+                text-[4px]
+                uppercase
+                tracking-[0.18em]
+
+                text-white/30
+              "
+            >
+              Presented by
+            </p>
+
+            <div className="mt-[4px]">
+              <BusinessModelLockup
+                model={
+                  model
+                }
+                brandA={
+                  brandA
+                }
+                brandB={
+                  brandB
+                }
+                scale="tiny"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <p
+              className="
+                text-[4px]
+                uppercase
+                tracking-[0.18em]
+
+                text-white/30
+              "
+            >
+              Presented by
+            </p>
+
+            <div className="mt-[4px]">
+              <BusinessModelLockup
+                model={
+                  model
+                }
+                brandA={
+                  brandA
+                }
+                brandB={
+                  brandB
+                }
+                scale="tiny"
+              />
+            </div>
+          </>
+        )}
+
+        {/* ====================================== */}
+        {/* SUPPORT                               */}
+        {/* ====================================== */}
+
+        <p
+          className="
+            mt-[7px]
+
+            text-[4px]
+            uppercase
+            tracking-[0.18em]
+
+            text-white/27
+          "
+        >
+          With the support of
+        </p>
+
+        {relationship ===
+        "sponsored" ? (
+          <div className="mt-[3px] h-[17px] w-[70px]">
+            <BrandLogo
+              logoUrl={
+                propertyX.logoUrl
+              }
+              fallback={
+                propertyX.name
+              }
+            />
           </div>
+        ) : (
+          <p
+            className="
+              mt-[2px]
+
+              text-[8px]
+              uppercase
+              tracking-[0.04em]
+
+              text-white/72
+
+              oook-semibold
+            "
+          >
+            Supporting Partner
+          </p>
+        )}
+
+        {/* ====================================== */}
+        {/* GENERIC CREDITS                        */}
+        {/* ====================================== */}
+
+        <div className="mt-[7px] grid w-full grid-cols-3 gap-x-[14px] gap-y-[5px]">
+          <CreditRole
+            role="Creative Director"
+            name="Alex Morgan"
+          />
+
+          <CreditRole
+            role="Executive Producer"
+            name="Jordan Lee"
+          />
+
+          <CreditRole
+            role="Director of Photography"
+            name="Taylor Reed"
+          />
+
+          <CreditRole
+            role="Producer"
+            name="Casey Miller"
+          />
+
+          <CreditRole
+            role="Camera Supervisor"
+            name="Jamie Cole"
+          />
+
+          <CreditRole
+            role="Post-production"
+            name="Morgan Hayes"
+          />
         </div>
 
-        {/* ====================================== */}
-        {/* SMALL PARTNERSHIP SIGNATURE            */}
-        {/* ====================================== */}
-
-        <BusinessModelLockup
-          model={
-            model
-          }
-          brandA={
-            brandA
-          }
-          brandB={
-            brandB
-          }
-          scale="tiny"
-        />
+        <div className="mt-[6px]">
+          <CreditRole
+            role="Special thanks"
+            name="Production Team"
+          />
+        </div>
       </div>
     </div>
   );
 }
 
 /* ================================================= */
-/* CREDIT ITEM                                       */
+/* CREDIT ROLE                                       */
 /* ================================================= */
 
-function CreditItem({
+function CreditRole({
   role,
   name,
 }: {
@@ -591,11 +731,32 @@ function CreditItem({
 }) {
   return (
     <div>
-      <p className="text-[5px] uppercase tracking-[0.11em] text-white/23">
+      <p
+        className="
+          text-[3.5px]
+          leading-none
+          tracking-[0.03em]
+
+          text-white/30
+        "
+      >
         {role}
       </p>
 
-      <p className="mt-[3px] text-[7px] text-white/58">
+      <p
+        className="
+          mt-[2px]
+
+          text-[6px]
+          leading-none
+          uppercase
+          tracking-[0.025em]
+
+          text-white/68
+
+          oook-semibold
+        "
+      >
         {name}
       </p>
     </div>
@@ -636,10 +797,6 @@ function CompleteClosingLockup({
 }) {
   return (
     <div className="flex max-w-[84%] flex-col items-center">
-      {/* ======================================== */}
-      {/* BASE A / B MODEL                         */}
-      {/* ======================================== */}
-
       <BusinessModelLockup
         model={
           model
@@ -652,10 +809,6 @@ function CompleteClosingLockup({
         }
         scale="normal"
       />
-
-      {/* ======================================== */}
-      {/* PRESENTING X                             */}
-      {/* ======================================== */}
 
       {relationship ===
         "presenting" && (
@@ -676,10 +829,6 @@ function CompleteClosingLockup({
           </div>
         </>
       )}
-
-      {/* ======================================== */}
-      {/* SPONSORED X                              */}
-      {/* ======================================== */}
 
       {relationship ===
         "sponsored" && (
@@ -734,35 +883,33 @@ function BusinessModelLockup({
   scale:
     "normal" | "tiny";
 }) {
-  const isTiny =
+  const tiny =
     scale ===
     "tiny";
 
   const largeWidth =
-    isTiny
-      ? 52
+    tiny
+      ? 62
       : 112;
 
   const smallWidth =
-    isTiny
-      ? 38
+    tiny
+      ? 44
       : 80;
 
   const height =
-    isTiny
-      ? 14
+    tiny
+      ? 17
       : 30;
 
-  /* ------------------------------------------------ */
-  /* A × B                                            */
-  /* ------------------------------------------------ */
+  /* A × B */
 
   if (
     model ===
     "axb"
   ) {
     return (
-      <div className="flex items-center gap-[8px]">
+      <div className="flex items-center gap-[7px]">
         <ScaledLogo
           brand={
             brandA
@@ -777,7 +924,7 @@ function BusinessModelLockup({
 
         <span
           className={
-            isTiny
+            tiny
               ? "text-[6px] text-white/32"
               : "text-[14px] text-white/38"
           }
@@ -800,9 +947,7 @@ function BusinessModelLockup({
     );
   }
 
-  /* ------------------------------------------------ */
-  /* A WITH B                                         */
-  /* ------------------------------------------------ */
+  /* A WITH B */
 
   if (
     model ===
@@ -824,7 +969,7 @@ function BusinessModelLockup({
 
         <RelationshipLabel
           tiny={
-            isTiny
+            tiny
           }
         >
           with
@@ -845,9 +990,7 @@ function BusinessModelLockup({
     );
   }
 
-  /* ------------------------------------------------ */
-  /* B POWERED BY A                                   */
-  /* ------------------------------------------------ */
+  /* B POWERED BY A */
 
   if (
     model ===
@@ -869,7 +1012,7 @@ function BusinessModelLockup({
 
         <RelationshipLabel
           tiny={
-            isTiny
+            tiny
           }
         >
           powered by
@@ -890,9 +1033,7 @@ function BusinessModelLockup({
     );
   }
 
-  /* ------------------------------------------------ */
-  /* A PRESENTS B                                     */
-  /* ------------------------------------------------ */
+  /* A PRESENTS B */
 
   return (
     <div className="flex items-center gap-[7px]">
@@ -910,7 +1051,7 @@ function BusinessModelLockup({
 
       <RelationshipLabel
         tiny={
-          isTiny
+          tiny
         }
       >
         presents
@@ -992,7 +1133,6 @@ function RelationshipLabel({
     <span
       className={`
         whitespace-nowrap
-
         uppercase
 
         ${

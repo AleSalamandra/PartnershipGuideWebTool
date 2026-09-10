@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  type ReactNode,
 } from "react";
 
 import BrandLogo from "./BrandLogo";
@@ -108,6 +109,14 @@ function createImageSequence():
     ];
   }
 
+  /*
+    IMPORTANT:
+
+    image6 is reserved for KF02 and KF04.
+
+    It must not appear in the other keyframes.
+  */
+
   return [
     pool[0],
     RESERVED_IMAGE,
@@ -135,6 +144,10 @@ function getBaseFlow(
   switch (
     model
   ) {
+    /* ------------------------------------------------ */
+    /* A × B                                            */
+    /* ------------------------------------------------ */
+
     case "axb":
       return [
         {
@@ -206,6 +219,10 @@ function getBaseFlow(
             "content",
         },
       ];
+
+    /* ------------------------------------------------ */
+    /* A WITH B                                         */
+    /* ------------------------------------------------ */
 
     case "aandb":
       return [
@@ -279,6 +296,10 @@ function getBaseFlow(
         },
       ];
 
+    /* ------------------------------------------------ */
+    /* B POWERED BY A                                   */
+    /* ------------------------------------------------ */
+
     case "poweredByA":
       return [
         {
@@ -350,6 +371,10 @@ function getBaseFlow(
             "content",
         },
       ];
+
+    /* ------------------------------------------------ */
+    /* A PRESENTS B                                     */
+    /* ------------------------------------------------ */
 
     case "presentsB":
     default:
@@ -502,13 +527,20 @@ export default function Page05() {
       bName
     );
 
-  /*
-    Presenting X changes what is being
-    progressively introduced, but does NOT
-    replace the underlying A / B model.
+  /* ------------------------------------------------ */
+  /* PRESENTING X                                     */
+  /* ------------------------------------------------ */
 
-    The complete relationship is resolved
-    in KF05.
+  /*
+    Presenting X does NOT replace the underlying
+    A / B partnership model.
+
+    KF01 introduces X.
+
+    KF05 resolves:
+      A / B business relationship
+      +
+      presenting X.
   */
 
   if (
@@ -557,6 +589,66 @@ export default function Page05() {
           <p className="mt-[15px] max-w-[720px] text-[16px] leading-[1.45] text-white/40">
             Brand hierarchy is introduced progressively rather than displaying every identity at once.
           </p>
+
+          {/* ==================================== */}
+          {/* YB STUDIOS PRODUCTION RULE           */}
+          {/* ==================================== */}
+
+          <div
+            className="
+              mt-[4px]
+
+              inline-flex
+              max-w-[1200px]
+
+              items-center
+              gap-[14px]
+
+              rounded-[11px]
+
+              border
+              border-white/[0.4]
+
+              bg-white/[0.05]
+
+              px-[16px]
+              py-[9px]
+            "
+          >
+            <span
+              className="
+                shrink-0
+
+                rounded-full
+
+                bg-white
+
+                px-[9px]
+                py-[5px]
+
+                text-[10px]
+                uppercase
+                tracking-[0.12em]
+
+                text-black
+
+                oook-medium
+              "
+            >
+              Production rule
+            </span>
+
+            <p
+              className="
+                text-[12px]
+                leading-[1.4]
+
+                text-white/45
+              "
+            >
+              Any video produced by YB Studios must be preceded by the YB Studios signature — a dedicated studio intro before the partnership opening sequence.
+            </p>
+          </div>
         </div>
 
         <PartnershipLockup
@@ -753,7 +845,7 @@ function Keyframe({
       </div>
 
       {/* ======================================== */}
-      {/* SPONSOR                                  */}
+      {/* SPONSORED X                              */}
       {/* ======================================== */}
 
       {relationship ===
@@ -817,6 +909,10 @@ function FrameContent({
   relationship:
     string;
 }) {
+  /* ------------------------------------------------ */
+  /* ATMOSPHERE                                       */
+  /* ------------------------------------------------ */
+
   if (
     frame.kind ===
     "atmosphere"
@@ -827,6 +923,10 @@ function FrameContent({
       </span>
     );
   }
+
+  /* ------------------------------------------------ */
+  /* CONNECTOR                                        */
+  /* ------------------------------------------------ */
 
   if (
     frame.kind ===
@@ -839,6 +939,10 @@ function FrameContent({
     );
   }
 
+  /* ------------------------------------------------ */
+  /* CONTENT                                          */
+  /* ------------------------------------------------ */
+
   if (
     frame.kind ===
     "content"
@@ -849,6 +953,10 @@ function FrameContent({
       </span>
     );
   }
+
+  /* ------------------------------------------------ */
+  /* BRAND A                                          */
+  /* ------------------------------------------------ */
 
   if (
     frame.kind ===
@@ -863,6 +971,10 @@ function FrameContent({
     );
   }
 
+  /* ------------------------------------------------ */
+  /* BRAND B                                          */
+  /* ------------------------------------------------ */
+
   if (
     frame.kind ===
     "brandB"
@@ -875,6 +987,10 @@ function FrameContent({
       />
     );
   }
+
+  /* ------------------------------------------------ */
+  /* PROPERTY X                                       */
+  /* ------------------------------------------------ */
 
   if (
     frame.kind ===
@@ -889,9 +1005,9 @@ function FrameContent({
     );
   }
 
-  /* ============================================ */
-  /* KF05 — COMPLETE RELATIONSHIP                 */
-  /* ============================================ */
+  /* ------------------------------------------------ */
+  /* KF05 — COMPLETE RELATIONSHIP                     */
+  /* ------------------------------------------------ */
 
   return (
     <CompleteRelationshipLockup
@@ -916,7 +1032,7 @@ function FrameContent({
 }
 
 /* ================================================= */
-/* COMPLETE LOCKUP                                   */
+/* COMPLETE RELATIONSHIP                             */
 /* ================================================= */
 
 function CompleteRelationshipLockup({
@@ -948,9 +1064,17 @@ function CompleteRelationshipLockup({
     boolean;
 }) {
   return (
-    <div className="flex max-w-[88%] flex-col items-center">
+    <div
+      className="
+        flex
+        max-w-[88%]
+
+        flex-col
+        items-center
+      "
+    >
       {/* ======================================== */}
-      {/* A / B BUSINESS MODEL                     */}
+      {/* BASE BUSINESS MODEL                      */}
       {/* ======================================== */}
 
       <BusinessModelLockup
@@ -966,12 +1090,22 @@ function CompleteRelationshipLockup({
       />
 
       {/* ======================================== */}
-      {/* PRESENTED PROPERTY                       */}
+      {/* PRESENTING PROPERTY X                    */}
       {/* ======================================== */}
 
       {presenting && (
         <>
-          <p className="my-[10px] text-[6px] uppercase tracking-[0.18em] text-white/34">
+          <p
+            className="
+              my-[10px]
+
+              text-[6px]
+              uppercase
+              tracking-[0.18em]
+
+              text-white/34
+            "
+          >
             Present
           </p>
 
@@ -1157,7 +1291,7 @@ function RelationshipLabel({
   children,
 }: {
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <span
@@ -1197,7 +1331,10 @@ function MiniLogo({
 }) {
   return (
     <div
-      className="h-[30px]"
+      className="
+        h-[30px]
+        shrink-0
+      "
       style={{
         width,
       }}
