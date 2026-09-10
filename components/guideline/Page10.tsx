@@ -9,82 +9,42 @@ import PartnershipLockup from "./PartnershipLockup";
 import RasterGlow from "./RasterGlow";
 
 import {
-  BrandCharacterTraitId,
   brandCharacterTraits,
+  type BrandCharacterTraitId,
 } from "@/data/brandCharacterTraits";
 
 import {
   useGuidelineStore,
 } from "@/store/guidelineStore";
 
+import {
+  buildGraphicLanguageSystem,
+  type DepthStyle,
+  type GlowStyle,
+  type GraphicLanguageSystem,
+  type GridStyle,
+  type LanguageBrand,
+  type LineStyle,
+  type MaskStyle,
+  type ShapeStyle,
+  type TextureStyle,
+  type UIStyle,
+} from "@/utils/graphicLanguageSystem";
+
 import type {
-  AdditionalRelationshipMode,
   PartnershipModelId,
 } from "@/types/guideline";
 
 /* ================================================= */
-/* TYPES                                             */
+/* CONSTANTS                                         */
 /* ================================================= */
 
-interface GraphicProfile {
-  roundness:
-    number;
-
-  energy:
-    number;
-
-  grid:
-    number;
-
-  particles:
-    number;
-
-  glow:
-    number;
-
-  texture:
-    number;
-
-  organic:
-    number;
-
-  precision:
-    number;
-
-  expressiveTilt:
-    number;
-}
-
-interface ColourSystem {
-  leadPrimary:
-    string;
-
-  leadSecondary:
-    string;
-
-  supportPrimary:
-    string;
-
-  supportSecondary:
-    string;
-}
+const DEFAULT_FONT =
+  '"oook-variable", sans-serif';
 
 /* ================================================= */
 /* HELPERS                                           */
 /* ================================================= */
-
-function clamp(
-  value:
-    number
-) {
-  return Math.min(
-    1,
-    Math.max(
-      0,
-      value
-    )
-  );
-}
 
 function safeColour(
   value:
@@ -111,47 +71,99 @@ function getTraits(
   const value =
     brand as {
       characterTraits?:
-        BrandCharacterTraitId[];
+        string[];
     };
 
-  return Array.isArray(
-    value.characterTraits
-  )
-    ? value.characterTraits
-    : [];
+  if (
+    !Array.isArray(
+      value.characterTraits
+    )
+  ) {
+    return [];
+  }
+
+  return value.characterTraits
+    .filter(
+      (
+        id
+      ) =>
+        brandCharacterTraits.some(
+          (
+            trait
+          ) =>
+            trait.id ===
+            id
+        )
+    )
+    .slice(
+      0,
+      2
+    ) as BrandCharacterTraitId[];
 }
 
-function hexToRgb(
-  colour:
+function getBrand(
+  brand:
+    unknown,
+
+  fallbackName:
+    string,
+
+  fallbackPrimary:
+    string,
+
+  fallbackSecondary:
     string
-) {
+): LanguageBrand {
   const value =
-    parseInt(
-      colour.replace(
-        "#",
-        ""
-      ),
-      16
-    );
+    brand as {
+      name?:
+        string;
+
+      logoUrl?:
+        string | null;
+
+      primaryColor?:
+        string;
+
+      secondaryColor?:
+        string;
+
+      fontFamily?:
+        string;
+
+      characterTraits?:
+        string[];
+    };
 
   return {
-    r:
-      (
-        value >>
-        16
-      ) &
-      255,
+    name:
+      value.name?.trim() ||
+      fallbackName,
 
-    g:
-      (
-        value >>
-        8
-      ) &
-      255,
+    logoUrl:
+      value.logoUrl ??
+      null,
 
-    b:
-      value &
-      255,
+    primaryColor:
+      safeColour(
+        value.primaryColor,
+        fallbackPrimary
+      ),
+
+    secondaryColor:
+      safeColour(
+        value.secondaryColor,
+        fallbackSecondary
+      ),
+
+    fontFamily:
+      value.fontFamily ||
+      DEFAULT_FONT,
+
+    characterTraits:
+      getTraits(
+        brand
+      ),
   };
 }
 
@@ -162,475 +174,40 @@ function alpha(
   opacity:
     number
 ) {
-  const {
-    r,
-    g,
-    b,
-  } =
-    hexToRgb(
-      colour
+  const hex =
+    safeColour(
+      colour,
+      "#FFFFFF"
+    ).replace(
+      "#",
+      ""
     );
 
-  return `rgba(${r},${g},${b},${opacity})`;
-}
-
-/* ================================================= */
-/* CHARACTER PROFILE                                 */
-/* ================================================= */
-
-function buildProfile(
-  traits:
-    BrandCharacterTraitId[]
-): GraphicProfile {
-  const profile:
-    GraphicProfile = {
-    roundness:
-      0.42,
-
-    energy:
-      0.3,
-
-    grid:
-      0.45,
-
-    particles:
-      0.24,
-
-    glow:
-      0.2,
-
-    texture:
-      0.14,
-
-    organic:
-      0.18,
-
-    precision:
-      0.58,
-
-    expressiveTilt:
-      0,
-  };
-
-  traits.forEach(
-    (
-      trait
-    ) => {
-      switch (
-        trait
-      ) {
-        case "classic":
-          profile.precision +=
-            0.2;
-
-          profile.grid +=
-            0.1;
-
-          profile.energy -=
-            0.08;
-          break;
-
-        case "elegant":
-          profile.roundness +=
-            0.05;
-
-          profile.energy -=
-            0.1;
-
-          profile.glow +=
-            0.04;
-          break;
-
-        case "premium":
-          profile.glow +=
-            0.1;
-
-          profile.texture +=
-            0.08;
-
-          profile.energy -=
-            0.08;
-          break;
-
-        case "minimal":
-          profile.particles -=
-            0.2;
-
-          profile.texture -=
-            0.12;
-
-          profile.energy -=
-            0.1;
-          break;
-
-        case "editorial":
-          profile.grid +=
-            0.28;
-
-          profile.precision +=
-            0.15;
-          break;
-
-        case "technical":
-          profile.grid +=
-            0.3;
-
-          profile.precision +=
-            0.28;
-
-          profile.glow +=
-            0.06;
-          break;
-
-        case "precise":
-          profile.precision +=
-            0.34;
-
-          profile.organic -=
-            0.16;
-          break;
-
-        case "futuristic":
-          profile.glow +=
-            0.32;
-
-          profile.grid +=
-            0.12;
-
-          profile.particles +=
-            0.12;
-          break;
-
-        case "bold":
-          profile.energy +=
-            0.18;
-          break;
-
-        case "dynamic":
-          profile.energy +=
-            0.3;
-
-          profile.particles +=
-            0.08;
-          break;
-
-        case "energetic":
-          profile.energy +=
-            0.4;
-
-          profile.particles +=
-            0.25;
-          break;
-
-        case "sporty":
-          profile.energy +=
-            0.38;
-
-          profile.grid +=
-            0.1;
-          break;
-
-        case "friendly":
-          profile.roundness +=
-            0.3;
-
-          profile.organic +=
-            0.12;
-          break;
-
-        case "organic":
-          profile.organic +=
-            0.5;
-
-          profile.roundness +=
-            0.18;
-
-          profile.texture +=
-            0.18;
-
-          profile.grid -=
-            0.14;
-          break;
-
-        case "immersive":
-          profile.glow +=
-            0.16;
-
-          profile.particles +=
-            0.12;
-          break;
-
-        case "cinematic":
-          profile.glow +=
-            0.12;
-
-          profile.texture +=
-            0.18;
-          break;
-
-        case "youthful":
-          profile.energy +=
-            0.2;
-
-          profile.roundness +=
-            0.1;
-          break;
-
-        case "playful":
-          profile.energy +=
-            0.15;
-
-          profile.roundness +=
-            0.3;
-
-          profile.organic +=
-            0.2;
-
-          profile.expressiveTilt +=
-            0.8;
-          break;
-
-        case "experimental":
-          profile.energy +=
-            0.14;
-
-          profile.organic +=
-            0.2;
-
-          profile.expressiveTilt +=
-            0.7;
-          break;
-
-        case "disruptive":
-          profile.energy +=
-            0.28;
-
-          profile.expressiveTilt +=
-            0.55;
-          break;
-      }
-    }
-  );
-
-  Object.keys(
-    profile
-  ).forEach(
-    (
-      key
-    ) => {
-      const property =
-        key as keyof GraphicProfile;
-
-      profile[
-        property
-      ] =
-        clamp(
-          profile[
-            property
-          ]
-        );
-    }
-  );
-
-  return profile;
-}
-
-/* ================================================= */
-/* BLENDING                                          */
-/* ================================================= */
-
-function blend(
-  a:
-    GraphicProfile,
-
-  b:
-    GraphicProfile,
-
-  weight:
-    number
-): GraphicProfile {
-  const inverse =
-    1 -
-    weight;
-
-  return {
-    roundness:
-      a.roundness *
-        weight +
-      b.roundness *
-        inverse,
-
-    energy:
-      a.energy *
-        weight +
-      b.energy *
-        inverse,
-
-    grid:
-      a.grid *
-        weight +
-      b.grid *
-        inverse,
-
-    particles:
-      a.particles *
-        weight +
-      b.particles *
-        inverse,
-
-    glow:
-      a.glow *
-        weight +
-      b.glow *
-        inverse,
-
-    texture:
-      a.texture *
-        weight +
-      b.texture *
-        inverse,
-
-    organic:
-      a.organic *
-        weight +
-      b.organic *
-        inverse,
-
-    precision:
-      a.precision *
-        weight +
-      b.precision *
-        inverse,
-
-    expressiveTilt:
-      a.expressiveTilt *
-        weight +
-      b.expressiveTilt *
-        inverse,
-  };
-}
-
-function getBaseProfile(
-  model:
-    PartnershipModelId,
-
-  a:
-    GraphicProfile,
-
-  b:
-    GraphicProfile
-) {
-  switch (
-    model
-  ) {
-    case "axb":
-      return blend(
-        a,
-        b,
-        0.5
-      );
-
-    case "aandb":
-      return blend(
-        a,
-        b,
-        0.7
-      );
-
-    case "poweredByA":
-      return blend(
-        b,
-        a,
-        0.9
-      );
-
-    case "presentsB":
-    default:
-      return a;
-  }
-}
-
-function applyXProfile(
-  base:
-    GraphicProfile,
-
-  x:
-    GraphicProfile,
-
-  mode:
-    AdditionalRelationshipMode
-) {
-  if (
-    mode ===
-    "presenting"
-  ) {
-    /*
-      55% underlying partnership
-      45% presented property.
-    */
-
-    return blend(
-      base,
-      x,
-      0.55
+  const number =
+    parseInt(
+      hex,
+      16
     );
-  }
 
-  return base;
-}
+  const r =
+    (
+      number >>
+      16
+    ) &
+    255;
 
-/* ================================================= */
-/* COLOUR SYSTEM                                     */
-/* ================================================= */
+  const g =
+    (
+      number >>
+      8
+    ) &
+    255;
 
-function getBaseColours(
-  model:
-    PartnershipModelId,
+  const b =
+    number &
+    255;
 
-  aPrimary:
-    string,
-
-  aSecondary:
-    string,
-
-  bPrimary:
-    string,
-
-  bSecondary:
-    string
-): ColourSystem {
-  if (
-    model ===
-    "poweredByA"
-  ) {
-    return {
-      leadPrimary:
-        bPrimary,
-
-      leadSecondary:
-        bSecondary,
-
-      supportPrimary:
-        aPrimary,
-
-      supportSecondary:
-        aSecondary,
-    };
-  }
-
-  return {
-    leadPrimary:
-      aPrimary,
-
-    leadSecondary:
-      aSecondary,
-
-    supportPrimary:
-      bPrimary,
-
-    supportSecondary:
-      bSecondary,
-  };
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
 /* ================================================= */
@@ -640,10 +217,12 @@ function getBaseColours(
 export default function Page10() {
   const {
     partnershipModel,
+
     additionalRelationship,
 
     brandA,
     brandB,
+
     propertyX,
   } =
     useGuidelineStore();
@@ -651,138 +230,61 @@ export default function Page10() {
   const model =
     partnershipModel as PartnershipModelId;
 
-  const presenting =
-    additionalRelationship ===
-    "presenting";
+  const a =
+    getBrand(
+      brandA,
 
-  const sponsored =
-    additionalRelationship ===
-    "sponsored";
+      "Brand A",
 
-  const propertyName =
-    propertyX.name.trim() ||
-    "X";
-
-  /* ------------------------------------------------ */
-  /* TRAITS                                           */
-  /* ------------------------------------------------ */
-
-  const aTraits =
-    getTraits(
-      brandA
-    );
-
-  const bTraits =
-    getTraits(
-      brandB
-    );
-
-  const xTraits =
-    getTraits(
-      propertyX
-    );
-
-  /* ------------------------------------------------ */
-  /* PROFILES                                         */
-  /* ------------------------------------------------ */
-
-  const aProfile =
-    buildProfile(
-      aTraits
-    );
-
-  const bProfile =
-    buildProfile(
-      bTraits
-    );
-
-  const xProfile =
-    buildProfile(
-      xTraits
-    );
-
-  const baseProfile =
-    getBaseProfile(
-      model,
-      aProfile,
-      bProfile
-    );
-
-  const profile =
-    applyXProfile(
-      baseProfile,
-      xProfile,
-      additionalRelationship
-    );
-
-  /* ------------------------------------------------ */
-  /* COLOURS                                          */
-  /* ------------------------------------------------ */
-
-  const aPrimary =
-    safeColour(
-      brandA.primaryColor,
-      "#FF453A"
-    );
-
-  const aSecondary =
-    safeColour(
-      brandA.secondaryColor,
+      "#FF453A",
       "#FF8A80"
     );
 
-  const bPrimary =
-    safeColour(
-      brandB.primaryColor,
-      "#3478F6"
-    );
+  const b =
+    getBrand(
+      brandB,
 
-  const bSecondary =
-    safeColour(
-      brandB.secondaryColor,
+      "Brand B",
+
+      "#3478F6",
       "#64D2FF"
     );
 
-  const xPrimary =
-    safeColour(
-      propertyX.primaryColor,
-      "#8A8A8A"
+  const x =
+    getBrand(
+      propertyX,
+
+      "Property X",
+
+      "#8A8A8A",
+      "#B8B8B8"
     );
 
-  const xSecondary =
-    safeColour(
-      propertyX.secondaryColor,
-      "#B9B9B9"
-    );
+  const relationship =
+    (
+      additionalRelationship ??
+      "none"
+    ) as
+      | "none"
+      | "presenting"
+      | "sponsored";
 
-  const baseColours =
-    getBaseColours(
+  const language =
+    buildGraphicLanguageSystem({
       model,
 
-      aPrimary,
-      aSecondary,
+      additionalRelationship:
+        relationship,
 
-      bPrimary,
-      bSecondary
-    );
+      brandA:
+        a,
 
-  const colours:
-    ColourSystem =
-    presenting
-      ? {
-          leadPrimary:
-            xPrimary,
+      brandB:
+        b,
 
-          leadSecondary:
-            xSecondary,
-
-          supportPrimary:
-            baseColours.leadPrimary,
-
-          supportSecondary:
-            baseColours.supportPrimary,
-        }
-      : baseColours;
+      propertyX:
+        x,
+    });
 
   return (
     <GuidelinePage>
@@ -836,59 +338,33 @@ export default function Page10() {
             className="
               mt-[13px]
 
-              max-w-[890px]
+              max-w-[930px]
 
-              text-[16px]
-              leading-[1.38]
+              text-[15px]
+              leading-[1.4]
 
-              text-white/45
+              text-white/43
             "
           >
-            {presenting
-              ? `${propertyName} contributes directly to geometry, density, rhythm and expression. Its character is blended with the existing A / B partnership rather than added as a separate graphic system.`
-              : sponsored
-                ? `${propertyName} does not influence the graphic language. The system continues to be generated exclusively from Brand A, Brand B and their partnership hierarchy.`
-                : "Brand character controls geometry, density, rhythm and expression while partnership hierarchy decides who leads the system."}
+            {language.summary}
           </p>
         </div>
 
-        <div
-          className="
-            flex
-            flex-col
-            items-end
-
-            gap-[10px]
-          "
-        >
-          <PartnershipLockup
-            model={
-              model
-            }
-            brandA={
-              brandA
-            }
-            brandB={
-              brandB
-            }
-          />
-
-          {additionalRelationship !==
-            "none" && (
-            <RelationshipLabel
-              mode={
-                additionalRelationship
-              }
-              propertyName={
-                propertyName
-              }
-            />
-          )}
-        </div>
+        <PartnershipLockup
+          model={
+            model
+          }
+          brandA={
+            brandA
+          }
+          brandB={
+            brandB
+          }
+        />
       </header>
 
       {/* ======================================== */}
-      {/* CHARACTER                                */}
+      {/* CHARACTER INPUT                          */}
       {/* ======================================== */}
 
       <aside
@@ -901,161 +377,125 @@ export default function Page10() {
           w-[300px]
         "
       >
-        <Card className="p-[16px]">
+        <Card className="p-[15px]">
           <SectionLabel>
             Character input
           </SectionLabel>
 
-          <CharacterGroup
-            label="Brand A"
+          <CharacterSource
+            label="Structure"
+            name={
+              language.structureName
+            }
             traits={
-              aTraits
+              language.structureTraits
             }
-            primary={
-              aPrimary
-            }
-            secondary={
-              aSecondary
+            colour={
+              language.supportColor
             }
           />
 
-          <CharacterGroup
-            label="Brand B"
+          <CharacterSource
+            label="Expression"
+            name={
+              language.expressionName
+            }
             traits={
-              bTraits
+              language.expressionTraits
             }
-            primary={
-              bPrimary
+            colour={
+              language.primaryColor
             }
-            secondary={
-              bSecondary
+            featured={
+              relationship ===
+              "presenting"
             }
           />
 
-          {presenting && (
-            <CharacterGroup
-              label={
-                propertyName
-              }
-              traits={
-                xTraits
-              }
-              primary={
-                xPrimary
-              }
-              secondary={
-                xSecondary
-              }
-              featured
-            />
-          )}
-
-          {sponsored && (
+          {relationship ===
+            "sponsored" && (
             <p
               className="
-                mt-[13px]
+                mt-[11px]
 
                 border-t
                 border-white/[0.06]
 
-                pt-[10px]
+                pt-[9px]
 
-                text-[8px]
+                text-[7px]
                 leading-[1.4]
 
-                text-white/24
+                text-white/19
               "
             >
-              Sponsor character is intentionally excluded from the resulting profile.
+              {x.name} remains sponsorship attribution and is excluded from the shared visual language.
             </p>
           )}
         </Card>
 
-        <Card className="mt-[10px] p-[16px]">
+        {/* ====================================== */}
+        {/* RESULTING DIRECTION                    */}
+        {/* ====================================== */}
+
+        <Card className="mt-[10px] p-[15px]">
           <SectionLabel>
-            Resulting behaviour
+            Resulting direction
           </SectionLabel>
 
           <div
             className="
-              mt-[13px]
+              mt-[12px]
 
               grid
               grid-cols-2
 
-              gap-x-[14px]
-              gap-y-[11px]
+              gap-x-[12px]
+              gap-y-[12px]
             "
           >
-            <Metric
+            <DirectionValue
               label="Geometry"
               value={
-                profile.organic
+                language.shapes.label
               }
-              left="Rigid"
-              right="Organic"
             />
 
-            <Metric
-              label="Energy"
+            <DirectionValue
+              label="Lines"
               value={
-                profile.energy
+                language.lines.label
               }
-              left="Calm"
-              right="Active"
             />
 
-            <Metric
-              label="Grid"
+            <DirectionValue
+              label="Framing"
               value={
-                profile.grid
+                language.masks.label
               }
-              left="Free"
-              right="Strict"
             />
 
-            <Metric
-              label="Glow"
+            <DirectionValue
+              label="Layout"
               value={
-                profile.glow
+                language.grid.label
               }
-              left="Flat"
-              right="Luminous"
             />
 
-            <Metric
-              label="Texture"
+            <DirectionValue
+              label="Surface"
               value={
-                profile.texture
+                language.texture.label
               }
-              left="Clean"
-              right="Rich"
             />
 
-            <Metric
-              label="Particles"
+            <DirectionValue
+              label="Depth"
               value={
-                profile.particles
+                language.depth.label
               }
-              left="Quiet"
-              right="Dense"
             />
           </div>
-
-          {presenting && (
-            <p
-              className="
-                mt-[13px]
-
-                text-[8px]
-                leading-[1.4]
-
-                text-white/24
-              "
-            >
-              Result = 55% partnership character + 45% {propertyName}.
-            </p>
-          )}
         </Card>
       </aside>
 
@@ -1080,122 +520,34 @@ export default function Page10() {
         <Comparison
           good
           title="DO"
-          description={
-            presenting
-              ? `Create one visual grammar in which ${propertyName} visibly influences the shared system.`
-              : "Create one visual grammar from both personalities and the partnership hierarchy."
-          }
+          description="Translate all selected characters into one coherent visual system."
         >
-          <GeneratedSystem
-            profile={
-              profile
-            }
-            primary={
-              colours.leadPrimary
-            }
-            secondary={
-              colours.leadSecondary
-            }
-            support={
-              colours.supportPrimary
-            }
-            supportSecondary={
-              colours.supportSecondary
+          <SharedSystemPreview
+            language={
+              language
             }
           />
         </Comparison>
 
         <Comparison
           title="DON'T"
-          description={
-            presenting
-              ? "Do not create three independent branded visual systems competing inside the same experience."
-              : sponsored
-                ? "Do not allow sponsor aesthetics to alter the collaboration system."
-                : "Do not place two independent branded visual systems side by side."
-          }
+          description="Do not stack independent brand languages or let every asset behave differently."
         >
-          <SplitSystem
-            mode={
-              additionalRelationship
+          <SplitSystemPreview
+            a={
+              a
             }
-            aPrimary={
-              aPrimary
+            b={
+              b
             }
-            bPrimary={
-              bPrimary
-            }
-            xPrimary={
-              xPrimary
+            x={
+              relationship ===
+              "presenting"
+                ? x
+                : null
             }
           />
         </Comparison>
-      </section>
-
-      {/* ======================================== */}
-      {/* TRAIT IMPLICATIONS                       */}
-      {/* ======================================== */}
-
-      <section
-        className={`
-          absolute
-
-          left-[395px]
-          right-[70px]
-          top-[585px]
-
-          grid
-
-          gap-[10px]
-
-          ${
-            presenting
-              ? "grid-cols-3"
-              : "grid-cols-2"
-          }
-        `}
-      >
-        <TraitCard
-          label="Brand A character"
-          traits={
-            aTraits
-          }
-          primary={
-            aPrimary
-          }
-          secondary={
-            aSecondary
-          }
-        />
-
-        <TraitCard
-          label="Brand B character"
-          traits={
-            bTraits
-          }
-          primary={
-            bPrimary
-          }
-          secondary={
-            bSecondary
-          }
-        />
-
-        {presenting && (
-          <TraitCard
-            label={`${propertyName} character`}
-            traits={
-              xTraits
-            }
-            primary={
-              xPrimary
-            }
-            secondary={
-              xSecondary
-            }
-            featured
-          />
-        )}
       </section>
 
       {/* ======================================== */}
@@ -1206,14 +558,15 @@ export default function Page10() {
         className="
           absolute
 
-          bottom-[26px]
           left-[70px]
           right-[70px]
+          top-[535px]
         "
       >
         <div
           className="
             flex
+            items-end
             justify-between
           "
         >
@@ -1224,101 +577,255 @@ export default function Page10() {
 
             <p
               className="
-                mt-[3px]
+                mt-[4px]
 
-                text-[9px]
+                text-[8px]
 
-                text-white/27
+                text-white/22
               "
             >
-              {presenting
-                ? `${propertyName} leads content expression while partnership colours support structure and authorship.`
-                : "Secondary colours support depth, layering and micro-expression."}
+              Each category interprets the same character combination differently.
             </p>
           </div>
 
           <p
             className="
-              text-[8px]
+              text-[7px]
               uppercase
               tracking-[0.12em]
 
-              text-white/18
+              text-white/16
             "
           >
-            {presenting
-              ? "A/B character × X character × hierarchy"
-              : "Character × hierarchy"}
+            Character × hierarchy × application
           </p>
         </div>
 
         <div
           className="
-            mt-[8px]
+            mt-[10px]
 
             grid
-            grid-cols-[repeat(13,minmax(0,1fr))]
+            grid-cols-4
 
-            gap-[5px]
+            gap-[8px]
           "
         >
-          {[
-            "Shapes",
-            "Lines",
-            "Masks",
-            "Frames",
-            "Particles",
-            "Grids",
-            "UI",
-            "Gradients",
-            "Glow",
-            "Textures",
-            "3D",
-            "Visualizers",
-            "Data",
-          ].map(
-            (
-              label,
-              index
-            ) => (
-              <ToolkitItem
-                key={
-                  label
-                }
-                label={
-                  label
-                }
-                index={
-                  index
-                }
-                primary={
-                  index %
-                      4 ===
-                    0
-                    ? colours.supportPrimary
-                    : colours.leadPrimary
-                }
-                secondary={
-                  index %
-                      3 ===
-                    0
-                    ? colours.supportSecondary
-                    : colours.leadSecondary
-                }
-                roundness={
-                  profile.roundness
-                }
-              />
-            )
-          )}
+          <ToolkitCard
+            label="Shapes"
+            title={
+              language.shapes.label
+            }
+            description={
+              language.shapes.description
+            }
+          >
+            <ShapePreview
+              style={
+                language.shapes.style
+              }
+              primary={
+                language.primaryColor
+              }
+              secondary={
+                language.secondaryColor
+              }
+            />
+          </ToolkitCard>
+
+          <ToolkitCard
+            label="Lines"
+            title={
+              language.lines.label
+            }
+            description={
+              language.lines.description
+            }
+          >
+            <LinePreview
+              style={
+                language.lines.style
+              }
+              primary={
+                language.primaryColor
+              }
+              secondary={
+                language.secondaryColor
+              }
+            />
+          </ToolkitCard>
+
+          <ToolkitCard
+            label="Masks & frames"
+            title={
+              language.masks.label
+            }
+            description={
+              language.masks.description
+            }
+          >
+            <MaskPreview
+              style={
+                language.masks.style
+              }
+              primary={
+                language.primaryColor
+              }
+              secondary={
+                language.secondaryColor
+              }
+            />
+          </ToolkitCard>
+
+          <ToolkitCard
+            label="Grid & layout"
+            title={
+              language.grid.label
+            }
+            description={
+              language.grid.description
+            }
+          >
+            <GridPreview
+              style={
+                language.grid.style
+              }
+              colour={
+                language.supportColor
+              }
+            />
+          </ToolkitCard>
+
+          <ToolkitCard
+            label="UI & data"
+            title={
+              language.ui.label
+            }
+            description={
+              language.ui.description
+            }
+          >
+            <UIPreview
+              style={
+                language.ui.style
+              }
+              primary={
+                language.primaryColor
+              }
+              secondary={
+                language.secondaryColor
+              }
+            />
+          </ToolkitCard>
+
+          <ToolkitCard
+            label="Texture"
+            title={
+              language.texture.label
+            }
+            description={
+              language.texture.description
+            }
+          >
+            <TexturePreview
+              style={
+                language.texture.style
+              }
+              primary={
+                language.primaryColor
+              }
+            />
+          </ToolkitCard>
+
+          <ToolkitCard
+            label="Glow"
+            title={
+              language.glow.label
+            }
+            description={
+              language.glow.description
+            }
+          >
+            <GlowPreview
+              style={
+                language.glow.style
+              }
+              primary={
+                language.primaryColor
+              }
+              secondary={
+                language.secondaryColor
+              }
+            />
+          </ToolkitCard>
+
+          <ToolkitCard
+            label="Depth / 3D"
+            title={
+              language.depth.label
+            }
+            description={
+              language.depth.description
+            }
+          >
+            <DepthPreview
+              style={
+                language.depth.style
+              }
+              primary={
+                language.primaryColor
+              }
+              secondary={
+                language.secondaryColor
+              }
+            />
+          </ToolkitCard>
         </div>
       </section>
+
+      {/* ======================================== */}
+      {/* FOOTER                                   */}
+      {/* ======================================== */}
+
+      <footer
+        className="
+          absolute
+
+          bottom-[20px]
+          left-[70px]
+          right-[70px]
+
+          flex
+          justify-between
+
+          border-t
+          border-white/[0.06]
+
+          pt-[8px]
+
+          text-[7px]
+
+          text-white/16
+        "
+      >
+        <span>
+          Structure: {
+            language.structureName
+          }
+        </span>
+
+        <span>
+          Expression: {
+            language.expressionName
+          }
+        </span>
+      </footer>
     </GuidelinePage>
   );
 }
 
 /* ================================================= */
-/* UI                                                */
+/* GENERIC UI                                        */
 /* ================================================= */
 
 function Card({
@@ -1358,11 +865,11 @@ function SectionLabel({
   return (
     <p
       className="
-        text-[10px]
+        text-[9px]
         uppercase
         tracking-[0.14em]
 
-        text-white/30
+        text-white/28
 
         oook-medium
       "
@@ -1376,23 +883,23 @@ function SectionLabel({
 /* CHARACTER                                         */
 /* ================================================= */
 
-function CharacterGroup({
+function CharacterSource({
   label,
+  name,
   traits,
-  primary,
-  secondary,
+  colour,
   featured = false,
 }: {
   label:
     string;
 
+  name:
+    string;
+
   traits:
     BrandCharacterTraitId[];
 
-  primary:
-    string;
-
-  secondary:
+  colour:
     string;
 
   featured?:
@@ -1401,19 +908,24 @@ function CharacterGroup({
   return (
     <div
       className={`
-        mt-[13px]
+        mt-[11px]
+
+        rounded-[11px]
+
+        border
+
+        px-[10px]
+        py-[9px]
 
         ${
           featured
             ? `
-                rounded-[10px]
-
-                border
-                border-white/[0.07]
-
-                p-[8px]
+                border-white/[0.12]
+                bg-white/[0.025]
               `
-            : ""
+            : `
+                border-white/[0.05]
+              `
         }
       `}
     >
@@ -1421,99 +933,136 @@ function CharacterGroup({
         className="
           flex
           items-center
-          gap-[6px]
+          justify-between
+
+          gap-[10px]
         "
       >
-        <div
-          className="
-            h-[4px]
-            w-[22px]
+        <div className="min-w-0">
+          <p
+            className="
+              text-[6px]
+              uppercase
+              tracking-[0.11em]
 
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              primary,
-          }}
-        />
+              text-white/17
+            "
+          >
+            {label}
+          </p>
 
-        <div
-          className="
-            h-[4px]
-            w-[10px]
+          <p
+            className="
+              mt-[2px]
 
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              secondary,
-          }}
-        />
+              truncate
+
+              text-[9px]
+
+              text-white/52
+            "
+          >
+            {name}
+          </p>
+        </div>
 
         <span
-          className={
-            featured
-              ? "truncate text-[10px] text-white/72"
-              : "truncate text-[10px] text-white/55"
-          }
-        >
-          {label}
-        </span>
+          className="
+            h-[4px]
+            w-[25px]
+
+            shrink-0
+
+            rounded-full
+          "
+          style={{
+            backgroundColor:
+              colour,
+          }}
+        />
       </div>
 
       <div
         className="
           mt-[7px]
 
-          flex
-          flex-wrap
-
-          gap-[4px]
+          space-y-[6px]
         "
       >
-        {traits.length >
-        0 ? (
-          traits.map(
-            (
-              id
-            ) => {
-              const trait =
-                brandCharacterTraits.find(
-                  (
-                    item
-                  ) =>
-                    item.id ===
-                    id
+        {traits.length ? (
+          traits
+            .slice(
+              0,
+              4
+            )
+            .map(
+              (
+                id
+              ) => {
+                const trait =
+                  brandCharacterTraits.find(
+                    (
+                      item
+                    ) =>
+                      item.id ===
+                      id
+                  );
+
+                if (
+                  !trait
+                ) {
+                  return null;
+                }
+
+                return (
+                  <div
+                    key={
+                      id
+                    }
+                  >
+                    <p
+                      className="
+                        text-[7px]
+
+                        text-white/44
+
+                        oook-medium
+                      "
+                    >
+                      {
+                        trait.label
+                      }
+                    </p>
+
+                    <p
+                      className="
+                        mt-[2px]
+
+                        line-clamp-2
+
+                        text-[6px]
+                        leading-[1.35]
+
+                        text-white/18
+                      "
+                    >
+                      {
+                        trait.description
+                      }
+                    </p>
+                  </div>
                 );
-
-              return (
-                <span
-                  key={
-                    id
-                  }
-                  className="
-                    rounded-full
-
-                    border
-                    border-white/[0.07]
-
-                    px-[6px]
-                    py-[3px]
-
-                    text-[8px]
-
-                    text-white/38
-                  "
-                >
-                  {trait?.label ??
-                    id}
-                </span>
-              );
-            }
-          )
+              }
+            )
         ) : (
-          <span className="text-[9px] text-white/22">
-            Neutral
+          <span
+            className="
+              text-[7px]
+
+              text-white/17
+            "
+          >
+            Neutral character
           </span>
         )}
       </div>
@@ -1522,92 +1071,45 @@ function CharacterGroup({
 }
 
 /* ================================================= */
-/* METRIC                                            */
+/* DIRECTION                                         */
 /* ================================================= */
 
-function Metric({
+function DirectionValue({
   label,
   value,
-  left,
-  right,
 }: {
   label:
     string;
 
   value:
-    number;
-
-  left:
-    string;
-
-  right:
     string;
 }) {
   return (
     <div>
       <p
         className="
-          text-[8px]
+          text-[6px]
           uppercase
           tracking-[0.1em]
 
-          text-white/26
+          text-white/16
         "
       >
         {label}
       </p>
 
-      <div
+      <p
         className="
-          mt-[5px]
+          mt-[3px]
 
-          h-[4px]
+          text-[8px]
+          leading-[1.25]
 
-          overflow-hidden
-
-          rounded-full
-
-          bg-white/[0.07]
+          text-white/43
         "
       >
-        <div
-          className="
-            h-full
-
-            rounded-full
-
-            bg-white/50
-          "
-          style={{
-            width:
-              `${Math.round(
-                value *
-                  100
-              )}%`,
-          }}
-        />
-      </div>
-
-      <div
-        className="
-          mt-[4px]
-
-          flex
-          justify-between
-
-          text-[7px]
-
-          text-white/18
-        "
-      >
-        <span>
-          {left}
-        </span>
-
-        <span>
-          {right}
-        </span>
-      </div>
+        {value}
+      </p>
     </div>
   );
 }
@@ -1635,11 +1137,11 @@ function Comparison({
     ReactNode;
 }) {
   return (
-    <Card className="p-[13px]">
+    <Card className="p-[12px]">
       <div
         className="
           flex
-          min-h-[38px]
+          h-[38px]
 
           items-start
           justify-between
@@ -1651,6 +1153,7 @@ function Comparison({
           className="
             flex
             items-center
+
             gap-[8px]
           "
         >
@@ -1658,20 +1161,28 @@ function Comparison({
             className={`
               flex
 
-              h-[24px]
-              w-[24px]
+              h-[23px]
+              w-[23px]
 
               items-center
               justify-center
 
               rounded-full
 
-              text-[11px]
+              text-[10px]
 
               ${
                 good
-                  ? "bg-white text-black"
-                  : "border border-white/12 text-white/40"
+                  ? `
+                      bg-white
+                      text-black
+                    `
+                  : `
+                      border
+                      border-white/12
+
+                      text-white/36
+                    `
               }
             `}
           >
@@ -1682,9 +1193,9 @@ function Comparison({
 
           <span
             className="
-              text-[14px]
+              text-[13px]
 
-              text-white/74
+              text-white/67
 
               oook-medium
             "
@@ -1695,14 +1206,13 @@ function Comparison({
 
         <p
           className="
-            max-w-[300px]
+            max-w-[260px]
 
             text-right
-
-            text-[10px]
+            text-[8px]
             leading-[1.35]
 
-            text-white/35
+            text-white/26
           "
         >
           {description}
@@ -1713,16 +1223,15 @@ function Comparison({
         className="
           relative
 
-          mt-[9px]
-
-          h-[315px]
+          mt-[7px]
+          h-[245px]
 
           overflow-hidden
 
-          rounded-[13px]
+          rounded-[12px]
 
           border
-          border-white/[0.06]
+          border-white/[0.055]
 
           bg-[#050506]
         "
@@ -1734,396 +1243,161 @@ function Comparison({
 }
 
 /* ================================================= */
-/* GENERATED SYSTEM                                  */
+/* GOOD SYSTEM                                       */
 /* ================================================= */
 
-function GeneratedSystem({
-  profile,
-  primary,
-  secondary,
-  support,
-  supportSecondary,
+function SharedSystemPreview({
+  language,
 }: {
-  profile:
-    GraphicProfile;
-
-  primary:
-    string;
-
-  secondary:
-    string;
-
-  support:
-    string;
-
-  supportSecondary:
-    string;
+  language:
+    GraphicLanguageSystem;
 }) {
-  const radius =
-    10 +
-    profile.roundness *
-      60;
-
-  const rotate =
-    profile.expressiveTilt >
-    0.45
-      ? (
-          profile.expressiveTilt -
-          0.45
-        ) *
-        8
-      : 0;
-
-  const particleCount =
-    Math.round(
-      4 +
-      profile.particles *
-        12
-    );
-
-  const gridCount =
-    Math.max(
-      4,
-      Math.round(
-        4 +
-        profile.grid *
-          7
-      )
-    );
-
   return (
     <>
-      {/* GRID */}
+      <div
+        className="
+          absolute
+          inset-0
 
-      {Array.from({
-        length:
-          gridCount,
-      }).map(
-        (
-          _,
-          index
-        ) => (
-          <div
-            key={`v-${index}`}
-            className="
-              absolute
-              bottom-0
-              top-0
-
-              w-px
-
-              bg-white/[0.035]
-            "
-            style={{
-              left:
-                `${
-                  (
-                    index +
-                    1
-                  ) /
-                  (
-                    gridCount +
-                    1
-                  ) *
-                  100
-                }%`,
-            }}
-          />
-        )
-      )}
-
-      {Array.from({
-        length:
-          gridCount -
-          1,
-      }).map(
-        (
-          _,
-          index
-        ) => (
-          <div
-            key={`h-${index}`}
-            className="
-              absolute
-              left-0
-              right-0
-
-              h-px
-
-              bg-white/[0.035]
-            "
-            style={{
-              top:
-                `${
-                  (
-                    index +
-                    1
-                  ) /
-                  gridCount *
-                  100
-                }%`,
-            }}
-          />
-        )
-      )}
-
-      {/* SAFE RASTER GLOW */}
-
-      {profile.glow >
-        0.15 && (
-        <RasterGlow
-          color={
-            secondary
+          opacity-[0.23]
+        "
+      >
+        <GridPreview
+          style={
+            language.grid.style
           }
-          secondaryColor={
-            primary
+          colour={
+            language.supportColor
           }
-          opacity={
-            0.08 +
-            profile.glow *
-              0.18
-          }
-          secondaryOpacity={
-            0.03
-          }
-          centerX={
-            35
-          }
-          centerY={
-            35
-          }
-          radius={
-            62
-          }
-          className="
-            absolute
+          large
+        />
+      </div>
 
-            left-[8%]
-            top-[5%]
-
-            h-[250px]
-            w-[280px]
-          "
+      {language.glow.style !==
+        "none" && (
+        <GlowField
+          style={
+            language.glow.style
+          }
+          primary={
+            language.primaryColor
+          }
+          secondary={
+            language.secondaryColor
+          }
         />
       )}
 
-      {/* PRIMARY SHAPE */}
-
       <div
         className="
           absolute
 
-          left-[16%]
-          top-[14%]
+          right-[18px]
+          top-[17px]
 
-          h-[155px]
-          w-[190px]
-
-          border
-        "
-        style={{
-          borderRadius:
-            radius,
-
-          borderColor:
-            alpha(
-              primary,
-              0.72
-            ),
-
-          backgroundColor:
-            alpha(
-              secondary,
-              0.13
-            ),
-
-          transform:
-            rotate
-              ? `rotate(${rotate}deg)`
-              : undefined,
-        }}
-      />
-
-      {/* SUPPORT SHAPE */}
-
-      <div
-        className="
-          absolute
-
-          right-[17%]
-          top-[27%]
-
-          h-[100px]
-          w-[128px]
-
-          border
-        "
-        style={{
-          borderRadius:
-            radius *
-            0.7,
-
-          borderColor:
-            alpha(
-              support,
-              0.52
-            ),
-
-          backgroundColor:
-            alpha(
-              supportSecondary,
-              0.1
-            ),
-        }}
-      />
-
-      {/* RHYTHM LINES */}
-
-      <div
-        className="
-          absolute
-
-          bottom-[72px]
-          right-[8%]
-
-          flex
-          w-[42%]
-
-          flex-col
-          items-end
-
-          gap-[7px]
+          h-[140px]
+          w-[250px]
         "
       >
-        {[
-          94,
-          78,
-          62,
-          86,
-          54,
-        ].map(
-          (
-            width,
-            index
-          ) => (
-            <div
-              key={
-                index
-              }
-              className="
-                h-[2px]
-
-                rounded-full
-              "
-              style={{
-                width:
-                  `${width}%`,
-
-                backgroundColor:
-                  index %
-                      2 ===
-                    0
-                    ? alpha(
-                        primary,
-                        0.65
-                      )
-                    : alpha(
-                        supportSecondary,
-                        0.5
-                      ),
-              }}
-            />
-          )
-        )}
+        <ShapePreview
+          style={
+            language.shapes.style
+          }
+          primary={
+            language.primaryColor
+          }
+          secondary={
+            language.secondaryColor
+          }
+          large
+        />
       </div>
 
-      {/* PARTICLES */}
+      <div
+        className="
+          absolute
 
-      {Array.from({
-        length:
-          particleCount,
-      }).map(
-        (
-          _,
-          index
-        ) => (
-          <div
-            key={
-              index
-            }
-            className="
-              absolute
+          bottom-[47px]
+          left-[17px]
 
-              rounded-full
-            "
-            style={{
-              left:
-                `${
-                  8 +
-                  (
-                    index *
-                    37
-                  ) %
-                    85
-                }%`,
-
-              top:
-                `${
-                  10 +
-                  (
-                    index *
-                    29
-                  ) %
-                    70
-                }%`,
-
-              width:
-                2 +
-                index %
-                  3,
-
-              height:
-                2 +
-                index %
-                  3,
-
-              backgroundColor:
-                index %
-                    3 ===
-                  0
-                  ? supportSecondary
-                  : primary,
-
-              opacity:
-                0.18 +
-                profile.energy *
-                  0.5,
-            }}
-          />
-        )
-      )}
+          h-[85px]
+          w-[190px]
+        "
+      >
+        <LinePreview
+          style={
+            language.lines.style
+          }
+          primary={
+            language.primaryColor
+          }
+          secondary={
+            language.secondaryColor
+          }
+          large
+        />
+      </div>
 
       <div
         className="
           absolute
 
           bottom-[14px]
-          left-[14px]
           right-[14px]
 
-          rounded-[10px]
-
-          border
-          border-white/[0.07]
-
-          bg-black/55
-
-          px-[11px]
-          py-[9px]
+          h-[66px]
+          w-[210px]
         "
       >
-        <p className="text-[9px] text-white/55">
-          One shared graphic system
+        <UIPreview
+          style={
+            language.ui.style
+          }
+          primary={
+            language.primaryColor
+          }
+          secondary={
+            language.secondaryColor
+          }
+          large
+        />
+      </div>
+
+      <div
+        className="
+          absolute
+
+          left-[16px]
+          top-[15px]
+        "
+      >
+        <p
+          className="
+            text-[6px]
+            uppercase
+            tracking-[0.13em]
+
+            text-white/16
+          "
+        >
+          Shared visual system
+        </p>
+
+        <p
+          className="
+            mt-[4px]
+
+            max-w-[185px]
+
+            text-[9px]
+            leading-[1.35]
+
+            text-white/42
+          "
+        >
+          {
+            language.expressionName
+          }
         </p>
       </div>
     </>
@@ -2131,131 +1405,172 @@ function GeneratedSystem({
 }
 
 /* ================================================= */
-/* DON'T                                             */
+/* BAD SYSTEM                                        */
 /* ================================================= */
 
-function SplitSystem({
-  mode,
-  aPrimary,
-  bPrimary,
-  xPrimary,
+function SplitSystemPreview({
+  a,
+  b,
+  x,
 }: {
-  mode:
-    AdditionalRelationshipMode;
+  a:
+    LanguageBrand;
 
-  aPrimary:
-    string;
+  b:
+    LanguageBrand;
 
-  bPrimary:
-    string;
-
-  xPrimary:
-    string;
+  x:
+    LanguageBrand | null;
 }) {
-  const presenting =
-    mode ===
-    "presenting";
+  const brands =
+    x
+      ? [
+          a,
+          b,
+          x,
+        ]
+      : [
+          a,
+          b,
+        ];
 
   return (
-    <>
-      <div
-        className={
-          presenting
-            ? "absolute inset-y-0 left-0 w-1/3"
-            : "absolute inset-y-0 left-0 w-1/2"
-        }
-        style={{
-          backgroundColor:
-            alpha(
-              aPrimary,
-              0.28
-            ),
-        }}
-      />
+    <div
+      className="
+        absolute
+        inset-0
 
-      <div
-        className={
-          presenting
-            ? "absolute inset-y-0 left-1/3 w-1/3"
-            : "absolute inset-y-0 right-0 w-1/2"
-        }
-        style={{
-          backgroundColor:
-            alpha(
-              bPrimary,
-              0.28
-            ),
-        }}
-      />
+        flex
+      "
+    >
+      {brands.map(
+        (
+          brand,
+          index
+        ) => (
+          <div
+            key={
+              `${brand.name}-${index}`
+            }
+            className="
+              relative
 
-      {presenting && (
-        <div
-          className="
-            absolute
-            inset-y-0
-            right-0
+              flex-1
 
-            w-1/3
-          "
-          style={{
-            backgroundColor:
-              alpha(
-                xPrimary,
-                0.32
-              ),
-          }}
-        />
-      )}
+              overflow-hidden
 
-      <div
-        className="
-          absolute
+              border-r
+              border-white/[0.06]
 
-          left-[8%]
-          top-[25%]
+              last:border-r-0
+            "
+            style={{
+              backgroundColor:
+                alpha(
+                  brand.primaryColor,
+                  0.08
+                ),
+            }}
+          >
+            {index %
+              3 ===
+            0 ? (
+              <div
+                className="
+                  absolute
 
-          h-[128px]
-          w-[25%]
+                  left-1/2
+                  top-1/2
 
-          rounded-[24px]
+                  h-[110px]
+                  w-[110px]
 
-          border
-          border-white/25
-        "
-      />
+                  -translate-x-1/2
+                  -translate-y-1/2
 
-      <div
-        className="
-          absolute
+                  rounded-[32px]
 
-          left-[39%]
-          top-[30%]
+                  border
+                "
+                style={{
+                  borderColor:
+                    brand.primaryColor,
+                }}
+              />
+            ) : index %
+                3 ===
+              1 ? (
+              <svg
+                viewBox="0 0 140 140"
+                className="
+                  absolute
 
-          h-[110px]
-          w-[22%]
+                  left-1/2
+                  top-1/2
 
-          rounded-full
+                  h-[130px]
+                  w-[130px]
 
-          border
-          border-white/25
-        "
-      />
+                  -translate-x-1/2
+                  -translate-y-1/2
+                "
+              >
+                <polygon
+                  points="22,38 101,22 124,61 104,118 32,109 14,68"
+                  fill="none"
+                  stroke={
+                    brand.primaryColor
+                  }
+                  strokeWidth="2"
+                />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 140 140"
+                className="
+                  absolute
 
-      {presenting && (
-        <div
-          className="
-            absolute
+                  left-1/2
+                  top-1/2
 
-            right-[7%]
-            top-[21%]
+                  h-[130px]
+                  w-[130px]
 
-            h-[145px]
-            w-[23%]
+                  -translate-x-1/2
+                  -translate-y-1/2
+                "
+              >
+                <path
+                  d="M22 83 C17 34 65 15 93 38 C132 39 137 84 104 107 C74 132 32 119 22 83 Z"
+                  fill="none"
+                  stroke={
+                    brand.primaryColor
+                  }
+                  strokeWidth="2"
+                />
+              </svg>
+            )}
 
-            border
-            border-white/25
-          "
-        />
+            <p
+              className="
+                absolute
+
+                bottom-[13px]
+                left-[12px]
+                right-[12px]
+
+                truncate
+
+                text-center
+                text-[7px]
+
+                text-white/25
+              "
+            >
+              {brand.name}
+            </p>
+          </div>
+        )
       )}
 
       <div
@@ -2271,330 +1586,1922 @@ function SplitSystem({
         <span
           className="
             flex
-
-            h-[40px]
-            w-[40px]
+            h-[36px]
+            w-[36px]
 
             items-center
             justify-center
 
             rounded-full
 
-            bg-black/70
+            border
+            border-white/10
 
-            text-[20px]
-            text-white
+            bg-black/75
+
+            text-[17px]
+
+            text-white/55
           "
         >
           ×
         </span>
       </div>
-    </>
+    </div>
   );
 }
 
 /* ================================================= */
-/* TRAIT CARD                                        */
+/* TOOLKIT CARD                                      */
 /* ================================================= */
 
-function TraitCard({
+function ToolkitCard({
   label,
-  traits,
-  primary,
-  secondary,
-  featured = false,
+  title,
+  description,
+  children,
 }: {
   label:
     string;
 
-  traits:
-    BrandCharacterTraitId[];
-
-  primary:
+  title:
     string;
 
-  secondary:
+  description:
     string;
 
-  featured?:
-    boolean;
+  children:
+    ReactNode;
 }) {
-  return (
-    <Card
-      className={`
-        min-h-[92px]
-
-        p-[12px]
-
-        ${
-          featured
-            ? "border-white/[0.11]"
-            : ""
-        }
-      `}
-    >
-      <div
-        className="
-          flex
-          items-center
-          gap-[6px]
-        "
-      >
-        <span
-          className="
-            h-[4px]
-            w-[25px]
-
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              primary,
-          }}
-        />
-
-        <span
-          className="
-            h-[4px]
-            w-[11px]
-
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              secondary,
-          }}
-        />
-
-        <p className="text-[9px] text-white/48">
-          {label}
-        </p>
-      </div>
-
-      <div
-        className="
-          mt-[9px]
-
-          flex
-          flex-wrap
-
-          gap-[4px]
-        "
-      >
-        {traits.length >
-        0 ? (
-          traits.map(
-            (
-              id
-            ) => {
-              const trait =
-                brandCharacterTraits.find(
-                  (
-                    item
-                  ) =>
-                    item.id ===
-                    id
-                );
-
-              return (
-                <span
-                  key={
-                    id
-                  }
-                  className="
-                    rounded-full
-
-                    border
-                    border-white/[0.07]
-
-                    px-[6px]
-                    py-[3px]
-
-                    text-[7px]
-
-                    text-white/32
-                  "
-                >
-                  {trait?.label ??
-                    id}
-                </span>
-              );
-            }
-          )
-        ) : (
-          <span className="text-[8px] text-white/20">
-            Neutral
-          </span>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-/* ================================================= */
-/* TOOLKIT                                           */
-/* ================================================= */
-
-function ToolkitItem({
-  label,
-  index,
-  primary,
-  secondary,
-  roundness,
-}: {
-  label:
-    string;
-
-  index:
-    number;
-
-  primary:
-    string;
-
-  secondary:
-    string;
-
-  roundness:
-    number;
-}) {
-  const radius =
-    3 +
-    roundness *
-      12;
-
   return (
     <div
       className="
-        flex
-        h-[66px]
+        relative
 
-        flex-col
+        h-[132px]
 
-        justify-between
+        overflow-hidden
 
-        rounded-[9px]
+        rounded-[13px]
 
         border
         border-white/[0.06]
 
-        bg-white/[0.015]
+        bg-white/[0.014]
 
-        p-[7px]
+        p-[10px]
       "
     >
       <div
         className="
-          relative
+          flex
+          items-start
+          justify-between
 
-          h-[29px]
-
-          overflow-hidden
+          gap-[8px]
         "
       >
-        <div
-          className="
-            absolute
+        <div>
+          <p
+            className="
+              text-[6px]
+              uppercase
+              tracking-[0.12em]
 
-            left-[2px]
-            top-[3px]
+              text-white/17
+            "
+          >
+            {label}
+          </p>
 
-            h-[20px]
-            w-[25px]
+          <p
+            className="
+              mt-[3px]
 
-            border
-          "
-          style={{
-            borderRadius:
-              radius,
+              text-[9px]
 
-            borderColor:
-              alpha(
-                primary,
-                0.7
-              ),
+              text-white/54
 
-            backgroundColor:
-              alpha(
-                secondary,
-                0.1
-              ),
-          }}
-        />
+              oook-medium
+            "
+          >
+            {title}
+          </p>
+        </div>
+      </div>
 
-        <div
-          className="
-            absolute
+      <div
+        className="
+          absolute
 
-            bottom-[4px]
-            right-[2px]
+          bottom-[9px]
+          left-[9px]
 
-            h-[3px]
-            w-[24px]
-
-            rounded-full
-          "
-          style={{
-            backgroundColor:
-              index %
-                  2 ===
-                0
-                ? primary
-                : secondary,
-          }}
-        />
+          h-[70px]
+          w-[118px]
+        "
+      >
+        {children}
       </div>
 
       <p
         className="
-          truncate
+          absolute
 
-          text-[7px]
+          bottom-[10px]
+          left-[137px]
+          right-[9px]
 
-          text-white/28
+          text-[6px]
+          leading-[1.4]
+
+          text-white/18
         "
       >
-        {label}
+        {description}
       </p>
     </div>
   );
 }
 
 /* ================================================= */
-/* RELATIONSHIP LABEL                                */
+/* SHAPES                                            */
 /* ================================================= */
 
-function RelationshipLabel({
-  mode,
-  propertyName,
+function ShapePreview({
+  style,
+  primary,
+  secondary,
+  large = false,
 }: {
-  mode:
-    AdditionalRelationshipMode;
+  style:
+    ShapeStyle;
 
-  propertyName:
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  large?:
+    boolean;
+}) {
+  return (
+    <svg
+      viewBox="0 0 160 90"
+      preserveAspectRatio="xMidYMid meet"
+      className="
+        h-full
+        w-full
+      "
+    >
+      {style ===
+        "restrained" && (
+        <>
+          <rect
+            x="23"
+            y="19"
+            width="94"
+            height="51"
+            rx="4"
+            fill="none"
+            stroke={
+              primary
+            }
+            strokeWidth={
+              large
+                ? 1.4
+                : 1.1
+            }
+          />
+
+          <rect
+            x="104"
+            y="31"
+            width="31"
+            height="25"
+            rx="2"
+            fill="none"
+            stroke={
+              secondary
+            }
+            strokeWidth="1"
+            opacity="0.55"
+          />
+        </>
+      )}
+
+      {style ===
+        "rounded" && (
+        <>
+          <rect
+            x="18"
+            y="20"
+            width="105"
+            height="50"
+            rx="25"
+            fill="none"
+            stroke={
+              primary
+            }
+            strokeWidth="1.5"
+          />
+
+          <circle
+            cx="126"
+            cy="34"
+            r="18"
+            fill="none"
+            stroke={
+              secondary
+            }
+            strokeWidth="1"
+            opacity="0.55"
+          />
+        </>
+      )}
+
+      {style ===
+        "angular" && (
+        <>
+          <polygon
+            points="27,18 115,18 137,38 121,71 31,71 15,49"
+            fill="none"
+            stroke={
+              primary
+            }
+            strokeWidth="1.5"
+          />
+
+          <polyline
+            points="91,28 118,28 128,39"
+            fill="none"
+            stroke={
+              secondary
+            }
+            strokeWidth="1"
+            opacity="0.6"
+          />
+        </>
+      )}
+
+      {style ===
+        "organic" && (
+        <>
+          <path
+            d="M20 51 C16 24 45 12 68 25 C91 7 132 20 136 45 C140 70 108 80 83 69 C58 83 25 75 20 51 Z"
+            fill="none"
+            stroke={
+              primary
+            }
+            strokeWidth="1.5"
+          />
+
+          <path
+            d="M50 59 C47 38 69 26 86 36 C105 27 120 39 117 55"
+            fill="none"
+            stroke={
+              secondary
+            }
+            strokeWidth="1"
+            opacity="0.55"
+          />
+        </>
+      )}
+
+      {style ===
+        "editorial" && (
+        <>
+          <rect
+            x="15"
+            y="18"
+            width="100"
+            height="58"
+            fill="none"
+            stroke={
+              primary
+            }
+            strokeWidth="1.2"
+          />
+
+          <rect
+            x="51"
+            y="29"
+            width="92"
+            height="36"
+            fill="none"
+            stroke={
+              secondary
+            }
+            strokeWidth="1"
+            opacity="0.5"
+          />
+
+          <line
+            x1="27"
+            y1="30"
+            x2="86"
+            y2="30"
+            stroke={
+              primary
+            }
+            strokeWidth="1"
+            opacity="0.6"
+          />
+        </>
+      )}
+
+      {style ===
+        "bold" && (
+        <>
+          <rect
+            x="19"
+            y="20"
+            width="97"
+            height="51"
+            rx="8"
+            fill={
+              primary
+            }
+            opacity="0.7"
+          />
+
+          <rect
+            x="95"
+            y="31"
+            width="46"
+            height="31"
+            rx="4"
+            fill={
+              secondary
+            }
+            opacity="0.5"
+          />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/* ================================================= */
+/* LINES                                             */
+/* ================================================= */
+
+function LinePreview({
+  style,
+  primary,
+  secondary,
+  large = false,
+}: {
+  style:
+    LineStyle;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  large?:
+    boolean;
+}) {
+  const thin =
+    large
+      ? 1.4
+      : 1;
+
+  return (
+    <svg
+      viewBox="0 0 160 90"
+      className="
+        h-full
+        w-full
+      "
+    >
+      {style ===
+        "hairline" && (
+        <>
+          <line
+            x1="13"
+            y1="28"
+            x2="142"
+            y2="28"
+            stroke={
+              primary
+            }
+            strokeWidth={
+              thin
+            }
+          />
+
+          <line
+            x1="39"
+            y1="45"
+            x2="119"
+            y2="45"
+            stroke={
+              secondary
+            }
+            strokeWidth={
+              thin
+            }
+            opacity="0.65"
+          />
+
+          <line
+            x1="20"
+            y1="62"
+            x2="93"
+            y2="62"
+            stroke={
+              primary
+            }
+            strokeWidth={
+              thin
+            }
+            opacity="0.4"
+          />
+        </>
+      )}
+
+      {style ===
+        "measured" && (
+        <>
+          {[0, 1, 2, 3].map(
+            (
+              index
+            ) => (
+              <line
+                key={
+                  index
+                }
+                x1="24"
+                y1={
+                  24 +
+                  index *
+                    14
+                }
+                x2={
+                  133 -
+                  index *
+                    12
+                }
+                y2={
+                  24 +
+                  index *
+                    14
+                }
+                stroke={
+                  index %
+                    2
+                    ? secondary
+                    : primary
+                }
+                strokeWidth="2"
+                opacity={
+                  0.85 -
+                  index *
+                    0.13
+                }
+              />
+            )
+          )}
+        </>
+      )}
+
+      {style ===
+        "directional" && (
+        <>
+          {[0, 1, 2].map(
+            (
+              index
+            ) => (
+              <line
+                key={
+                  index
+                }
+                x1={
+                  17 +
+                  index *
+                    20
+                }
+                y1="67"
+                x2={
+                  93 +
+                  index *
+                    20
+                }
+                y2="21"
+                stroke={
+                  index ===
+                  1
+                    ? secondary
+                    : primary
+                }
+                strokeWidth={
+                  2.4
+                }
+                opacity={
+                  0.8 -
+                  index *
+                    0.18
+                }
+              />
+            )
+          )}
+        </>
+      )}
+
+      {style ===
+        "expressive" && (
+        <>
+          <path
+            d="M12 62 C44 11 83 73 145 25"
+            fill="none"
+            stroke={
+              primary
+            }
+            strokeWidth="1.8"
+          />
+
+          <path
+            d="M28 69 C59 37 91 62 128 44"
+            fill="none"
+            stroke={
+              secondary
+            }
+            strokeWidth="1.2"
+            opacity="0.6"
+          />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/* ================================================= */
+/* MASKS                                             */
+/* ================================================= */
+
+function MaskPreview({
+  style,
+  primary,
+  secondary,
+}: {
+  style:
+    MaskStyle;
+
+  primary:
+    string;
+
+  secondary:
     string;
 }) {
   return (
-    <span
+    <svg
+      viewBox="0 0 160 90"
       className="
-        rounded-full
-
-        border
-        border-white/[0.07]
-
-        px-[10px]
-        py-[6px]
-
-        text-[8px]
-        uppercase
-        tracking-[0.12em]
-
-        text-white/30
+        h-full
+        w-full
       "
     >
-      {mode ===
-      "presenting"
-        ? `Presenting ${propertyName}`
-        : `Sponsored by ${propertyName}`}
-    </span>
+      {style ===
+        "clean" && (
+        <>
+          <rect
+            x="18"
+            y="17"
+            width="124"
+            height="59"
+            rx="3"
+            fill={
+              alpha(
+                primary,
+                0.07
+              )
+            }
+            stroke={
+              primary
+            }
+            strokeWidth="1.1"
+          />
+
+          <rect
+            x="31"
+            y="28"
+            width="98"
+            height="37"
+            fill="none"
+            stroke={
+              secondary
+            }
+            opacity="0.35"
+          />
+        </>
+      )}
+
+      {style ===
+        "soft" && (
+        <>
+          <rect
+            x="15"
+            y="16"
+            width="130"
+            height="61"
+            rx="24"
+            fill={
+              alpha(
+                primary,
+                0.06
+              )
+            }
+            stroke={
+              primary
+            }
+          />
+
+          <rect
+            x="34"
+            y="27"
+            width="92"
+            height="39"
+            rx="16"
+            fill="none"
+            stroke={
+              secondary
+            }
+            opacity="0.42"
+          />
+        </>
+      )}
+
+      {style ===
+        "cropped" && (
+        <>
+          <rect
+            x="-18"
+            y="12"
+            width="124"
+            height="68"
+            fill={
+              alpha(
+                primary,
+                0.05
+              )
+            }
+            stroke={
+              primary
+            }
+          />
+
+          <rect
+            x="79"
+            y="25"
+            width="105"
+            height="45"
+            fill="none"
+            stroke={
+              secondary
+            }
+            opacity="0.5"
+          />
+        </>
+      )}
+
+      {style ===
+        "angular" && (
+        <>
+          <polygon
+            points="21,16 125,16 145,35 132,75 28,75 13,56"
+            fill={
+              alpha(
+                primary,
+                0.05
+              )
+            }
+            stroke={
+              primary
+            }
+          />
+
+          <polyline
+            points="39,28 116,28 130,40"
+            fill="none"
+            stroke={
+              secondary
+            }
+            opacity="0.45"
+          />
+        </>
+      )}
+
+      {style ===
+        "layered" && (
+        <>
+          {[0, 1, 2].map(
+            (
+              index
+            ) => (
+              <rect
+                key={
+                  index
+                }
+                x={
+                  18 +
+                  index *
+                    13
+                }
+                y={
+                  17 +
+                  index *
+                    7
+                }
+                width="104"
+                height="54"
+                rx="8"
+                fill={
+                  alpha(
+                    index ===
+                    2
+                      ? primary
+                      : secondary,
+                    0.025
+                  )
+                }
+                stroke={
+                  index ===
+                  2
+                    ? primary
+                    : secondary
+                }
+                opacity={
+                  0.28 +
+                  index *
+                    0.22
+                }
+              />
+            )
+          )}
+        </>
+      )}
+    </svg>
+  );
+}
+
+/* ================================================= */
+/* GRID                                              */
+/* ================================================= */
+
+function GridPreview({
+  style,
+  colour,
+  large = false,
+}: {
+  style:
+    GridStyle;
+
+  colour:
+    string;
+
+  large?:
+    boolean;
+}) {
+  const opacity =
+    large
+      ? 0.25
+      : 0.48;
+
+  if (
+    style ===
+    "strict"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 160 90"
+        className="h-full w-full"
+      >
+        {[30, 60, 90, 120].map(
+          (
+            x
+          ) => (
+            <line
+              key={
+                `v${x}`
+              }
+              x1={
+                x
+              }
+              y1="10"
+              x2={
+                x
+              }
+              y2="80"
+              stroke={
+                colour
+              }
+              opacity={
+                opacity
+              }
+            />
+          )
+        )}
+
+        {[23, 45, 67].map(
+          (
+            y
+          ) => (
+            <line
+              key={
+                `h${y}`
+              }
+              x1="14"
+              y1={
+                y
+              }
+              x2="145"
+              y2={
+                y
+              }
+              stroke={
+                colour
+              }
+              opacity={
+                opacity
+              }
+            />
+          )
+        )}
+      </svg>
+    );
+  }
+
+  if (
+    style ===
+    "editorial"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 160 90"
+        className="h-full w-full"
+      >
+        <line
+          x1="24"
+          y1="9"
+          x2="24"
+          y2="80"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity
+          }
+        />
+
+        <line
+          x1="106"
+          y1="9"
+          x2="106"
+          y2="80"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity *
+            0.7
+          }
+        />
+
+        <line
+          x1="14"
+          y1="28"
+          x2="145"
+          y2="28"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity
+          }
+        />
+
+        <line
+          x1="48"
+          y1="63"
+          x2="145"
+          y2="63"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity *
+            0.55
+          }
+        />
+      </svg>
+    );
+  }
+
+  if (
+    style ===
+    "open"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 160 90"
+        className="h-full w-full"
+      >
+        <line
+          x1="20"
+          y1="20"
+          x2="20"
+          y2="72"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity
+          }
+        />
+
+        <line
+          x1="20"
+          y1="72"
+          x2="127"
+          y2="72"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity *
+            0.6
+          }
+        />
+      </svg>
+    );
+  }
+
+  if (
+    style ===
+    "offset"
+  ) {
+    return (
+      <svg
+        viewBox="0 0 160 90"
+        className="h-full w-full"
+      >
+        <line
+          x1="19"
+          y1="21"
+          x2="111"
+          y2="21"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity
+          }
+        />
+
+        <line
+          x1="47"
+          y1="43"
+          x2="143"
+          y2="43"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity *
+            0.8
+          }
+        />
+
+        <line
+          x1="29"
+          y1="68"
+          x2="96"
+          y2="68"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity *
+            0.6
+          }
+        />
+
+        <line
+          x1="47"
+          y1="10"
+          x2="47"
+          y2="79"
+          stroke={
+            colour
+          }
+          opacity={
+            opacity *
+            0.45
+          }
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 160 90"
+      className="h-full w-full"
+    >
+      {Array.from({
+        length:
+          7,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <line
+            key={
+              index
+            }
+            x1="15"
+            y1={
+              14 +
+              index *
+                10
+            }
+            x2="145"
+            y2={
+              14 +
+              index *
+                10
+            }
+            stroke={
+              colour
+            }
+            opacity={
+              opacity *
+              (
+                0.45 +
+                index *
+                  0.06
+              )
+            }
+          />
+        )
+      )}
+
+      {[31, 62, 93, 124].map(
+        (
+          x
+        ) => (
+          <line
+            key={
+              x
+            }
+            x1={
+              x
+            }
+            y1="10"
+            x2={
+              x
+            }
+            y2="79"
+            stroke={
+              colour
+            }
+            opacity={
+              opacity *
+              0.5
+            }
+          />
+        )
+      )}
+    </svg>
+  );
+}
+
+/* ================================================= */
+/* UI                                                */
+/* ================================================= */
+
+function UIPreview({
+  style,
+  primary,
+  secondary,
+  large = false,
+}: {
+  style:
+    UIStyle;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+
+  large?:
+    boolean;
+}) {
+  const scale =
+    large
+      ? 1
+      : 0.92;
+
+  return (
+    <div
+      className="
+        relative
+
+        h-full
+        w-full
+      "
+      style={{
+        transform:
+          `scale(${scale})`,
+      }}
+    >
+      {style ===
+        "minimal" && (
+        <>
+          <div
+            className="
+              absolute
+
+              left-[8%]
+              top-[23%]
+
+              h-[28%]
+              w-[55%]
+
+              rounded-full
+
+              border
+              border-white/[0.11]
+            "
+          />
+
+          <span
+            className="
+              absolute
+
+              left-[16%]
+              top-[33%]
+
+              h-[3px]
+              w-[23%]
+
+              rounded-full
+            "
+            style={{
+              backgroundColor:
+                primary,
+            }}
+          />
+
+          <span
+            className="
+              absolute
+
+              bottom-[23%]
+              right-[12%]
+
+              h-[5px]
+              w-[13%]
+
+              rounded-full
+            "
+            style={{
+              backgroundColor:
+                secondary,
+            }}
+          />
+        </>
+      )}
+
+      {style ===
+        "soft" && (
+        <>
+          <div
+            className="
+              absolute
+
+              left-[7%]
+              top-[18%]
+
+              h-[31%]
+              w-[50%]
+
+              rounded-full
+            "
+            style={{
+              backgroundColor:
+                alpha(
+                  primary,
+                  0.22
+                ),
+            }}
+          />
+
+          <div
+            className="
+              absolute
+
+              bottom-[16%]
+              right-[8%]
+
+              h-[34%]
+              w-[34%]
+
+              rounded-[16px]
+            "
+            style={{
+              backgroundColor:
+                alpha(
+                  secondary,
+                  0.16
+                ),
+            }}
+          />
+        </>
+      )}
+
+      {style ===
+        "modular" && (
+        <div
+          className="
+            absolute
+
+            inset-[11%]
+
+            grid
+            grid-cols-3
+
+            gap-[5px]
+          "
+        >
+          {Array.from({
+            length:
+              6,
+          }).map(
+            (
+              _,
+              index
+            ) => (
+              <div
+                key={
+                  index
+                }
+                className="
+                  rounded-[4px]
+
+                  border
+                  border-white/[0.08]
+                "
+                style={{
+                  backgroundColor:
+                    index ===
+                    1
+                      ? alpha(
+                          primary,
+                          0.2
+                        )
+                      : "rgba(255,255,255,.025)",
+                }}
+              />
+            )
+          )}
+        </div>
+      )}
+
+      {style ===
+        "data" && (
+        <>
+          <p
+            className="
+              absolute
+
+              left-[10%]
+              top-[15%]
+
+              font-mono
+
+              text-[17px]
+
+              text-white/60
+            "
+          >
+            01:24
+          </p>
+
+          <div
+            className="
+              absolute
+
+              bottom-[20%]
+              left-[10%]
+
+              flex
+              items-end
+
+              gap-[5px]
+            "
+          >
+            {[17, 31, 23, 44, 35].map(
+              (
+                height,
+                index
+              ) => (
+                <span
+                  key={
+                    index
+                  }
+                  className="
+                    block
+                    w-[7px]
+
+                    rounded-[2px]
+                  "
+                  style={{
+                    height,
+
+                    backgroundColor:
+                      index ===
+                      3
+                        ? secondary
+                        : primary,
+
+                    opacity:
+                      0.4 +
+                      index *
+                        0.1,
+                  }}
+                />
+              )
+            )}
+          </div>
+        </>
+      )}
+
+      {style ===
+        "bold" && (
+        <>
+          <div
+            className="
+              absolute
+
+              left-[8%]
+              top-[18%]
+
+              h-[42%]
+              w-[66%]
+
+              rounded-[7px]
+            "
+            style={{
+              backgroundColor:
+                primary,
+            }}
+          />
+
+          <div
+            className="
+              absolute
+
+              bottom-[18%]
+              right-[8%]
+
+              h-[23%]
+              w-[34%]
+
+              rounded-[5px]
+            "
+            style={{
+              backgroundColor:
+                secondary,
+            }}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ================================================= */
+/* TEXTURE                                           */
+/* ================================================= */
+
+function TexturePreview({
+  style,
+  primary,
+}: {
+  style:
+    TextureStyle;
+
+  primary:
+    string;
+}) {
+  if (
+    style ===
+    "clean"
+  ) {
+    return (
+      <div
+        className="
+          absolute
+
+          inset-[14%]
+
+          rounded-[7px]
+
+          border
+          border-white/[0.06]
+        "
+      />
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 160 90"
+      className="h-full w-full"
+    >
+      {style ===
+        "grain" &&
+        Array.from({
+          length:
+            34,
+        }).map(
+          (
+            _,
+            index
+          ) => (
+            <circle
+              key={
+                index
+              }
+              cx={
+                10 +
+                (
+                  index *
+                  37
+                ) %
+                  143
+              }
+              cy={
+                9 +
+                (
+                  index *
+                  29
+                ) %
+                  72
+              }
+              r={
+                index %
+                5 ===
+                0
+                  ? 1.3
+                  : 0.7
+              }
+              fill={
+                primary
+              }
+              opacity={
+                0.15 +
+                (
+                  index %
+                  4
+                ) *
+                  0.08
+              }
+            />
+          )
+        )}
+
+      {style ===
+        "atmospheric" && (
+        <>
+          <circle
+            cx="52"
+            cy="44"
+            r="31"
+            fill={
+              primary
+            }
+            opacity="0.09"
+          />
+
+          <circle
+            cx="104"
+            cy="38"
+            r="39"
+            fill={
+              primary
+            }
+            opacity="0.045"
+          />
+
+          <circle
+            cx="126"
+            cy="65"
+            r="21"
+            fill={
+              primary
+            }
+            opacity="0.065"
+          />
+        </>
+      )}
+
+      {style ===
+        "digital" &&
+        Array.from({
+          length:
+            28,
+        }).map(
+          (
+            _,
+            index
+          ) => (
+            <rect
+              key={
+                index
+              }
+              x={
+                12 +
+                (
+                  index *
+                  23
+                ) %
+                  137
+              }
+              y={
+                12 +
+                (
+                  index *
+                  17
+                ) %
+                  66
+              }
+              width={
+                index %
+                3 ===
+                0
+                  ? 6
+                  : 3
+              }
+              height={
+                index %
+                4 ===
+                0
+                  ? 2
+                  : 1
+              }
+              fill={
+                primary
+              }
+              opacity={
+                0.18 +
+                (
+                  index %
+                  3
+                ) *
+                  0.1
+              }
+            />
+          )
+        )}
+
+      {style ===
+        "tactile" && (
+        <>
+          {[0, 1, 2, 3].map(
+            (
+              index
+            ) => (
+              <path
+                key={
+                  index
+                }
+                d={`M 9 ${
+                  23 +
+                  index *
+                    14
+                } C 43 ${
+                  6 +
+                  index *
+                    18
+                }, 86 ${
+                  39 +
+                  index *
+                    7
+                }, 151 ${
+                  17 +
+                  index *
+                    16
+                }`}
+                fill="none"
+                stroke={
+                  primary
+                }
+                strokeWidth="1"
+                opacity={
+                  0.18 +
+                  index *
+                    0.09
+                }
+              />
+            )
+          )}
+        </>
+      )}
+    </svg>
+  );
+}
+
+/* ================================================= */
+/* GLOW                                              */
+/* ================================================= */
+
+function GlowPreview({
+  style,
+  primary,
+  secondary,
+}: {
+  style:
+    GlowStyle;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+}) {
+  return (
+    <div
+      className="
+        relative
+
+        h-full
+        w-full
+
+        overflow-hidden
+      "
+    >
+      {style ===
+      "none" ? (
+        <div
+          className="
+            absolute
+
+            left-1/2
+            top-1/2
+
+            h-[34px]
+            w-[34px]
+
+            -translate-x-1/2
+            -translate-y-1/2
+
+            rounded-full
+
+            border
+            border-white/[0.09]
+          "
+        />
+      ) : (
+        <GlowField
+          style={
+            style
+          }
+          primary={
+            primary
+          }
+          secondary={
+            secondary
+          }
+        />
+      )}
+
+      <span
+        className="
+          absolute
+
+          left-1/2
+          top-1/2
+
+          h-[6px]
+          w-[6px]
+
+          -translate-x-1/2
+          -translate-y-1/2
+
+          rounded-full
+        "
+        style={{
+          backgroundColor:
+            primary,
+        }}
+      />
+    </div>
+  );
+}
+
+function GlowField({
+  style,
+  primary,
+  secondary,
+}: {
+  style:
+    Exclude<
+      GlowStyle,
+      "none"
+    >;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+}) {
+  const config =
+    style ===
+    "soft"
+      ? {
+          opacity:
+            0.18,
+
+          secondaryOpacity:
+            0.04,
+
+          size:
+            "h-[150px] w-[210px]",
+        }
+      : style ===
+          "focused"
+        ? {
+            opacity:
+              0.3,
+
+            secondaryOpacity:
+              0.035,
+
+            size:
+              "h-[100px] w-[100px]",
+          }
+        : {
+            opacity:
+              0.38,
+
+            secondaryOpacity:
+              0.1,
+
+            size:
+              "h-[170px] w-[220px]",
+          };
+
+  return (
+    <RasterGlow
+      color={
+        primary
+      }
+      secondaryColor={
+        secondary
+      }
+      opacity={
+        config.opacity
+      }
+      secondaryOpacity={
+        config.secondaryOpacity
+      }
+      centerX={
+        50
+      }
+      centerY={
+        50
+      }
+      className={`
+        absolute
+
+        left-1/2
+        top-1/2
+
+        -translate-x-1/2
+        -translate-y-1/2
+
+        ${config.size}
+      `}
+    />
+  );
+}
+
+/* ================================================= */
+/* DEPTH                                             */
+/* ================================================= */
+
+function DepthPreview({
+  style,
+  primary,
+  secondary,
+}: {
+  style:
+    DepthStyle;
+
+  primary:
+    string;
+
+  secondary:
+    string;
+}) {
+  const count =
+    style ===
+    "flat"
+      ? 1
+      : style ===
+          "subtle"
+        ? 2
+        : style ===
+            "layered"
+          ? 3
+          : 4;
+
+  const offset =
+    style ===
+    "immersive"
+      ? 13
+      : 8;
+
+  return (
+    <div
+      className="
+        absolute
+
+        inset-[10px]
+      "
+    >
+      {Array.from({
+        length:
+          count,
+      }).map(
+        (
+          _,
+          index
+        ) => (
+          <div
+            key={
+              index
+            }
+            className="
+              absolute
+
+              h-[42px]
+              w-[72px]
+
+              rounded-[7px]
+
+              border
+            "
+            style={{
+              left:
+                8 +
+                index *
+                  offset,
+
+              top:
+                8 +
+                index *
+                  (
+                    offset *
+                    0.55
+                  ),
+
+              borderColor:
+                index ===
+                count -
+                  1
+                  ? primary
+                  : secondary,
+
+              backgroundColor:
+                alpha(
+                  index ===
+                  count -
+                    1
+                    ? primary
+                    : secondary,
+                  0.025 +
+                    index *
+                      0.02
+                ),
+
+              opacity:
+                0.28 +
+                index *
+                  0.18,
+            }}
+          />
+        )
+      )}
+    </div>
   );
 }

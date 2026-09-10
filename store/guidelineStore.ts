@@ -1,113 +1,130 @@
-import {
-  create,
-} from "zustand";
+"use client";
+
+import { create } from "zustand";
 
 import type {
-  BrandConfig,
-  GuidelineStoreState,
-  PropertyXConfig,
+  BrandCharacterTraitId,
+} from "@/data/brandCharacterTraits";
+
+import type {
+  PartnershipModelId,
 } from "@/types/guideline";
+
+/* ================================================= */
+/* TYPES                                             */
+/* ================================================= */
+
+export type AdditionalRelationshipMode =
+  | "none"
+  | "presenting"
+  | "sponsored";
+
+export interface GuidelineBrand {
+  name: string;
+
+  logoUrl: string | null;
+
+  primaryColor: string;
+  secondaryColor: string;
+
+  fontFamily: string;
+
+  characterTraits:
+    BrandCharacterTraitId[];
+}
+
+interface GuidelineStore {
+  partnershipModel:
+    PartnershipModelId;
+
+  additionalRelationship:
+    AdditionalRelationshipMode;
+
+  brandA:
+    GuidelineBrand;
+
+  brandB:
+    GuidelineBrand;
+
+  propertyX:
+    GuidelineBrand;
+
+  commonFontFamily:
+    string;
+
+  setPartnershipModel: (
+    model: PartnershipModelId
+  ) => void;
+
+  setAdditionalRelationship: (
+    mode: AdditionalRelationshipMode
+  ) => void;
+
+  updateBrandA: (
+    patch: Partial<GuidelineBrand>
+  ) => void;
+
+  updateBrandB: (
+    patch: Partial<GuidelineBrand>
+  ) => void;
+
+  updatePropertyX: (
+    patch: Partial<GuidelineBrand>
+  ) => void;
+
+  setCommonFontFamily: (
+    fontFamily: string
+  ) => void;
+
+  resetGuideline: () => void;
+}
 
 /* ================================================= */
 /* DEFAULTS                                          */
 /* ================================================= */
 
-export const DEFAULT_FONT =
+const DEFAULT_FONT =
   '"oook-variable", sans-serif';
 
-export const DEFAULT_A_PRIMARY =
-  "#FF453A";
-
-export const DEFAULT_A_SECONDARY =
-  "#FF8A80";
-
-export const DEFAULT_B_PRIMARY =
-  "#3478F6";
-
-export const DEFAULT_B_SECONDARY =
-  "#64D2FF";
-
-export const DEFAULT_X_PRIMARY =
-  "#8A8A8A";
-
-export const DEFAULT_X_SECONDARY =
-  "#B9B9B9";
-
-/* ================================================= */
-/* DEFAULT FACTORIES                                 */
-/* ================================================= */
-
-/*
-  Factories rather than shared objects so arrays and
-  nested state are always recreated on Reset.
-*/
-
-export function createDefaultBrandA():
-  BrandConfig {
+function createBrandA(): GuidelineBrand {
   return {
-    name:
-      "Brand A",
+    name: "Brand A",
+    logoUrl: null,
 
-    logoUrl:
-      null,
+    primaryColor: "#FF453A",
+    secondaryColor: "#FF8A80",
 
-    primaryColor:
-      DEFAULT_A_PRIMARY,
+    fontFamily: DEFAULT_FONT,
 
-    secondaryColor:
-      DEFAULT_A_SECONDARY,
-
-    fontFamily:
-      DEFAULT_FONT,
-
-    characterTraits:
-      [],
+    characterTraits: [],
   };
 }
 
-export function createDefaultBrandB():
-  BrandConfig {
+function createBrandB(): GuidelineBrand {
   return {
-    name:
-      "Brand B",
+    name: "Brand B",
+    logoUrl: null,
 
-    logoUrl:
-      null,
+    primaryColor: "#3478F6",
+    secondaryColor: "#64D2FF",
 
-    primaryColor:
-      DEFAULT_B_PRIMARY,
+    fontFamily: DEFAULT_FONT,
 
-    secondaryColor:
-      DEFAULT_B_SECONDARY,
-
-    fontFamily:
-      DEFAULT_FONT,
-
-    characterTraits:
-      [],
+    characterTraits: [],
   };
 }
 
-export function createDefaultPropertyX():
-  PropertyXConfig {
+function createPropertyX(): GuidelineBrand {
   return {
-    name:
-      "X",
+    name: "Property X",
+    logoUrl: null,
 
-    logoUrl:
-      null,
+    primaryColor: "#8A8A8A",
+    secondaryColor: "#B8B8B8",
 
-    primaryColor:
-      DEFAULT_X_PRIMARY,
+    fontFamily: DEFAULT_FONT,
 
-    secondaryColor:
-      DEFAULT_X_SECONDARY,
-
-    fontFamily:
-      DEFAULT_FONT,
-
-    characterTraits:
-      [],
+    characterTraits: [],
   };
 }
 
@@ -116,133 +133,83 @@ export function createDefaultPropertyX():
 /* ================================================= */
 
 export const useGuidelineStore =
-  create<GuidelineStoreState>(
-    (
-      set
-    ) => ({
-      /* ========================================= */
-      /* DATA                                      */
-      /* ========================================= */
+  create<GuidelineStore>((set) => ({
+    partnershipModel: "axb",
 
-      partnershipModel:
-        "axb",
+    additionalRelationship: "none",
 
-      additionalRelationship:
-        "none",
+    brandA: createBrandA(),
 
-      brandA:
-        createDefaultBrandA(),
+    brandB: createBrandB(),
 
-      brandB:
-        createDefaultBrandB(),
+    propertyX: createPropertyX(),
 
-      propertyX:
-        createDefaultPropertyX(),
+    commonFontFamily: DEFAULT_FONT,
 
-      /* ========================================= */
-      /* PARTNERSHIP                               */
-      /* ========================================= */
+    setPartnershipModel: (
+      partnershipModel
+    ) => {
+      set({
+        partnershipModel,
+      });
+    },
 
-      setPartnershipModel: (
-        model
-      ) => {
-        set({
-          partnershipModel:
-            model,
-        });
-      },
+    setAdditionalRelationship: (
+      additionalRelationship
+    ) => {
+      set({
+        additionalRelationship,
+      });
+    },
 
-      /* ========================================= */
-      /* ADDITIONAL RELATIONSHIP                   */
-      /* ========================================= */
+    updateBrandA: (patch) => {
+      set((state) => ({
+        brandA: {
+          ...state.brandA,
+          ...patch,
+        },
+      }));
+    },
 
-      setAdditionalRelationship: (
-        mode
-      ) => {
-        set({
-          additionalRelationship:
-            mode,
-        });
-      },
+    updateBrandB: (patch) => {
+      set((state) => ({
+        brandB: {
+          ...state.brandB,
+          ...patch,
+        },
+      }));
+    },
 
-      /* ========================================= */
-      /* BRAND A                                   */
-      /* ========================================= */
+    updatePropertyX: (patch) => {
+      set((state) => ({
+        propertyX: {
+          ...state.propertyX,
+          ...patch,
+        },
+      }));
+    },
 
-      updateBrandA: (
-        patch
-      ) => {
-        set(
-          (
-            state
-          ) => ({
-            brandA: {
-              ...state.brandA,
-              ...patch,
-            },
-          })
-        );
-      },
+    setCommonFontFamily: (
+      commonFontFamily
+    ) => {
+      set({
+        commonFontFamily,
+      });
+    },
 
-      /* ========================================= */
-      /* BRAND B                                   */
-      /* ========================================= */
+    resetGuideline: () => {
+      set({
+        partnershipModel: "axb",
 
-      updateBrandB: (
-        patch
-      ) => {
-        set(
-          (
-            state
-          ) => ({
-            brandB: {
-              ...state.brandB,
-              ...patch,
-            },
-          })
-        );
-      },
+        additionalRelationship: "none",
 
-      /* ========================================= */
-      /* PROPERTY X                                */
-      /* ========================================= */
+        brandA: createBrandA(),
 
-      updatePropertyX: (
-        patch
-      ) => {
-        set(
-          (
-            state
-          ) => ({
-            propertyX: {
-              ...state.propertyX,
-              ...patch,
-            },
-          })
-        );
-      },
+        brandB: createBrandB(),
 
-      /* ========================================= */
-      /* RESET                                     */
-      /* ========================================= */
+        propertyX: createPropertyX(),
 
-      resetGuideline: () => {
-        set({
-          partnershipModel:
-            "axb",
-
-          additionalRelationship:
-            "none",
-
-          brandA:
-            createDefaultBrandA(),
-
-          brandB:
-            createDefaultBrandB(),
-
-          propertyX:
-            createDefaultPropertyX(),
-        });
-      },
-    })
-  );
+        commonFontFamily: DEFAULT_FONT,
+      });
+    },
+  }));

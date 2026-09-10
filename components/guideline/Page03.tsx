@@ -542,10 +542,6 @@ export default function Page03() {
           )}
         </section>
       ) : (
-        /* ====================================== */
-        /* BASE / SPONSORED                       */
-        /* ====================================== */
-
         <section
           className="
             absolute
@@ -999,10 +995,6 @@ function PresentingSurface({
     >
       <CanvasGuides />
 
-      {/* ======================================== */}
-      {/* 01 — PROPERTY FIRST                      */}
-      {/* ======================================== */}
-
       {template ===
         "x-hero" && (
         <>
@@ -1087,10 +1079,6 @@ function PresentingSurface({
         </>
       )}
 
-      {/* ======================================== */}
-      {/* 02 — STACKED                             */}
-      {/* ======================================== */}
-
       {template ===
         "x-stacked" && (
         <div
@@ -1144,18 +1132,9 @@ function PresentingSurface({
             />
           </div>
 
-          <AccentLine
-            color={
-              propertyColor
-            }
-            className="mt-[18px] w-[86px]"
-          />
+
         </div>
       )}
-
-      {/* ======================================== */}
-      {/* 03 — EDITORIAL                           */}
-      {/* ======================================== */}
 
       {template ===
         "x-editorial" && (
@@ -1307,8 +1286,6 @@ function PositioningSurface({
     >
       <CanvasGuides />
 
-      {/* A × B */}
-
       {template ===
         "equal-horizontal" && (
         <div className="absolute left-[10%] right-[10%] top-1/2 grid -translate-y-1/2 grid-cols-[1fr_52px_1fr] items-center gap-[18px]">
@@ -1414,8 +1391,6 @@ function PositioningSurface({
         </div>
       )}
 
-      {/* A WITH B */}
-
       {template ===
         "with-horizontal" && (
         <div className="absolute left-[9%] right-[9%] top-1/2 grid -translate-y-1/2 grid-cols-[1.35fr_0.8fr] items-end gap-[54px]">
@@ -1517,8 +1492,6 @@ function PositioningSurface({
           </div>
         </>
       )}
-
-      {/* POWERED */}
 
       {template ===
         "powered-stacked" && (
@@ -1627,8 +1600,6 @@ function PositioningSurface({
         </>
       )}
 
-      {/* PRESENTS */}
-
       {template ===
         "presents-stacked" && (
         <div className="absolute left-1/2 top-1/2 flex w-[62%] -translate-x-1/2 -translate-y-1/2 flex-col items-center">
@@ -1736,10 +1707,6 @@ function PositioningSurface({
           </div>
         </>
       )}
-
-      {/* ======================================== */}
-      {/* SPONSOR CREDIT                           */}
-      {/* ======================================== */}
 
       {sponsor && (
         <SponsorCredit
@@ -2136,8 +2103,6 @@ function OpticalLogoFrame({
 
       <div className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-white/[0.035]" />
 
-      <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-white/[0.035]" />
-
       <div className="absolute bottom-[19%] left-[13%] right-[13%] top-[19%]">
         <BrandLogo
           logoUrl={
@@ -2196,7 +2161,11 @@ function MiniLogo({
 }) {
   return (
     <div
-      className="h-[28px]"
+      className="
+        h-[28px]
+
+        overflow-hidden
+      "
       style={{
         width,
       }}
@@ -2212,7 +2181,6 @@ function MiniLogo({
     </div>
   );
 }
-
 function LabeledLockupBlock({
   label,
 

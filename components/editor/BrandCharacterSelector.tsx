@@ -2,6 +2,7 @@
 
 import {
   brandCharacterTraits,
+  MAX_BRAND_CHARACTER_TRAITS,
   type BrandCharacterTraitId,
 } from "@/data/brandCharacterTraits";
 
@@ -13,41 +14,14 @@ import {
 /* TYPES                                             */
 /* ================================================= */
 
-export type CharacterIdentity =
+type CharacterTarget =
   | "A"
   | "B"
   | "X";
 
 interface BrandCharacterSelectorProps {
   brand:
-    CharacterIdentity;
-}
-
-/* ================================================= */
-/* CONSTANTS                                         */
-/* ================================================= */
-
-const MAX_TRAITS =
-  5;
-
-/* ================================================= */
-/* HELPERS                                           */
-/* ================================================= */
-
-function getTraitDescription(
-  trait:
-    (typeof brandCharacterTraits)[number]
-) {
-  const value =
-    trait as {
-      description?:
-        string;
-    };
-
-  return (
-    value.description ??
-    ""
-  );
+    CharacterTarget;
 }
 
 /* ================================================= */
@@ -61,105 +35,140 @@ export default function BrandCharacterSelector({
     brandA,
     brandB,
     propertyX,
-
-    updateBrandA,
-    updateBrandB,
-    updatePropertyX,
   } =
     useGuidelineStore();
 
-  /* ------------------------------------------------ */
-  /* ACTIVE IDENTITY                                  */
-  /* ------------------------------------------------ */
+  const currentBrand =
+    brand === "A"
+      ? brandA
+      : brand === "B"
+        ? brandB
+        : propertyX;
+
+  /*
+    Protect against old state containing
+    more than two traits.
+  */
 
   const selected =
-    brand === "A"
-      ? brandA.characterTraits
-      : brand === "B"
-        ? brandB.characterTraits
-        : propertyX.characterTraits;
+    (
+      currentBrand
+        ?.characterTraits ??
+      []
+    ).slice(
+      0,
+      MAX_BRAND_CHARACTER_TRAITS
+    );
 
-  const identityLabel =
+  /* ------------------------------------------------ */
+  /* LABEL                                            */
+  /* ------------------------------------------------ */
+
+  const title =
     brand === "A"
-      ? "Brand A"
+      ? "Brand A character"
       : brand === "B"
-        ? "Brand B"
-        : "Presented property";
+        ? "Brand B character"
+        : "Property character";
 
   /* ------------------------------------------------ */
   /* UPDATE                                           */
   /* ------------------------------------------------ */
 
-  const updateTraits = (
-    characterTraits:
+  function updateTraits(
+    next:
       BrandCharacterTraitId[]
-  ) => {
-    if (
-      brand === "A"
-    ) {
-      updateBrandA({
-        characterTraits,
-      });
+  ) {
+    useGuidelineStore.setState(
+      (state) => {
+        if (
+          brand === "A"
+        ) {
+          return {
+            brandA: {
+              ...state.brandA,
 
-      return;
-    }
+              characterTraits:
+                next,
+            },
+          };
+        }
 
-    if (
-      brand === "B"
-    ) {
-      updateBrandB({
-        characterTraits,
-      });
+        if (
+          brand === "B"
+        ) {
+          return {
+            brandB: {
+              ...state.brandB,
 
-      return;
-    }
+              characterTraits:
+                next,
+            },
+          };
+        }
 
-    updatePropertyX({
-      characterTraits,
-    });
-  };
+        return {
+          propertyX: {
+            ...state.propertyX,
+
+            characterTraits:
+              next,
+          },
+        };
+      }
+    );
+  }
 
   /* ------------------------------------------------ */
   /* TOGGLE                                           */
   /* ------------------------------------------------ */
 
-  const toggleTrait = (
-    id:
+  function toggleTrait(
+    traitId:
       BrandCharacterTraitId
-  ) => {
+  ) {
     const active =
       selected.includes(
-        id
+        traitId
       );
+
+    /*
+      Deselect.
+    */
 
     if (
       active
     ) {
       updateTraits(
         selected.filter(
-          (
+          (id) =>
+            id !==
             traitId
-          ) =>
-            traitId !==
-            id
         )
       );
 
       return;
     }
 
+    /*
+      Maximum two.
+
+      Do NOT silently replace an
+      existing trait.
+    */
+
     if (
       selected.length >=
-      MAX_TRAITS
+      MAX_BRAND_CHARACTER_TRAITS
     ) {
       return;
     }
 
     updateTraits([
       ...selected,
-      id,
+      traitId,
     ]);
-  };
+  }
 
   /* ------------------------------------------------ */
   /* RENDER                                           */
@@ -167,12 +176,17 @@ export default function BrandCharacterSelector({
 
   return (
     <div>
+      {/* ======================================== */}
+      {/* HEADER                                   */}
+      {/* ======================================== */}
+
       <div
         className="
           flex
-          items-start
+          items-end
           justify-between
-          gap-[16px]
+
+          gap-[12px]
         "
       >
         <div>
@@ -187,7 +201,7 @@ export default function BrandCharacterSelector({
               oook-medium
             "
           >
-            Character
+            {title}
           </p>
 
           <p
@@ -200,125 +214,42 @@ export default function BrandCharacterSelector({
               text-white/21
             "
           >
-            Choose up to five traits for {identityLabel}.
+            Select up to 2 traits.
           </p>
         </div>
 
         <span
           className="
-            shrink-0
-
             rounded-full
 
             border
-            border-white/[0.07]
+            border-white/[0.08]
 
             px-[7px]
             py-[4px]
 
             text-[7px]
 
-            text-white/24
+            text-white/28
           "
         >
-          {selected.length}
-          /
-          {MAX_TRAITS}
+          {selected.length}/
+          {MAX_BRAND_CHARACTER_TRAITS}
         </span>
       </div>
 
       {/* ======================================== */}
-      {/* SELECTED                                 */}
-      {/* ======================================== */}
-
-      {selected.length >
-        0 && (
-        <div
-          className="
-            mt-[12px]
-
-            flex
-            flex-wrap
-
-            gap-[4px]
-          "
-        >
-          {selected.map(
-            (
-              id
-            ) => {
-              const trait =
-                brandCharacterTraits.find(
-                  (
-                    item
-                  ) =>
-                    item.id ===
-                    id
-                );
-
-              if (
-                !trait
-              ) {
-                return null;
-              }
-
-              return (
-                <button
-                  key={
-                    id
-                  }
-
-                  type="button"
-
-                  onClick={() =>
-                    toggleTrait(
-                      id
-                    )
-                  }
-
-                  className="
-                    rounded-full
-
-                    border
-                    border-white/22
-
-                    bg-white
-
-                    px-[7px]
-                    py-[4px]
-
-                    text-[7px]
-
-                    text-black/75
-
-                    transition-opacity
-
-                    hover:opacity-80
-                  "
-                >
-                  {trait.label}
-                  <span className="ml-[5px] opacity-45">
-                    ×
-                  </span>
-                </button>
-              );
-            }
-          )}
-        </div>
-      )}
-
-      {/* ======================================== */}
-      {/* OPTIONS                                  */}
+      {/* TRAITS                                   */}
       {/* ======================================== */}
 
       <div
         className="
-          mt-[12px]
+          mt-[11px]
 
           flex
           flex-wrap
 
-          gap-[4px]
+          gap-[5px]
         "
       >
         {brandCharacterTraits.map(
@@ -330,86 +261,177 @@ export default function BrandCharacterSelector({
                 trait.id
               );
 
-            const disabled =
+            const blocked =
               !active &&
               selected.length >=
-                MAX_TRAITS;
-
-            const description =
-              getTraitDescription(
-                trait
-              );
+                MAX_BRAND_CHARACTER_TRAITS;
 
             return (
-              <button
+              <div
                 key={
                   trait.id
                 }
-
-                type="button"
-
-                title={
-                  description ||
-                  trait.label
-                }
-
-                disabled={
-                  disabled
-                }
-
-                onClick={() =>
-                  toggleTrait(
-                    trait.id
-                  )
-                }
-
-                className={`
-                  rounded-full
-
-                  border
-
-                  px-[7px]
-                  py-[4px]
-
-                  text-[7px]
-
-                  transition-all
-                  duration-150
-
-                  ${
-                    active
-                      ? `
-                          border-white
-                          bg-white
-                          text-black
-                        `
-                      : `
-                          border-white/[0.07]
-                          bg-white/[0.018]
-                          text-white/38
-
-                          hover:border-white/17
-                          hover:bg-white/[0.04]
-                          hover:text-white/65
-                        `
-                  }
-
-                  ${
-                    disabled
-                      ? `
-                          cursor-not-allowed
-                          opacity-25
-                        `
-                      : ""
-                  }
-                `}
+                className="
+                  group
+                  relative
+                "
               >
-                {trait.label}
-              </button>
+                <button
+                  type="button"
+                  disabled={
+                    blocked
+                  }
+                  onClick={() =>
+                    toggleTrait(
+                      trait.id
+                    )
+                  }
+                  className={`
+                    rounded-full
+
+                    border
+
+                    px-[8px]
+                    py-[5px]
+
+                    text-[8px]
+                    leading-none
+
+                    transition-all
+                    duration-150
+
+                    ${
+                      active
+                        ? `
+                            border-white
+                            bg-white
+
+                            text-black
+                          `
+                        : blocked
+                          ? `
+                              cursor-not-allowed
+
+                              border-white/[0.035]
+
+                              bg-transparent
+
+                              text-white/12
+                            `
+                          : `
+                              border-white/[0.075]
+
+                              bg-white/[0.018]
+
+                              text-white/42
+
+                              hover:border-white/18
+                              hover:bg-white/[0.045]
+                              hover:text-white/72
+                            `
+                    }
+                  `}
+                >
+                  {
+                    trait.label
+                  }
+                </button>
+
+                {/* ================================= */}
+                {/* TOOLTIP                           */}
+                {/* ================================= */}
+
+                <div
+                  className="
+                    pointer-events-none
+
+                    absolute
+
+                    bottom-[calc(100%+8px)]
+                    left-1/2
+
+                    z-[200]
+
+                    w-[220px]
+
+                    -translate-x-1/2
+                    translate-y-[3px]
+
+                    rounded-[11px]
+
+                    border
+                    border-white/[0.1]
+
+                    bg-[#151517]
+
+                    px-[11px]
+                    py-[9px]
+
+                    opacity-0
+
+                    shadow-[0_14px_40px_rgba(0,0,0,0.48)]
+
+                    transition-all
+                    duration-150
+
+                    group-hover:translate-y-0
+                    group-hover:opacity-100
+                  "
+                >
+                  <p
+                    className="
+                      text-[9px]
+
+                      text-white/78
+
+                      oook-medium
+                    "
+                  >
+                    {
+                      trait.label
+                    }
+                  </p>
+
+                  <p
+                    className="
+                      mt-[4px]
+
+                      text-[8px]
+                      leading-[1.45]
+
+                      text-white/43
+                    "
+                  >
+                    {
+                      trait.description
+                    }
+                  </p>
+                </div>
+              </div>
             );
           }
         )}
       </div>
+
+      {/* ======================================== */}
+      {/* LIMIT MESSAGE                            */}
+      {/* ======================================== */}
+
+      {selected.length >=
+        MAX_BRAND_CHARACTER_TRAITS && (
+        <p
+          className="
+            mt-[8px]
+
+            text-[7px]
+            leading-[1.4]
+
+            text-white/18
+          "
+        >
+          Remove one trait to select another.
+        </p>
+      )}
     </div>
   );
 }

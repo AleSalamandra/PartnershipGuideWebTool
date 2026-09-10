@@ -30,11 +30,40 @@ import {
 /* ================================================= */
 
 export interface GuidelinePageDefinition {
+  /*
+    Stable unique identifier.
+
+    Used by ThumbnailBar as React key
+    and by GuidelineDocument for remounting.
+  */
+
   id:
     string;
 
+  /*
+    Visible document number.
+
+    IMPORTANT:
+    ThumbnailBar consumes this value.
+  */
+
   number:
     string;
+
+  /*
+    Kept as an alias for UI components that may
+    use `label` rather than `number`.
+
+    This also keeps the page metadata resilient
+    while we debug the viewer.
+  */
+
+  label:
+    string;
+
+  /*
+    Human-readable page name.
+  */
 
   title:
     string;
@@ -49,11 +78,11 @@ interface GuidelineDocumentProps {
 }
 
 /* ================================================= */
-/* DOCUMENT STRUCTURE                                */
+/* PAGES                                             */
 /* ================================================= */
 
 /*
-  SINGLE SOURCE OF TRUTH
+  DOCUMENT ORDER
 
   01  Cover
   02  Partnership Principle
@@ -61,236 +90,316 @@ interface GuidelineDocumentProps {
   04  Corporate Visuals
   05  Logo Positioning
   06  Brand Hierarchy
-  07  Video Opening
+  07  Opening Keyframes
   08  Content Branding
-  09  Video Closing
-  10  Shared Visual Territory — Colour
-  11  Shared Visual Territory — Typography
-  12  Shared Visual Territory — Graphic Language
+  09  Closing
+  10  Colours
+  11  Typography
+  12  Graphic Language
   13  Motion Language
   14  Footage & Image Treatment
-  15  Complete Shared Branding Example
+  15  Complete Example
+
+
+  IMPORTANT:
+
+  Do not turn this back into an array
+  of bare React components.
+
+  Several parts of the application consume
+  the metadata attached to each page.
 */
 
 export const GUIDELINE_PAGES:
   GuidelinePageDefinition[] = [
-  {
-    id:
-      "cover",
+    {
+      id:
+        "cover",
 
-    number:
-      "01",
+      number:
+        "01",
 
-    title:
-      "Style Guide",
+      label:
+        "01",
 
-    component:
-      CoverPage,
-  },
+      title:
+        "Cover",
 
-  {
-    id:
-      "partnership-principle",
+      component:
+        CoverPage,
+    },
 
-    number:
-      "02",
+    {
+      id:
+        "partnership-principle",
 
-    title:
-      "Partnership Principle",
+      number:
+        "02",
 
-    component:
-      PartnershipPrinciple,
-  },
+      label:
+        "02",
 
-  {
-    id:
-      "partnership-model",
+      title:
+        "Partnership Principle",
 
-    number:
-      "03",
+      component:
+        PartnershipPrinciple,
+    },
 
-    title:
-      "Partnership Model",
+    {
+      id:
+        "page-01",
 
-    component:
-      Page01,
-  },
+      number:
+        "03",
 
-  {
-    id:
-      "corporate-visuals",
+      label:
+        "03",
 
-    number:
-      "04",
+      title:
+        "Partnership Model",
 
-    title:
-      "Corporate Visuals",
+      component:
+        Page01,
+    },
 
-    component:
-      Page02,
-  },
+    {
+      id:
+        "page-02",
 
-  {
-    id:
-      "logo-positioning",
+      number:
+        "04",
 
-    number:
-      "05",
+      label:
+        "04",
 
-    title:
-      "Logo Positioning Suggestions",
+      title:
+        "Corporate Visuals",
 
-    component:
-      Page03,
-  },
+      component:
+        Page02,
+    },
 
-  {
-    id:
-      "brand-hierarchy",
+    {
+      id:
+        "page-03",
 
-    number:
-      "06",
+      number:
+        "05",
 
-    title:
-      "Brand Hierarchy Across Media",
+      label:
+        "05",
 
-    component:
-      Page04,
-  },
+      title:
+        "Logo Positioning",
 
-  {
-    id:
-      "video-opening",
+      component:
+        Page03,
+    },
 
-    number:
-      "07",
+    {
+      id:
+        "page-04",
 
-    title:
-      "Video Opening Keyframes",
+      number:
+        "06",
 
-    component:
-      Page05,
-  },
+      label:
+        "06",
 
-  {
-    id:
-      "content-branding",
+      title:
+        "Brand Hierarchy",
 
-    number:
-      "08",
+      component:
+        Page04,
+    },
 
-    title:
-      "Content Branding Applications",
+    {
+      id:
+        "page-05",
 
-    component:
-      Page06,
-  },
+      number:
+        "07",
 
-  {
-    id:
-      "video-closing",
+      label:
+        "07",
 
-    number:
-      "09",
+      title:
+        "Opening Keyframes",
 
-    title:
-      "Video Closing Applications",
+      component:
+        Page05,
+    },
 
-    component:
-      Page07,
-  },
+    {
+      id:
+        "page-06",
 
-  {
-    id:
-      "shared-colour",
+      number:
+        "08",
 
-    number:
-      "10",
+      label:
+        "08",
 
-    title:
-      "Shared Visual Territory — Colour",
+      title:
+        "Content Branding",
 
-    component:
-      Page08,
-  },
+      component:
+        Page06,
+    },
 
-  {
-    id:
-      "shared-typography",
+    {
+      id:
+        "page-07",
 
-    number:
-      "11",
+      number:
+        "09",
 
-    title:
-      "Shared Visual Territory — Typography",
+      label:
+        "09",
 
-    component:
-      Page09,
-  },
+      title:
+        "Closing",
 
-  {
-    id:
-      "shared-graphic-language",
+      component:
+        Page07,
+    },
 
-    number:
-      "12",
+    {
+      id:
+        "page-08",
 
-    title:
-      "Shared Visual Territory — Graphic Language",
+      number:
+        "10",
 
-    component:
-      Page10,
-  },
+      label:
+        "10",
 
-  {
-    id:
-      "motion-language",
+      title:
+        "Colours",
 
-    number:
-      "13",
+      component:
+        Page08,
+    },
 
-    title:
-      "Shared Visual Territory — Motion Language",
+    {
+      id:
+        "page-09",
 
-    component:
-      Page11,
-  },
+      number:
+        "11",
 
-  {
-    id:
-      "footage-treatment",
+      label:
+        "11",
 
-    number:
-      "14",
+      title:
+        "Typography",
 
-    title:
-      "Footage & Image Treatment",
+      component:
+        Page09,
+    },
 
-    component:
-      Page12,
-  },
+    {
+      id:
+        "page-10",
 
-  {
-    id:
-      "complete-example",
+      number:
+        "12",
 
-    number:
-      "15",
+      label:
+        "12",
 
-    title:
-      "Complete Shared Branding Example",
+      title:
+        "Graphic Language",
 
-    component:
-      Page13,
-  },
-];
+      component:
+        Page10,
+    },
+
+    {
+      id:
+        "page-11",
+
+      number:
+        "13",
+
+      label:
+        "13",
+
+      title:
+        "Motion Language",
+
+      component:
+        Page11,
+    },
+
+    {
+      id:
+        "page-12",
+
+      number:
+        "14",
+
+      label:
+        "14",
+
+      title:
+        "Footage & Image Treatment",
+
+      component:
+        Page12,
+    },
+
+    {
+      id:
+        "page-13",
+
+      number:
+        "15",
+
+      label:
+        "15",
+
+      title:
+        "Complete Example",
+
+      component:
+        Page13,
+    },
+  ];
 
 /* ================================================= */
-/* PAGE COUNT                                        */
+/* SAFE PAGE INDEX                                   */
 /* ================================================= */
 
-export const GUIDELINE_PAGE_COUNT =
-  GUIDELINE_PAGES.length;
+function getSafePageIndex(
+  value:
+    number
+) {
+  if (
+    !Number.isFinite(
+      value
+    )
+  ) {
+    return 0;
+  }
+
+  const pageIndex =
+    Math.floor(
+      value
+    );
+
+  return Math.max(
+    0,
+
+    Math.min(
+      GUIDELINE_PAGES.length -
+        1,
+
+      pageIndex
+    )
+  );
+}
 
 /* ================================================= */
 /* DOCUMENT                                          */
@@ -299,15 +408,6 @@ export const GUIDELINE_PAGE_COUNT =
 export default function GuidelineDocument({
   currentPage,
 }: GuidelineDocumentProps) {
-  /*
-    Read the configuration here as well.
-
-    Individual pages still subscribe to the store,
-    but this guarantees that the document tree
-    itself responds to changes in the relationship
-    layer.
-  */
-
   const partnershipModel =
     useGuidelineStore(
       (
@@ -324,86 +424,70 @@ export default function GuidelineDocument({
         state.additionalRelationship
     );
 
-  const propertyX =
-    useGuidelineStore(
-      (
-        state
-      ) =>
-        state.propertyX
-    );
-
   /* ------------------------------------------------ */
-  /* SAFE PAGE                                        */
+  /* CURRENT PAGE                                     */
   /* ------------------------------------------------ */
 
-  const safePageIndex =
-    Math.min(
-      Math.max(
-        currentPage,
-        0
-      ),
-
-      GUIDELINE_PAGES.length -
-        1
+  const pageIndex =
+    getSafePageIndex(
+      currentPage
     );
 
   const pageDefinition =
     GUIDELINE_PAGES[
-      safePageIndex
+      pageIndex
     ];
 
   const CurrentPage =
     pageDefinition.component;
 
   /* ------------------------------------------------ */
-  /* CONFIGURATION KEY                                */
+  /* REMOUNT KEY                                      */
   /* ------------------------------------------------ */
 
-  /*
-    This is especially useful for pages that contain
-    local React state, image selection or animations.
+  const pageKey =
+    [
+      pageDefinition.id,
 
-    Switching:
+      partnershipModel,
 
-      None
-      Presenting X
-      Sponsored by X
-
-    forces the active guideline page to mount with the
-    correct relationship context.
-  */
-
-  const configurationKey = [
-    pageDefinition.id,
-
-    partnershipModel,
-
-    additionalRelationship,
-
-    propertyX.name,
-
-    propertyX.logoUrl
-      ? "x-logo"
-      : "no-x-logo",
-
-    propertyX.primaryColor,
-
-    propertyX.secondaryColor,
-
-    propertyX.fontFamily,
-
-    propertyX.characterTraits.join(
+      additionalRelationship,
+    ].join(
       "-"
-    ),
-  ].join(
-    "::"
-  );
+    );
+
+  /* ------------------------------------------------ */
+  /* RENDER                                           */
+  /* ------------------------------------------------ */
 
   return (
-    <CurrentPage
-      key={
-        configurationKey
+    <div
+      data-guideline-document="true"
+
+      data-guideline-page-id={
+        pageDefinition.id
       }
-    />
+
+      data-guideline-page-number={
+        pageDefinition.number
+      }
+
+      className="
+        relative
+
+        h-[900px]
+        w-[1600px]
+
+        shrink-0
+
+        overflow-hidden
+      "
+    >
+      <CurrentPage
+        key={
+          pageKey
+        }
+      />
+    </div>
   );
 }

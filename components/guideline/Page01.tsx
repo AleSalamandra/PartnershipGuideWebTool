@@ -527,71 +527,7 @@ export default function Page01() {
             </p>
           </div>
 
-          {additional && (
-            <div
-              className="
-                mt-[15px]
-
-                inline-flex
-                items-center
-                gap-[8px]
-
-                rounded-full
-
-                border
-                border-white/[0.08]
-
-                px-[10px]
-                py-[6px]
-              "
-            >
-              <span
-                className="
-                  text-[8px]
-                  uppercase
-                  tracking-[0.13em]
-
-                  text-white/25
-                "
-              >
-                Additional relationship
-              </span>
-
-              <span className="text-[9px] text-white/55">
-                {additional.label}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div
-          className="
-            flex
-            flex-col
-            items-end
-            gap-[13px]
-          "
-        >
-          <PartnershipLockup
-            model={model}
-            brandA={brandA}
-            brandB={brandB}
-          />
-
-          {additionalRelationship !==
-            "none" && (
-            <XSignature
-              mode={
-                additionalRelationship
-              }
-              name={
-                propertyName
-              }
-              logoUrl={
-                propertyX.logoUrl
-              }
-            />
-          )}
+          
         </div>
       </header>
 
@@ -752,7 +688,7 @@ export default function Page01() {
 
         <InfoSection
           title="Use when"
-          className="mt-[28px]"
+          className="mt-[18px]"
         >
           {content.useWhen(
             brandAName,
